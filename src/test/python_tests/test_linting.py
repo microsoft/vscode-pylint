@@ -1,17 +1,24 @@
-import os
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+"""
+Test for linting over LSP.
+"""
+
+import sys
 from threading import Event
+
 from hamcrest import assert_that, greater_than, is_
 
-from .lsp_test_client import session, utils, constants
+from .lsp_test_client import constants, session, utils
 
-file_path = os.path.join(constants.TEST_DATA, "sample1", "sample.py")
+file_path = constants.TEST_DATA / "sample1" / "sample.py"
 uri = utils.as_uri(file_path)
 linter = utils.get_linter_defaults()
 
 
 def test_publish_diagnostics_on_open():
-    with open(file_path, "r") as f:
-        contents = f.read()
+    """Test to ensure linting on file open."""
+    contents = file_path.read_text()
 
     actual = []
     with session.LspSession() as ls_session:
@@ -38,7 +45,7 @@ def test_publish_diagnostics_on_open():
         )
 
         # wait for a second to receive all notifications
-        done.wait(1000)
+        done.wait(1)
 
     expected = {
         "uri": uri,
@@ -56,7 +63,10 @@ def test_publish_diagnostics_on_open():
             {
                 "range": {
                     "start": {"line": 2, "character": 6},
-                    "end": {"line": 2, "character": 7},
+                    "end": {
+                        "line": 2,
+                        "character": 7 if sys.version_info >= (3, 8) else 6,
+                    },
                 },
                 "message": "Undefined variable 'x'",
                 "severity": 1,
@@ -66,7 +76,10 @@ def test_publish_diagnostics_on_open():
             {
                 "range": {
                     "start": {"line": 0, "character": 0},
-                    "end": {"line": 0, "character": 10},
+                    "end": {
+                        "line": 0,
+                        "character": 10 if sys.version_info >= (3, 8) else 0,
+                    },
                 },
                 "message": "Unused import sys",
                 "severity": 2,
@@ -80,8 +93,8 @@ def test_publish_diagnostics_on_open():
 
 
 def test_publish_diagnostics_on_save():
-    with open(file_path, "r") as f:
-        contents = f.read()
+    """Test to ensure linting on file save."""
+    contents = file_path.read_text()
 
     actual = []
     with session.LspSession() as ls_session:
@@ -126,7 +139,10 @@ def test_publish_diagnostics_on_save():
             {
                 "range": {
                     "start": {"line": 2, "character": 6},
-                    "end": {"line": 2, "character": 7},
+                    "end": {
+                        "line": 2,
+                        "character": 7 if sys.version_info >= (3, 8) else 6,
+                    },
                 },
                 "message": "Undefined variable 'x'",
                 "severity": 1,
@@ -136,7 +152,10 @@ def test_publish_diagnostics_on_save():
             {
                 "range": {
                     "start": {"line": 0, "character": 0},
-                    "end": {"line": 0, "character": 10},
+                    "end": {
+                        "line": 0,
+                        "character": 10 if sys.version_info >= (3, 8) else 0,
+                    },
                 },
                 "message": "Unused import sys",
                 "severity": 2,
@@ -150,8 +169,8 @@ def test_publish_diagnostics_on_save():
 
 
 def test_publish_diagnostics_on_close():
-    with open(file_path, "r") as f:
-        contents = f.read()
+    """Test to ensure diagnostic clean-up on file close."""
+    contents = file_path.read_text()
 
     actual = []
     with session.LspSession() as ls_session:
@@ -197,7 +216,7 @@ def test_publish_diagnostics_on_close():
         )
 
         # wait for a second to receive all notifications
-        done.wait(100)
+        done.wait(1)
 
     # On close should clearout everything
     expected = {

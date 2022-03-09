@@ -1,8 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+"""
+Constants for use with tests.
+"""
+import pathlib
 
-import os
-
-TEST_ROOT = os.path.dirname(os.path.dirname(__file__))
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(TEST_ROOT)))
-TEST_DATA = os.path.join(TEST_ROOT, "test_data")
+TEST_ROOT = pathlib.Path(__file__).parent.parent
+PROJECT_ROOT = TEST_ROOT.parent.parent.parent
+TEST_DATA = TEST_ROOT / "test_data"

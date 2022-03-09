@@ -34,20 +34,20 @@ def tests(session):
 @nox.session()
 def lint(session):
     session.install("-r" "./requirements.txt")
+    session.install("-r", "src/test/python_tests/requirements.txt")
 
-    # check linting using the linter from package.json
-    package_json_path = os.path.join(os.path.dirname(__file__), "package.json")
-    session.log("Reading linter from: {0}".format(package_json_path))
-
-    with open(package_json_path, "r") as f:
-        package_json = json.load(f)
-
-    session.install(package_json["linter"]["module"])
-    session.run(package_json["linter"]["module"], "./bundled/linter")
+    session.run("pylint", "./bundled/linter")
+    session.run(
+        "pylint",
+        "--ignore=./src/test/python_tests/test_data",
+        "./src/test/python_tests",
+    )
 
     # check formatting using black
     session.install("black")
     session.run("black", "--check", "./bundled/linter")
+    session.run("black", "--check", "./src/test/python_tests")
+    session.run("black", "--check", "noxfile.py")
 
 
 @nox.session()

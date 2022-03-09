@@ -55,3 +55,4 @@ runs:
 
     - name: Check linting and formatting
       run: python -m nox --session lint
+      shell: bash

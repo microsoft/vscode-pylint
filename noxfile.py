@@ -23,7 +23,7 @@ def bundled_libs_install(session):
 
 
 @nox.session()
-def test(session):
+def tests(session):
     session.install("-r", "src/test/python_tests/requirements.txt")
     session.run("pytest", "src/test/python_tests")
 

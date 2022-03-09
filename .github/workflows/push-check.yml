@@ -1,0 +1,85 @@
+name: Push Validation
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'release'
+      - 'release/*'
+      - 'release-*'
+
+env:
+  NODE_VERSION: 14.19.0
+  TEST_RESULTS_DIRECTORY: .
+  # Force a path with spaces and unicode chars to test extension works in these scenarios
+  special-working-directory: './🐍 🐛'
+  special-working-directory-relative: '🐍 🐛'
+
+jobs:
+  build-vsix:
+    name: Create VSIX
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build VSIX
+        uses: ./.github/actions/build-vsix
+        with:
+          node_version: ${{ env.NODE_VERSION}}
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
+      - name: Lint
+        uses: ./.github/actions/lint
+        with:
+          node_version: ${{ env.NODE_VERSION }}
+
+  tests:
+    name: Tests
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ${{ env.special-working-directory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.6', '3.7', '3.8', '3.9', '3.10']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.special-working-directory-relative }}
+
+      - name: Use Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Python Update Pip
+        run: python -m pip install -U pip
+        shell: bash
+
+      # For faster/better builds of sdists.
+      - name: Install build pre-requisite
+        run: python -m pip install wheel
+        shell: bash
+
+      - name: Install nox
+        run: python -m pip install nox
+        shell: bash
+
+      - name: Install bundled python libraries
+        run: python -m nox --session bundled_libs_install
+        shell: bash
+
+      - name: Run tests
+        run: python -m nox --session tests
+        shell: bash

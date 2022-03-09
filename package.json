@@ -1,0 +1,154 @@
+{
+    "name": "pylint",
+    "displayName": "Pylint",
+    "description": "Linting support for python files using `pylint`.",
+    "version": "2022.0.0-dev",
+    "linter": {
+        "name": "Pylint",
+        "module": "pylint"
+    },
+    "publisher": "ms-python",
+    "license": "MIT",
+    "homepage": "https://github.com/Mirosoft/vscode-pylint",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Mirosoft/vscode-pylint"
+    },
+    "bugs": {
+        "url": "https://github.com/Mirosoft/vscode-pylint/issues"
+    },
+    "icon": "icon.png",
+    "galleryBanner": {
+        "color": "#1e415e",
+        "theme": "dark"
+    },
+    "keywords": [
+        "python",
+        "linting",
+        "pylint"
+    ],
+    "engines": {
+        "vscode": "^1.64.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Linters"
+    ],
+    "extensionDependencies": [
+        "ms-python.python"
+    ],
+    "activationEvents": [
+        "onLanguage:python",
+        "workspaceContains:.pylintrc",
+        "workspaceContains:*.py",
+        "onCommand:pylint.restart"
+    ],
+    "main": "./dist/extension.js",
+    "scripts": {
+        "vscode:prepublish": "npm run package",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool hidden-source-map",
+        "compile-tests": "tsc -p . --outDir out",
+        "watch-tests": "tsc -p . -w --outDir out",
+        "pretest": "npm run compile-tests && npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js",
+        "vsce-package": "vsce package -o pylint.vsix"
+    },
+    "contributes": {
+        "languages": [
+            {
+                "filenames": [
+                    ".pylintrc"
+                ],
+                "id": "ini"
+            }
+        ],
+        "configuration": {
+            "properties": {
+                "python.pylintTrace": {
+                    "default": "error",
+                    "description": "The trace level the extension logs at, defaults to 'error'",
+                    "enum": [
+                        "debug",
+                        "error",
+                        "info",
+                        "off",
+                        "warn"
+                    ],
+                    "scope": "window",
+                    "type": "string"
+                },
+                "python.pylintArgs": {
+                    "default": [],
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource",
+                    "type": "array"
+                },
+                "python.pylintSeverity": {
+                    "default": {
+                        "convention": "Information",
+                        "error": "Error",
+                        "fatal": "Error",
+                        "refactor": "Hint",
+                        "warning": "Warning",
+                        "info": "Information"
+                    },
+                    "additionalProperties": {
+                        "enum": [
+                            "Error",
+                            "Hint",
+                            "Information",
+                            "Warning"
+                        ]
+                    },
+                    "description": "Mapping from severity of `pylint` message type to severity shown in problem window.",
+                    "scope": "resource",
+                    "type": "object"
+                },
+                "python.pylintPath": {
+                    "default": [],
+                    "description": "When set to a path to pylint binary, extension will use that for linting. NOTE: Using this option may slowdown linting.",
+                    "scope": "resource",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array"
+                    ]
+                }
+            }
+        },
+        "commands": [
+            {
+                "title": "Restart Linter",
+                "category": "Pylint",
+                "command": "pylint.restart"
+            }
+        ]
+    },
+    "dependencies": {
+        "fs-extra": "^9.1.0",
+        "vscode-languageclient": "7.0.0"
+    },
+    "devDependencies": {
+        "@types/fs-extra": "^9.0.11",
+        "@types/vscode": "^1.64.0",
+        "@types/glob": "^7.2.0",
+        "@types/node": "14.x",
+        "@typescript-eslint/eslint-plugin": "^5.9.1",
+        "@typescript-eslint/parser": "^5.9.1",
+        "eslint": "^8.6.0",
+        "glob": "^7.2.0",
+        "typescript": "^4.5.4",
+        "ts-loader": "^9.2.6",
+        "webpack": "^5.66.0",
+        "webpack-cli": "^4.9.1",
+        "@vscode/test-electron": "^2.0.3",
+        "vsce": "^2.6.7"
+    }
+}

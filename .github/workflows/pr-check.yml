@@ -53,26 +53,31 @@ jobs:
         with:
           path: ${{ env.special-working-directory-relative }}
 
+      # Install bundled libs using 3.7 even though you test it on other versions.
+      - name: Use Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.7'
+
+      - name: Update pip, install wheel and nox
+        run: python -m pip install -U pip wheel nox
+        shell: bash
+
+      # This will install libraries to a target directory.
+      - name: Install bundled python libraries
+        run: python -m nox --session bundled_libs_install
+        shell: bash
+
+      # Now that the bundle is installed to target using python 3.7
+      # switch back the python we want to test with
       - name: Use Python ${{ matrix.python }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Install Python Update Pip
-        run: python -m pip install -U pip
-        shell: bash
-
-      # For faster/better builds of sdists.
-      - name: Install build pre-requisite
-        run: python -m pip install wheel
-        shell: bash
-
-      - name: Install nox
-        run: python -m pip install nox
-        shell: bash
-
-      - name: Install bundled python libraries
-        run: python -m nox --session bundled_libs_install
+      # The new python may not have nox so install it again
+      - name: Update pip, install wheel and nox (again)
+        run: python -m pip install -U pip wheel nox
         shell: bash
 
       - name: Run tests

@@ -1,5 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+"""
+Default initialize request params.
+"""
 
 import os
 
@@ -10,8 +13,8 @@ from .utils import as_uri, get_initialization_options
 VSCODE_DEFAULT_INITIALIZE = {
     "processId": os.getpid(),
     "clientInfo": {"name": "vscode", "version": "1.45.0"},
-    "rootPath": PROJECT_ROOT,
-    "rootUri": as_uri(PROJECT_ROOT),
+    "rootPath": str(PROJECT_ROOT),
+    "rootUri": as_uri(str(PROJECT_ROOT)),
     "capabilities": {
         "workspace": {
             "applyEdit": True,
@@ -212,6 +215,6 @@ VSCODE_DEFAULT_INITIALIZE = {
         "window": {"workDoneProgress": True},
     },
     "trace": "verbose",
-    "workspaceFolders": [{"uri": as_uri(PROJECT_ROOT), "name": "linter_lsp"}],
+    "workspaceFolders": [{"uri": as_uri(str(PROJECT_ROOT)), "name": "linter_lsp"}],
     "initializationOptions": get_initialization_options(),
 }

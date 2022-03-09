@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+"""
+Utility functions for use with tests.
+"""
 import json
 import os
 import pathlib
 import platform
-import re
 from random import choice
 
 from .constants import PROJECT_ROOT
@@ -21,28 +22,6 @@ def normalizecase(path: str) -> str:
 def as_uri(path: str) -> str:
     """Return 'file' uri as string."""
     return normalizecase(pathlib.Path(path).as_uri())
-
-
-class StringPattern:
-    """Matches string patterns."""
-
-    def __init__(self, pattern):
-        self.pattern = pattern
-
-    def __eq__(self, o):
-        """Compares against pattern when possible."""
-        if isinstance(o, str):
-            match = re.match(self.pattern, o)
-            return match is not None
-
-        if isinstance(o, StringPattern):
-            return self.pattern == o.pattern
-
-        return False
-
-    def match(self, test_str):
-        """Returns matches if pattern matches are found in the test string."""
-        return re.match(self.pattern, test_str)
 
 
 class PythonFile:
@@ -68,17 +47,15 @@ class PythonFile:
 
 def get_linter_defaults():
     """Returns linter details from package.json"""
-    package_json_path = os.path.join(PROJECT_ROOT, "package.json")
-    with open(package_json_path, "r") as f:
-        package_json = json.load(f)
+    package_json_path = PROJECT_ROOT / "package.json"
+    package_json = json.loads(package_json_path.read_text())
     return package_json["linter"]
 
 
 def get_initialization_options():
     """Returns initialization options from package.json"""
-    package_json_path = os.path.join(PROJECT_ROOT, "package.json")
-    with open(package_json_path, "r") as f:
-        package_json = json.load(f)
+    package_json_path = PROJECT_ROOT / "package.json"
+    package_json = json.loads(package_json_path.read_text())
 
     linter = package_json["linter"]
 
@@ -86,7 +63,7 @@ def get_initialization_options():
     settings = {
         "trace": "error",
         "args": [],
-        "severity": properties["python.%sSeverity" % linter["module"]]["default"],
+        "severity": properties[f"python.{linter['module']}Severity"]["default"],
         "path": [],
         "logPath": None,
     }

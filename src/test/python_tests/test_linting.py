@@ -11,14 +11,15 @@ from hamcrest import assert_that, greater_than, is_
 
 from .lsp_test_client import constants, session, utils
 
-file_path = constants.TEST_DATA / "sample1" / "sample.py"
-uri = utils.as_uri(file_path)
-linter = utils.get_linter_defaults()
+TEST_FILE_PATH = constants.TEST_DATA / "sample1" / "sample.py"
+TEST_FILE_URI = utils.as_uri(str(TEST_FILE_PATH))
+LINTER = utils.get_linter_defaults()
+TIMEOUT = 10  # 10 seconds
 
 
 def test_publish_diagnostics_on_open():
     """Test to ensure linting on file open."""
-    contents = file_path.read_text()
+    contents = TEST_FILE_PATH.read_text()
 
     actual = []
     with session.LspSession() as ls_session:
@@ -36,7 +37,7 @@ def test_publish_diagnostics_on_open():
         ls_session.notify_did_open(
             {
                 "textDocument": {
-                    "uri": uri,
+                    "uri": TEST_FILE_URI,
                     "languageId": "python",
                     "version": 1,
                     "text": contents,
@@ -44,11 +45,11 @@ def test_publish_diagnostics_on_open():
             }
         )
 
-        # wait for a second to receive all notifications
-        done.wait(1)
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
 
     expected = {
-        "uri": uri,
+        "uri": TEST_FILE_URI,
         "diagnostics": [
             {
                 "range": {
@@ -58,7 +59,7 @@ def test_publish_diagnostics_on_open():
                 "message": "Missing module docstring",
                 "severity": 3,
                 "code": "C0114:missing-module-docstring",
-                "source": linter["name"],
+                "source": LINTER["name"],
             },
             {
                 "range": {
@@ -71,7 +72,7 @@ def test_publish_diagnostics_on_open():
                 "message": "Undefined variable 'x'",
                 "severity": 1,
                 "code": "E0602:undefined-variable",
-                "source": linter["name"],
+                "source": LINTER["name"],
             },
             {
                 "range": {
@@ -84,7 +85,7 @@ def test_publish_diagnostics_on_open():
                 "message": "Unused import sys",
                 "severity": 2,
                 "code": "W0611:unused-import",
-                "source": linter["name"],
+                "source": LINTER["name"],
             },
         ],
     }
@@ -94,7 +95,7 @@ def test_publish_diagnostics_on_open():
 
 def test_publish_diagnostics_on_save():
     """Test to ensure linting on file save."""
-    contents = file_path.read_text()
+    contents = TEST_FILE_PATH.read_text()
 
     actual = []
     with session.LspSession() as ls_session:
@@ -112,7 +113,7 @@ def test_publish_diagnostics_on_save():
         ls_session.notify_did_save(
             {
                 "textDocument": {
-                    "uri": uri,
+                    "uri": TEST_FILE_URI,
                     "languageId": "python",
                     "version": 1,
                     "text": contents,
@@ -120,11 +121,11 @@ def test_publish_diagnostics_on_save():
             }
         )
 
-        # wait for a second to receive all notifications
-        done.wait(1)
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
 
     expected = {
-        "uri": uri,
+        "uri": TEST_FILE_URI,
         "diagnostics": [
             {
                 "range": {
@@ -134,7 +135,7 @@ def test_publish_diagnostics_on_save():
                 "message": "Missing module docstring",
                 "severity": 3,
                 "code": "C0114:missing-module-docstring",
-                "source": linter["name"],
+                "source": LINTER["name"],
             },
             {
                 "range": {
@@ -147,7 +148,7 @@ def test_publish_diagnostics_on_save():
                 "message": "Undefined variable 'x'",
                 "severity": 1,
                 "code": "E0602:undefined-variable",
-                "source": linter["name"],
+                "source": LINTER["name"],
             },
             {
                 "range": {
@@ -160,7 +161,7 @@ def test_publish_diagnostics_on_save():
                 "message": "Unused import sys",
                 "severity": 2,
                 "code": "W0611:unused-import",
-                "source": linter["name"],
+                "source": LINTER["name"],
             },
         ],
     }
@@ -170,7 +171,7 @@ def test_publish_diagnostics_on_save():
 
 def test_publish_diagnostics_on_close():
     """Test to ensure diagnostic clean-up on file close."""
-    contents = file_path.read_text()
+    contents = TEST_FILE_PATH.read_text()
 
     actual = []
     with session.LspSession() as ls_session:
@@ -188,7 +189,7 @@ def test_publish_diagnostics_on_close():
         ls_session.notify_did_open(
             {
                 "textDocument": {
-                    "uri": uri,
+                    "uri": TEST_FILE_URI,
                     "languageId": "python",
                     "version": 1,
                     "text": contents,
@@ -196,8 +197,8 @@ def test_publish_diagnostics_on_close():
             }
         )
 
-        # wait for a second to receive all notifications
-        done.wait(1)
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
 
         # We should receive some diagnostics
         assert_that(len(actual), is_(greater_than(0)))
@@ -208,19 +209,19 @@ def test_publish_diagnostics_on_close():
         ls_session.notify_did_close(
             {
                 "textDocument": {
-                    "uri": uri,
+                    "uri": TEST_FILE_URI,
                     "languageId": "python",
                     "version": 1,
                 }
             }
         )
 
-        # wait for a second to receive all notifications
-        done.wait(1)
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
 
     # On close should clearout everything
     expected = {
-        "uri": uri,
+        "uri": TEST_FILE_URI,
         "diagnostics": [],
     }
     assert_that(actual, is_(expected))

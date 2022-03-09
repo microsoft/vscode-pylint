@@ -53,6 +53,7 @@
         "watch-tests": "tsc -p . -w --outDir out",
         "pretest": "npm run compile-tests && npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
+        "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.yml' '.github/**/*.yml'",
         "test": "node ./out/test/runTest.js",
         "vsce-package": "vsce package -o pylint.vsix"
     },
@@ -144,6 +145,7 @@
         "@typescript-eslint/parser": "^5.9.1",
         "eslint": "^8.6.0",
         "glob": "^7.2.0",
+        "prettier": "^2.0.2",
         "typescript": "^4.5.4",
         "ts-loader": "^9.2.6",
         "webpack": "^5.66.0",

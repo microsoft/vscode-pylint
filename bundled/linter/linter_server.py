@@ -5,8 +5,8 @@ Implementation of linting support over LSP.
 """
 
 import json
-import sys
 import pathlib
+import sys
 from typing import Dict, Sequence, Union
 
 # Ensure that will can import LSP libraries, and other bundled linter libraries
@@ -14,8 +14,7 @@ sys.path.append(str(pathlib.Path(__file__).parent.parent / "libs"))
 
 # pylint: disable=wrong-import-position,import-error
 import utils
-
-from pygls import server, lsp
+from pygls import lsp, server
 from pygls.lsp import types
 
 all_configurations = {

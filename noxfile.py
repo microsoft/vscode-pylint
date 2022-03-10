@@ -57,6 +57,12 @@ def lint(session):
     session.run("black", "--check", "./src/test/python_tests")
     session.run("black", "--check", "noxfile.py")
 
+    # check import sorting using isort
+    session.install("isort")
+    session.run("isort", "--check", "./bundled/linter")
+    session.run("isort", "--check", "./src/test/python_tests")
+    session.run("isort", "--check", "noxfile.py")
+
 
 @nox.session()
 def update_build_number(session):
@@ -79,3 +85,20 @@ def update_build_number(session):
     session.log(f"Updating version from {package_json['version']} to {version}")
     package_json["version"] = version
     package_json_path.write_text(json.dumps(package_json, indent=4), encoding="utf-8")
+
+
+@nox.session()
+def validate_readme(session):
+    """Ensures the linter version in 'requirements.txt' matches 'readme.md'."""
+    requirements_file = pathlib.Path(__file__).parent / "requirements.txt"
+    readme_file = pathlib.Path(__file__).parent / "README.md"
+
+    lines = requirements_file.read_text(encoding="utf-8").splitlines(keepends=False)
+    linter_ver = list(line for line in lines if line.startswith("pylint"))[0]
+    name, version = linter_ver.split(" ")[0].split("==")
+
+    session.log(f"Looking for {name}={version} in README.md")
+    content = readme_file.read_text(encoding="utf-8")
+    if f"{name}={version}" not in content:
+        raise ValueError(f"Linter info {name}={version} was not found in README.md.")
+    session.log(f"FOUND {name}={version} in README.md")

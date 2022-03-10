@@ -9,7 +9,6 @@ import os
 from .constants import PROJECT_ROOT
 from .utils import as_uri, get_initialization_options
 
-
 VSCODE_DEFAULT_INITIALIZE = {
     "processId": os.getpid(),
     "clientInfo": {"name": "vscode", "version": "1.45.0"},

@@ -1,9 +1,5 @@
 # Change Log
 
-All notable changes to the "python-pylint" extension will be documented in this file.
+## 2022.1.0-dev
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+-   Initial release

@@ -70,7 +70,7 @@ jobs:
 
       # This will install libraries to a target directory.
       - name: Install bundled python libraries
-        run: python -m nox --session bundled_libs_install
+        run: python -m nox --session install_bundled_libs
         shell: bash
 
       # Now that the bundle is installed to target using python 3.7

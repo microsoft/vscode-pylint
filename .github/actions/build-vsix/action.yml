@@ -47,14 +47,14 @@ runs:
       shell: bash
 
     - name: Install bundled python libraries
-      run: python -m nox --session bundled_libs_install
+      run: python -m nox --session install_bundled_libs
       shell: bash
 
     # Use the GITHUB_RUN_ID environment variable to update the build number.
     # GITHUB_RUN_ID is a unique number for each run within a repository.
     # This number does not change if you re-run the workflow run.
     - name: Update extension build number
-      run: python -m nox --session updateBuildNumber -- $GITHUB_RUN_ID
+      run: python -m nox --session update_build_number -- $GITHUB_RUN_ID
       shell: bash
 
     - name: Build VSIX

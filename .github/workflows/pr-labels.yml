@@ -10,19 +10,19 @@ permissions:
 jobs:
   # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
   add-classify-label:
-    name: "Add 'classify'"
+    name: 'Ensure Required Labels'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const result = await github.rest.issues.listLabelsOnIssue({
+            const result = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.pull_request.number,
+              pull_number: context.issue.number,
             })
-            const labels = result.data.map((label) => label.name)
+            const labels = result.data.labels.map((label) => label.name)
             const hasNewsLabels = labels.some((label) => label === 'news' || label === 'skip news' )
 
             if (hasNewsLabels) {

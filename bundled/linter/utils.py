@@ -151,20 +151,24 @@ class CustomIO(io.TextIOWrapper):
         """Provide this close method which is used by some linters."""
 
 
-class SubstituteSysArgv:
-    """Manage sys.argv context when using runpy.run_module()."""
+class SubstituteAttr:
+    """Manage object attributes context when using runpy.run_module()."""
 
-    def __init__(self, new_args):
-        self.original_argv = []
-        self.new_args = new_args
+    def __init__(self, obj, attribute: str, new_value):
+        self.object = obj
+        self.attribute = attribute
+        self.new_value = new_value
+        self.original_value = getattr(self.object, self.attribute)
 
     def __enter__(self):
-        self.original_argv = sys.argv[:]
-        setattr(sys, "argv", self.new_args)
+        setattr(self.object, self.attribute, self.new_value)
         return self
 
     def __exit__(self, exctype, excinst, exctb):
-        setattr(sys, "argv", self.original_argv)
+        setattr(self.object, self.attribute, self.original_value)
+        self.object = None
+        self.attribute = None
+        self.new_value = None
 
 
 def run_module(
@@ -175,21 +179,20 @@ def run_module(
     str_error = CustomIO("<stderr>", encoding=sys.stderr.encoding)
 
     try:
-        with SubstituteSysArgv(argv), RedirectIO("stdout", str_output), RedirectIO(
-            "stderr", str_error
-        ):
-            if use_stdin and source:
-                str_input = CustomIO(
-                    "<stdin>",
-                    encoding=sys.stdin.encoding,
-                    newline="\n",
-                )
-                with RedirectIO("stdin", str_input):
-                    str_input.write(source)
-                    str_input.seek(0)
+        with SubstituteAttr(sys, "argv", argv):
+            with RedirectIO("stdout", str_output), RedirectIO("stderr", str_error):
+                if use_stdin and source:
+                    str_input = CustomIO(
+                        "<stdin>",
+                        encoding=sys.stdin.encoding,
+                        newline="\n",
+                    )
+                    with RedirectIO("stdin", str_input):
+                        str_input.write(source)
+                        str_input.seek(0)
+                        runpy.run_module(module, run_name="__main__")
+                else:
                     runpy.run_module(module, run_name="__main__")
-            else:
-                runpy.run_module(module, run_name="__main__")
     except SystemExit:
         pass
 

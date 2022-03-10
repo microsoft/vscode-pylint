@@ -13,7 +13,7 @@ from typing import Dict, Sequence, Union
 sys.path.append(str(pathlib.Path(__file__).parent.parent / "libs"))
 
 # pylint: disable=wrong-import-position,import-error
-from utils import get_linter_options_by_version, is_stdlib_file, run_module, run_path
+import utils
 
 from pygls import server, lsp
 from pygls.lsp import types
@@ -107,7 +107,7 @@ def _lint_and_publish_diagnostics(
     """Runs linter, processes the output, and publishes the diagnostics over LSP."""
     document = LSP_SERVER.workspace.get_document(params.text_document.uri)
 
-    if is_stdlib_file(document.path):
+    if utils.is_stdlib_file(document.path):
         # Don't lint standard library python files.
         # Publishing empty diagnostics clears the entry.
         LSP_SERVER.publish_diagnostics(document.uri, [])
@@ -122,9 +122,13 @@ def _lint_and_publish_diagnostics(
     argv += ["--from-stdin", document.path] if use_stdin else [document.path]
 
     if use_path:
-        result = run_path(argv, use_stdin, document.source)
+        result = utils.run_path(argv, use_stdin, document.source)
     else:
-        result = run_module(module, argv, use_stdin, document.source)
+        # This is needed to preserve sys.path, pylint modifies
+        # sys.path and that might not work for this scenario
+        # next time around.
+        with utils.SubstituteAttr(sys, "path", sys.path[:]):
+            result = utils.run_module(module, argv, use_stdin, document.source)
 
     if result.stderr:
         LSP_SERVER.show_message_log(result.stderr)
@@ -152,7 +156,7 @@ def initialize(params: types.InitializeParams):
     SETTINGS = params.initialization_options["settings"]
 
     global LINTER  # pylint: disable=global-statement
-    LINTER = get_linter_options_by_version(
+    LINTER = utils.get_linter_options_by_version(
         all_configurations,
         SETTINGS["path"] if len(SETTINGS["path"]) > 0 else None,
     )

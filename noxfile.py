@@ -8,7 +8,7 @@ import json
 import pathlib
 import re
 
-import nox
+import nox  # pylint: disable=import-error
 
 
 @nox.session(python="3.7")
@@ -60,6 +60,7 @@ def lint(session):
 
 @nox.session()
 def update_build_number(session):
+    """Updates buildnumber for the extension."""
     if len(session.posargs) == 0:
         session.log("No updates to package version")
         return

@@ -9,13 +9,13 @@
     },
     "publisher": "ms-python",
     "license": "MIT",
-    "homepage": "https://github.com/Mirosoft/vscode-pylint",
+    "homepage": "https://github.com/Microsoft/vscode-pylint",
     "repository": {
         "type": "git",
-        "url": "https://github.com/Mirosoft/vscode-pylint"
+        "url": "https://github.com/microsoft/vscode-pylint.git"
     },
     "bugs": {
-        "url": "https://github.com/Mirosoft/vscode-pylint/issues"
+        "url": "https://github.com/Microsoft/vscode-pylint/issues"
     },
     "icon": "icon.png",
     "galleryBanner": {

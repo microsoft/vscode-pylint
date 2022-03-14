@@ -68,7 +68,7 @@
         ],
         "configuration": {
             "properties": {
-                "python.pylintTrace": {
+                "pylint.trace": {
                     "default": "error",
                     "description": "The trace level the extension logs at, defaults to 'error'",
                     "enum": [
@@ -81,7 +81,7 @@
                     "scope": "window",
                     "type": "string"
                 },
-                "python.pylintArgs": {
+                "pylint.args": {
                     "default": [],
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "items": {
@@ -90,7 +90,7 @@
                     "scope": "resource",
                     "type": "array"
                 },
-                "python.pylintSeverity": {
+                "pylint.severity": {
                     "default": {
                         "convention": "Information",
                         "error": "Error",
@@ -112,7 +112,7 @@
                     "scope": "resource",
                     "type": "object"
                 },
-                "python.pylintPath": {
+                "pylint.path": {
                     "default": [],
                     "description": "When set to a path to pylint binary, extension will use that for linting. NOTE: Using this option may slowdown linting.",
                     "scope": "resource",

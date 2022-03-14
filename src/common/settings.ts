@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationChangeEvent } from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { LoggingLevelSettingType } from './types';
 import { getConfiguration } from './vscodeapi';
 
@@ -13,22 +13,17 @@ export interface ISettings {
 }
 
 export function getLinterExtensionSettings(moduleName: string): ISettings {
-    const config = getConfiguration('python');
+    const config = getConfiguration(moduleName);
     return {
-        trace: config.get<LoggingLevelSettingType>(`${moduleName}Trace`) ?? 'error',
-        args: config.get<string[]>(`${moduleName}Args`) ?? [],
-        severity: config.get<Record<string, string>>(`${moduleName}Severity`) ?? {},
-        path: config.get<string[]>(`${moduleName}Path`) ?? [],
+        trace: config.get<LoggingLevelSettingType>(`trace`) ?? 'error',
+        args: config.get<string[]>(`args`) ?? [],
+        severity: config.get<Record<string, string>>(`severity`) ?? {},
+        path: config.get<string[]>(`path`) ?? [],
     };
 }
 
 export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, moduleName: string): boolean {
-    const settings = [
-        `python.${moduleName}Trace`,
-        `python.${moduleName}Args`,
-        `python.${moduleName}Severity`,
-        `python.${moduleName}Path`,
-    ];
+    const settings = [`${moduleName}.trace`, `${moduleName}.args`, `${moduleName}.severity`, `${moduleName}.path`];
     const changed = settings.map((s) => e.affectsConfiguration(s));
     return changed.includes(true);
 }

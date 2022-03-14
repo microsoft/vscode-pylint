@@ -63,7 +63,7 @@ def get_initialization_options():
     settings = {
         "trace": "error",
         "args": [],
-        "severity": properties[f"python.{linter['module']}Severity"]["default"],
+        "severity": properties[f"{linter['module']}.severity"]["default"],
         "path": [],
         "logPath": None,
     }

@@ -7,8 +7,8 @@ Test for linting over LSP.
 import sys
 from threading import Event
 
-from hamcrest import assert_that, greater_than, is_
 import pytest
+from hamcrest import assert_that, greater_than, is_
 
 from .lsp_test_client import constants, defaults, session, utils
 

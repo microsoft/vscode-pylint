@@ -26,6 +26,7 @@ WINDOW_LOG_MESSAGE = "window/logMessage"
 WINDOW_SHOW_MESSAGE = "window/showMessage"
 
 
+# pylint: disable=too-many-instance-attributes
 class LspSession(MethodDispatcher):
     """Send and Receive messages over LSP as a test LS Client."""
 

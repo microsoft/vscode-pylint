@@ -1,8 +1,9 @@
 # Pylint extension for Visual Studio Code
 
-A Visual Studio Code extension with support for the `pylint` linter. The extension ships with `pylint=2.12.2`.
+A Visual Studio Code extension with support for the `pylint` linter. The extension ships with `pylint=2.13.4`.
 
 ## Usage
+
 Once installed in Visual Studio Code, pylint will be automatically executed when you open a Python file.
 
 If you want to disable pylint, you can [disable this extension](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) per workspace in Visual Studio Code.

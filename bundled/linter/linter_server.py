@@ -106,7 +106,9 @@ def _lint_and_publish_diagnostics(
     """Runs linter, processes the output, and publishes the diagnostics over LSP."""
     document = LSP_SERVER.workspace.get_document(params.text_document.uri)
 
-    if utils.is_stdlib_file(document.path):
+    if str(document.uri).startswith("vscode-notebook-cell") or utils.is_stdlib_file(
+        document.path
+    ):
         # Don't lint standard library python files.
         # Publishing empty diagnostics clears the entry.
         LSP_SERVER.publish_diagnostics(document.uri, [])

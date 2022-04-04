@@ -13,7 +13,7 @@ import runpy
 import site
 import subprocess
 import sys
-from typing import List, Sequence
+from typing import Any, List, Sequence
 
 from packaging.version import parse
 
@@ -145,49 +145,40 @@ class CustomIO(io.TextIOWrapper):
     name = None
 
     def __init__(self, name, encoding="utf-8", newline=None):
-        super().__init__(io.BytesIO(), encoding=encoding, newline=newline)
-        self.name = name
+        self._buffer = io.BytesIO()
+        self._buffer.name = name
+        super().__init__(self._buffer, encoding=encoding, newline=newline)
 
     def close(self):
         """Provide this close method which is used by some linters."""
+        # This is intentionally empty.
+
+    def get_value(self) -> str:
+        self.seek(0)
+        return self.read()
 
 
-class SubstituteAttr:
+@contextlib.contextmanager
+def substitute_attr(obj: Any, attribute: str, new_value: Any):
     """Manage object attributes context when using runpy.run_module()."""
-
-    def __init__(self, obj, attribute: str, new_value):
-        self.object = obj
-        self.attribute = attribute
-        self.new_value = new_value
-        self.original_value = getattr(self.object, self.attribute)
-
-    def __enter__(self):
-        setattr(self.object, self.attribute, self.new_value)
-        return self
-
-    def __exit__(self, exctype, excinst, exctb):
-        setattr(self.object, self.attribute, self.original_value)
-        self.object = None
-        self.attribute = None
-        self.new_value = None
+    old_value = getattr(obj, attribute)
+    setattr(obj, attribute, new_value)
+    yield
+    setattr(obj, attribute, old_value)
 
 
 def run_module(
     module: str, argv: Sequence[str], use_stdin: bool, source: str = None
 ) -> LinterResult:
     """Runs linter as a module."""
-    str_output = CustomIO("<stdout>", encoding=sys.stdout.encoding)
-    str_error = CustomIO("<stderr>", encoding=sys.stderr.encoding)
+    str_output = CustomIO("<stdout>", encoding="utf-8")
+    str_error = CustomIO("<stderr>", encoding="utf-8")
 
     try:
-        with SubstituteAttr(sys, "argv", argv):
+        with substitute_attr(sys, "argv", argv):
             with RedirectIO("stdout", str_output), RedirectIO("stderr", str_error):
                 if use_stdin and source:
-                    str_input = CustomIO(
-                        "<stdin>",
-                        encoding=sys.stdin.encoding,
-                        newline="\n",
-                    )
+                    str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
                     with RedirectIO("stdin", str_input):
                         str_input.write(source)
                         str_input.seek(0)
@@ -197,9 +188,7 @@ def run_module(
     except SystemExit:
         pass
 
-    str_error.seek(0)
-    str_output.seek(0)
-    return LinterResult(str_output.read(), str_error.read())
+    return LinterResult(str_output.get_value(), str_error.get_value())
 
 
 def run_path(argv: Sequence[str], use_stdin: bool, source: str = None) -> LinterResult:

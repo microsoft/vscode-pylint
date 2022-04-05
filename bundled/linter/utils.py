@@ -126,7 +126,7 @@ class RedirectIO(contextlib.AbstractContextManager):
         setattr(sys, self._stream, self._new_target)
         return self._new_target
 
-    def __exit__(self, exctype, excinst, exctb):
+    def __exit__(self, *_):
         setattr(sys, self._stream, self._old_targets.pop())
 
 
@@ -154,6 +154,7 @@ class CustomIO(io.TextIOWrapper):
         # This is intentionally empty.
 
     def get_value(self) -> str:
+        """Returns value from the buffer as string."""
         self.seek(0)
         return self.read()
 

@@ -5,19 +5,9 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR } from './constants';
 
-export interface ILinterPattern {
-    regex: string;
-    args: string[];
-    lineStartsAt1: boolean;
-    columnStartsAt1: boolean;
-    useStdin: boolean;
-}
-
 export interface ILinter {
     name: string;
     module: string;
-    patterns: Record<string, ILinterPattern>;
-    version: string;
 }
 
 export function loadLinterDefaults(): ILinter {

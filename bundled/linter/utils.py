@@ -112,24 +112,6 @@ def get_linter_options_by_version(raw_options, linter_path):
     return options
 
 
-class RedirectIO(contextlib.AbstractContextManager):
-    """Redirect stdio streams to a custom stream."""
-
-    def __init__(self, stream, new_target):
-        self._stream = stream
-        self._new_target = new_target
-        # We use a list of old targets to make this CM re-entrant
-        self._old_targets = []
-
-    def __enter__(self):
-        self._old_targets.append(getattr(sys, self._stream))
-        setattr(sys, self._stream, self._new_target)
-        return self._new_target
-
-    def __exit__(self, *_):
-        setattr(sys, self._stream, self._old_targets.pop())
-
-
 # pylint: disable-next=too-few-public-methods
 class LinterResult:
     """Object to hold result from running linter."""
@@ -168,6 +150,15 @@ def substitute_attr(obj: Any, attribute: str, new_value: Any):
     setattr(obj, attribute, old_value)
 
 
+@contextlib.contextmanager
+def redirect_io(stream: str, new_stream):
+    """Redirect stdio streams to a custom stream."""
+    old_stream = getattr(sys, stream)
+    setattr(sys, stream, new_stream)
+    yield
+    setattr(sys, stream, old_stream)
+
+
 def run_module(
     module: str, argv: Sequence[str], use_stdin: bool, source: str = None
 ) -> LinterResult:
@@ -177,15 +168,16 @@ def run_module(
 
     try:
         with substitute_attr(sys, "argv", argv):
-            with RedirectIO("stdout", str_output), RedirectIO("stderr", str_error):
-                if use_stdin and source:
-                    str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
-                    with RedirectIO("stdin", str_input):
-                        str_input.write(source)
-                        str_input.seek(0)
+            with redirect_io("stdout", str_output):
+                with redirect_io("stderr", str_error):
+                    if use_stdin and source:
+                        str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
+                        with redirect_io("stdin", str_input):
+                            str_input.write(source)
+                            str_input.seek(0)
+                            runpy.run_module(module, run_name="__main__")
+                    else:
                         runpy.run_module(module, run_name="__main__")
-                else:
-                    runpy.run_module(module, run_name="__main__")
     except SystemExit:
         pass
 

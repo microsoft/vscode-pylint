@@ -122,6 +122,7 @@ def _lint_and_publish_diagnostics(
     argv += LINTER["args"] + SETTINGS["args"]
     argv += ["--from-stdin", document.path] if use_stdin else [document.path]
 
+    LSP_SERVER.show_message_log(" ".join(argv))
     if use_path:
         result = utils.run_path(argv, use_stdin, document.source)
     else:

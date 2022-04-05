@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { OutputChannel } from 'vscode';
+import { Disposable, OutputChannel } from 'vscode';
+import { State } from 'vscode-languageclient';
 import {
     LanguageClient,
     LanguageClientOptions,
@@ -9,7 +10,7 @@ import {
     ServerOptions,
 } from 'vscode-languageclient/node';
 import { LINTER_SCRIPT_PATH } from './constants';
-import { traceInfo } from './logging';
+import { traceInfo, traceVerbose } from './logging';
 import { ISettings } from './settings';
 import { traceLevelToLSTrace } from './utilities';
 import { isVirtualWorkspace } from './vscodeapi';
@@ -19,7 +20,7 @@ export type ILinterInitOptions = { settings: ISettings };
 export async function createLinterServer(
     interpreter: string,
     serverName: string,
-    trace: OutputChannel,
+    outputChannel: OutputChannel,
     initializationOptions: ILinterInitOptions,
 ): Promise<LanguageClient> {
     const serverOptions: ServerOptions = {
@@ -39,30 +40,47 @@ export async function createLinterServer(
                   { scheme: 'vscode-notebook-cell', language: 'python' },
                   { scheme: 'vscode-interactive-input', language: 'python' },
               ],
-        outputChannel: trace,
-        revealOutputChannelOn: RevealOutputChannelOn.Error,
-        outputChannelName: trace.name,
-        traceOutputChannel: trace,
+        outputChannel: outputChannel,
+        traceOutputChannel: outputChannel,
+        revealOutputChannelOn: RevealOutputChannelOn.Never,
         initializationOptions,
     };
 
     return new LanguageClient(serverName, serverName, serverOptions, clientOptions);
 }
 
+let _disposables: Disposable[] = [];
 export async function restartLinterServer(
     interpreter: string,
     serverName: string,
-    trace: OutputChannel,
+    outputChannel: OutputChannel,
     initializationOptions: ILinterInitOptions,
     lsClient?: LanguageClient,
 ): Promise<LanguageClient> {
     if (lsClient) {
-        traceInfo(`Stopping linter server`);
-        lsClient.stop();
+        traceInfo(`Server: Stop requested`);
+        await lsClient.stop();
+        _disposables.forEach((d) => d.dispose());
+        _disposables = [];
     }
-    const newLSClient = await createLinterServer(interpreter, serverName, trace, initializationOptions);
+    const newLSClient = await createLinterServer(interpreter, serverName, outputChannel, initializationOptions);
     newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings.trace);
-    newLSClient.start();
-    traceInfo(`Starting linter server`);
+    traceInfo(`Server: Start requested.`);
+    _disposables.push(
+        newLSClient.onDidChangeState((e) => {
+            switch (e.newState) {
+                case State.Stopped:
+                    traceVerbose(`Server State: Stopped`);
+                    break;
+                case State.Starting:
+                    traceVerbose(`Server State: Starting`);
+                    break;
+                case State.Running:
+                    traceVerbose(`Server State: Running`);
+                    break;
+            }
+        }),
+        newLSClient.start(),
+    );
     return newLSClient;
 }

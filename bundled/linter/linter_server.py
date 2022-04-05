@@ -133,7 +133,7 @@ def _lint_and_publish_diagnostics(
             result = utils.run_module(module, argv, use_stdin, document.source)
 
     if result.stderr:
-        LSP_SERVER.show_message_log(result.stderr)
+        LSP_SERVER.show_message_log(result.stderr, msg_type=lsp.MessageType.Error)
 
     LSP_SERVER.show_message_log(f"{document.uri} :\r\n{result.stdout}")
 
@@ -180,7 +180,7 @@ def did_open(_server: server.LanguageServer, params: types.DidOpenTextDocumentPa
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_SAVE)
 def did_save(_server: server.LanguageServer, params: types.DidSaveTextDocumentParams):
-    """LSP handler for textDocument/didOpen request."""
+    """LSP handler for textDocument/didSave request."""
     _lint_and_publish_diagnostics(params)
 
 

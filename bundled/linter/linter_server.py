@@ -14,7 +14,7 @@ sys.path.append(str(pathlib.Path(__file__).parent.parent / "libs"))
 
 # pylint: disable=wrong-import-position,import-error
 import utils
-from pygls import lsp, server
+from pygls import lsp, protocol, server
 from pygls.lsp import types
 
 all_configurations = {
@@ -128,7 +128,7 @@ def _lint_and_publish_diagnostics(
         # This is needed to preserve sys.path, pylint modifies
         # sys.path and that might not work for this scenario
         # next time around.
-        with utils.SubstituteAttr(sys, "path", sys.path[:]):
+        with utils.substitute_attr(sys, "path", sys.path[:]):
             result = utils.run_module(module, argv, use_stdin, document.source)
 
     if result.stderr:
@@ -161,6 +161,14 @@ def initialize(params: types.InitializeParams):
         all_configurations,
         SETTINGS["path"] if len(SETTINGS["path"]) > 0 else None,
     )
+
+    if isinstance(LSP_SERVER.lsp, protocol.LanguageServerProtocol):
+        if SETTINGS["trace"] == "debug":
+            LSP_SERVER.lsp.trace = lsp.Trace.Verbose
+        elif SETTINGS["trace"] == "off":
+            LSP_SERVER.lsp.trace = lsp.Trace.Off
+        else:
+            LSP_SERVER.lsp.trace = lsp.Trace.Messages
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_OPEN)

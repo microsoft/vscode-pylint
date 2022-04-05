@@ -16,7 +16,6 @@ export function traceLevelToLSTrace(level: string): Trace {
             return Trace.Messages;
         case 'debug':
             return Trace.Verbose;
-            break;
         default:
             return Trace.Off;
     }

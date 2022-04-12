@@ -3,6 +3,7 @@
 
 import { Disposable, Event, EventEmitter, extensions, Uri } from 'vscode';
 import { traceError } from './logging';
+import { getWorkspaceFolder, getWorkspaceFolders } from './vscodeapi';
 
 interface IExtensionApi {
     ready: Promise<void>;
@@ -18,21 +19,37 @@ interface IExtensionApi {
     };
 }
 
-const onDidChangePythonInterpreterEvent = new EventEmitter<string>();
-export const onDidChangePythonInterpreter: Event<string> = onDidChangePythonInterpreterEvent.event;
+interface IInterpreterDetails {
+    path?: string[];
+    resource?: Uri;
+}
 
-let _interpreterPath = '';
-function updateInterpreterFromExtension(api: IExtensionApi) {
-    const { execCommand } = api.settings.getExecutionDetails();
-    const interpreterPath = execCommand ? execCommand.join(' ') : 'python';
-    if (_interpreterPath !== interpreterPath) {
-        _interpreterPath = interpreterPath;
-        onDidChangePythonInterpreterEvent.fire(_interpreterPath);
+const onDidChangePythonInterpreterEvent = new EventEmitter<IInterpreterDetails>();
+export const onDidChangePythonInterpreter: Event<IInterpreterDetails> = onDidChangePythonInterpreterEvent.event;
+
+const interpreterMap: Map<string, string[] | undefined> = new Map();
+
+function updateInterpreterFromExtension(api: IExtensionApi, resource?: Uri | undefined) {
+    const execCommand = api.settings.getExecutionDetails(resource).execCommand;
+    const workspaceFolder = resource ? getWorkspaceFolder(resource) : undefined;
+    const key = workspaceFolder?.uri.toString() ?? '';
+
+    const currentInterpreter = interpreterMap.get(key)?.join(' ') ?? '';
+    const newInterpreter = execCommand?.join(' ') ?? '';
+    if (currentInterpreter !== newInterpreter) {
+        interpreterMap.set(key, execCommand);
+        onDidChangePythonInterpreterEvent.fire({
+            path: execCommand,
+            resource,
+        });
     }
 }
 
 export async function initializePython(disposables: Disposable[]): Promise<void> {
     try {
+        interpreterMap.set('', undefined);
+        getWorkspaceFolders().forEach((w) => interpreterMap.set(w.uri.toString(), undefined));
+
         const extension = extensions.getExtension('ms-python.python');
         if (extension) {
             if (!extension.isActive) {
@@ -42,8 +59,8 @@ export async function initializePython(disposables: Disposable[]): Promise<void>
             const api: IExtensionApi = extension.exports as IExtensionApi;
 
             disposables.push(
-                api.settings.onDidChangeExecutionDetails(() => {
-                    updateInterpreterFromExtension(api);
+                api.settings.onDidChangeExecutionDetails((resource) => {
+                    updateInterpreterFromExtension(api, resource);
                 }),
             );
 
@@ -54,9 +71,8 @@ export async function initializePython(disposables: Disposable[]): Promise<void>
     }
 }
 
-export async function getInterpreterPath(disposables: Disposable[]): Promise<string> {
-    if (_interpreterPath.length === 0) {
-        await initializePython(disposables);
-    }
-    return _interpreterPath;
+export function getInterpreterDetails(resource?: Uri): IInterpreterDetails {
+    const workspaceFolder = resource ? getWorkspaceFolder(resource) : undefined;
+    const key = workspaceFolder?.uri.toString() ?? '';
+    return { path: interpreterMap.get(key), resource };
 }

@@ -15,17 +15,18 @@ import { ISettings } from './settings';
 import { traceLevelToLSTrace } from './utilities';
 import { isVirtualWorkspace } from './vscodeapi';
 
-export type ILinterInitOptions = { settings: ISettings };
+export type ILinterInitOptions = { settings: ISettings[] };
 
 export async function createLinterServer(
-    interpreter: string,
+    interpreter: string[],
     serverName: string,
     outputChannel: OutputChannel,
     initializationOptions: ILinterInitOptions,
 ): Promise<LanguageClient> {
+    const command = interpreter.shift() ?? 'python';
     const serverOptions: ServerOptions = {
-        command: interpreter,
-        args: [LINTER_SCRIPT_PATH],
+        command,
+        args: interpreter.concat([LINTER_SCRIPT_PATH]),
     };
 
     // Options to control the language client
@@ -51,36 +52,37 @@ export async function createLinterServer(
 
 let _disposables: Disposable[] = [];
 export async function restartLinterServer(
-    interpreter: string,
+    interpreter: string[],
     serverName: string,
     outputChannel: OutputChannel,
     initializationOptions: ILinterInitOptions,
     lsClient?: LanguageClient,
-): Promise<LanguageClient> {
-    if (lsClient) {
-        traceInfo(`Server: Stop requested`);
-        await lsClient.stop();
-        _disposables.forEach((d) => d.dispose());
-        _disposables = [];
-    }
-    const newLSClient = await createLinterServer(interpreter, serverName, outputChannel, initializationOptions);
-    newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings.trace);
-    traceInfo(`Server: Start requested.`);
-    _disposables.push(
-        newLSClient.onDidChangeState((e) => {
-            switch (e.newState) {
-                case State.Stopped:
-                    traceVerbose(`Server State: Stopped`);
-                    break;
-                case State.Starting:
-                    traceVerbose(`Server State: Starting`);
-                    break;
-                case State.Running:
-                    traceVerbose(`Server State: Running`);
-                    break;
-            }
-        }),
-        newLSClient.start(),
-    );
-    return newLSClient;
+): Promise<LanguageClient | undefined> {
+    return undefined;
+    // if (lsClient) {
+    //     traceInfo(`Server: Stop requested`);
+    //     await lsClient.stop();
+    //     _disposables.forEach((d) => d.dispose());
+    //     _disposables = [];
+    // }
+    // const newLSClient = await createLinterServer(interpreter, serverName, outputChannel, initializationOptions);
+    // newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings[0].trace);
+    // traceInfo(`Server: Start requested.`);
+    // _disposables.push(
+    //     newLSClient.onDidChangeState((e) => {
+    //         switch (e.newState) {
+    //             case State.Stopped:
+    //                 traceVerbose(`Server State: Stopped`);
+    //                 break;
+    //             case State.Starting:
+    //                 traceVerbose(`Server State: Starting`);
+    //                 break;
+    //             case State.Running:
+    //                 traceVerbose(`Server State: Running`);
+    //                 break;
+    //         }
+    //     }),
+    //     newLSClient.start(),
+    // );
+    // return newLSClient;
 }

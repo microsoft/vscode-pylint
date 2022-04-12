@@ -35,7 +35,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // the first thing that we do in this extension.
     const linter = loadLinterDefaults();
 
-    const settings = getLinterExtensionSettings(linter.module);
+    const settings = await getLinterExtensionSettings(linter.module);
 
     // Setup logging
     const outputChannel = createOutputChannel(linter.name);
@@ -52,7 +52,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             linter.name,
             outputChannel,
             {
-                settings: getLinterExtensionSettings(linter.module),
+                settings: await getLinterExtensionSettings(linter.module, true),
             },
             lsClient,
         );
@@ -60,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     context.subscriptions.push(
         onDidChangePythonInterpreter(async () => {
-            const interpreter = getInterpreterDetails();
+            const interpreter = await getInterpreterDetails();
             if (interpreter.path) {
                 await runServer(interpreter.path);
             }
@@ -69,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     context.subscriptions.push(
         registerCommand(`${linter.module}.restart`, async () => {
-            const interpreter = getInterpreterDetails();
+            const interpreter = await getInterpreterDetails();
             if (interpreter.path) {
                 await runServer(interpreter.path);
             }
@@ -79,10 +79,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
             if (checkIfConfigurationChanged(e, linter.module)) {
-                const newSettings = getLinterExtensionSettings(linter.module);
+                const newSettings = await getLinterExtensionSettings(linter.module);
                 setLoggingLevel(newSettings[0].trace);
 
-                const interpreter = getInterpreterDetails();
+                const interpreter = await getInterpreterDetails();
                 if (interpreter.path) {
                     await runServer(interpreter.path);
                 }

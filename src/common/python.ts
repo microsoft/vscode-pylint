@@ -45,6 +45,17 @@ function updateInterpreterFromExtension(api: IExtensionApi, resource?: Uri | und
     }
 }
 
+async function getPythonExtensionAPI(): Promise<IExtensionApi | undefined> {
+    const extension = extensions.getExtension('ms-python.python');
+    if (extension) {
+        if (!extension.isActive) {
+            await extension.activate();
+        }
+    }
+
+    return extension?.exports as IExtensionApi;
+}
+
 export async function initializePython(disposables: Disposable[]): Promise<void> {
     try {
         interpreterMap.set('', undefined);
@@ -56,23 +67,37 @@ export async function initializePython(disposables: Disposable[]): Promise<void>
                 await extension.activate();
             }
 
-            const api: IExtensionApi = extension.exports as IExtensionApi;
+            const api = await getPythonExtensionAPI();
 
-            disposables.push(
-                api.settings.onDidChangeExecutionDetails((resource) => {
-                    updateInterpreterFromExtension(api, resource);
-                }),
-            );
+            if (api) {
+                disposables.push(
+                    api.settings.onDidChangeExecutionDetails((resource) => {
+                        updateInterpreterFromExtension(api, resource);
+                    }),
+                );
 
-            updateInterpreterFromExtension(api);
+                updateInterpreterFromExtension(api);
+            }
         }
     } catch (error) {
         traceError('Error initializing python: ', error);
     }
 }
 
-export function getInterpreterDetails(resource?: Uri): IInterpreterDetails {
+export async function getInterpreterDetails(resource?: Uri): Promise<IInterpreterDetails> {
     const workspaceFolder = resource ? getWorkspaceFolder(resource) : undefined;
+
     const key = workspaceFolder?.uri.toString() ?? '';
-    return { path: interpreterMap.get(key), resource };
+    const interpreterPath = interpreterMap.get(key);
+    if (interpreterPath) {
+        return { path: interpreterPath, resource };
+    }
+
+    const api = await getPythonExtensionAPI();
+    if (api) {
+        const execCommand = api.settings.getExecutionDetails(resource).execCommand;
+        interpreterMap.set(key, execCommand);
+        return { path: execCommand, resource };
+    }
+    return { path: undefined, resource };
 }

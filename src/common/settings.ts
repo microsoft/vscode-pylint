@@ -15,22 +15,27 @@ export interface ISettings {
     interpreter: string[];
 }
 
-export function getLinterExtensionSettings(moduleName: string): ISettings[] {
+export async function getLinterExtensionSettings(
+    moduleName: string,
+    includeInterpreter?: boolean,
+): Promise<ISettings[]> {
     const settings: ISettings[] = [];
-    getWorkspaceFolders().forEach((workspace) => {
+    const workspaces = getWorkspaceFolders();
+
+    for (const workspace of workspaces) {
         const config = getConfiguration(moduleName, workspace.uri);
-        const interpreter = getInterpreterDetails(workspace.uri);
+        const interpreter = includeInterpreter ? (await getInterpreterDetails(workspace.uri)).path : [];
         const workspaceSetting = {
             workspace: workspace.uri.toString(),
             trace: config.get<LoggingLevelSettingType>(`trace`) ?? 'error',
             args: config.get<string[]>(`args`) ?? [],
             severity: config.get<Record<string, string>>(`severity`) ?? {},
             path: config.get<string[]>(`path`) ?? [],
-            interpreter: interpreter.path ?? [],
+            interpreter: interpreter ?? [],
         };
 
         settings.push(workspaceSetting);
-    });
+    }
 
     return settings;
 }

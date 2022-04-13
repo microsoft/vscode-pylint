@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, OutputChannel } from 'vscode';
+import { Disposable, OutputChannel, WorkspaceFolder } from 'vscode';
 import { State } from 'vscode-languageclient';
 import {
     LanguageClient,
@@ -13,9 +13,24 @@ import { LINTER_SCRIPT_PATH } from './constants';
 import { traceInfo, traceVerbose } from './logging';
 import { ISettings } from './settings';
 import { traceLevelToLSTrace } from './utilities';
-import { isVirtualWorkspace } from './vscodeapi';
+import { getWorkspaceFolders, isVirtualWorkspace } from './vscodeapi';
 
 export type ILinterInitOptions = { settings: ISettings[] };
+
+function getProjectRoot() {
+    const workspaces: readonly WorkspaceFolder[] = getWorkspaceFolders();
+    if (workspaces.length == 1) {
+        return workspaces[0].uri.fsPath;
+    } else {
+        let root = workspaces[0].uri.fsPath;
+        for (const w of workspaces) {
+            if (root.length > w.uri.fsPath.length) {
+                root = w.uri.fsPath;
+            }
+        }
+        return root;
+    }
+}
 
 export async function createLinterServer(
     interpreter: string[],
@@ -27,6 +42,7 @@ export async function createLinterServer(
     const serverOptions: ServerOptions = {
         command,
         args: interpreter.concat([LINTER_SCRIPT_PATH]),
+        options: { cwd: getProjectRoot() },
     };
 
     // Options to control the language client
@@ -57,32 +73,31 @@ export async function restartLinterServer(
     outputChannel: OutputChannel,
     initializationOptions: ILinterInitOptions,
     lsClient?: LanguageClient,
-): Promise<LanguageClient | undefined> {
-    return undefined;
-    // if (lsClient) {
-    //     traceInfo(`Server: Stop requested`);
-    //     await lsClient.stop();
-    //     _disposables.forEach((d) => d.dispose());
-    //     _disposables = [];
-    // }
-    // const newLSClient = await createLinterServer(interpreter, serverName, outputChannel, initializationOptions);
-    // newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings[0].trace);
-    // traceInfo(`Server: Start requested.`);
-    // _disposables.push(
-    //     newLSClient.onDidChangeState((e) => {
-    //         switch (e.newState) {
-    //             case State.Stopped:
-    //                 traceVerbose(`Server State: Stopped`);
-    //                 break;
-    //             case State.Starting:
-    //                 traceVerbose(`Server State: Starting`);
-    //                 break;
-    //             case State.Running:
-    //                 traceVerbose(`Server State: Running`);
-    //                 break;
-    //         }
-    //     }),
-    //     newLSClient.start(),
-    // );
-    // return newLSClient;
+): Promise<LanguageClient> {
+    if (lsClient) {
+        traceInfo(`Server: Stop requested`);
+        await lsClient.stop();
+        _disposables.forEach((d) => d.dispose());
+        _disposables = [];
+    }
+    const newLSClient = await createLinterServer(interpreter, serverName, outputChannel, initializationOptions);
+    newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings[0].trace);
+    traceInfo(`Server: Start requested.`);
+    _disposables.push(
+        newLSClient.onDidChangeState((e) => {
+            switch (e.newState) {
+                case State.Stopped:
+                    traceVerbose(`Server State: Stopped`);
+                    break;
+                case State.Starting:
+                    traceVerbose(`Server State: Starting`);
+                    break;
+                case State.Running:
+                    traceVerbose(`Server State: Running`);
+                    break;
+            }
+        }),
+        newLSClient.start(),
+    );
+    return newLSClient;
 }

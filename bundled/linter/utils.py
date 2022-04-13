@@ -8,17 +8,19 @@ Utility functions and classes for use with linting over LSP.
 import contextlib
 import importlib
 import io
+import os
 import os.path
 import runpy
 import site
 import subprocess
 import sys
-from typing import Any, List, Sequence
+import threading
+from typing import Any, List, Sequence, Tuple, Union
 
 from packaging.version import parse
 
 
-def as_list(content):
+def as_list(content: Union[Any, List[Any], Tuple[Any]]) -> Union[List[Any], Tuple[Any]]:
     """Ensures we always get a list"""
     if isinstance(content, (list, tuple)):
         return content
@@ -34,12 +36,26 @@ _site_paths = tuple(
 )
 
 
-def is_stdlib_file(file_path):
+def is_same_path(file_path1, file_path2) -> bool:
+    """Returns true if two paths are the same."""
+    return os.path.normcase(os.path.normpath(file_path1)) == os.path.normcase(
+        os.path.normpath(file_path2)
+    )
+
+
+def is_current_interpreter(executable) -> bool:
+    """Returns true if the executable path is same as the current interpreter."""
+    return is_same_path(executable, sys.executable)
+
+
+def is_stdlib_file(file_path) -> bool:
     """Return True if the file belongs to standard library."""
     return os.path.normcase(os.path.normpath(file_path)).startswith(_site_paths)
 
 
-def _get_linter_version_by_path(settings_path: List[str]) -> str:
+def get_linter_version_by_path(
+    settings_path: List[str],
+):
     """Extract version number when using path to run linter."""
     try:
         args = settings_path + ["--version"]
@@ -59,57 +75,13 @@ def _get_linter_version_by_path(settings_path: List[str]) -> str:
     # astroid 2.9.3
     # Python 3.10.2 (tags/v3.10.2:a58ebcc, Jan 17 2022, 14:12:15) [MSC v.1929 64 bit (AMD64)]
     first_line = result.stdout.splitlines(keepends=False)[0]
-    return first_line.split(" ")[1]
+    return parse(first_line.split(" ")[1])
 
 
-def _get_linter_version_by_module(module):
+def get_linter_version_by_module(module):
     """Extracts linter version when using the module to lint."""
     imported = importlib.import_module(module)
-    return imported.__getattr__("__version__")
-
-
-def get_linter_options_by_version(raw_options, linter_path):
-    """Gets the settings based on the version of the linter."""
-    name = raw_options["name"]
-    module = raw_options["module"]
-
-    default = {
-        "name": name,
-        "module": module,
-        "columnStartsAt1": raw_options["patterns"]["default"]["columnStartsAt1"],
-        "lineStartsAt1": raw_options["patterns"]["default"]["lineStartsAt1"],
-        "args": raw_options["patterns"]["default"]["args"],
-        "regex": raw_options["patterns"]["default"]["regex"],
-        "useStdin": raw_options["patterns"]["default"]["useStdin"],
-    }
-
-    options = default
-
-    if len(raw_options["patterns"]) == 1:
-        return options
-
-    try:
-        version = parse(
-            _get_linter_version_by_path(linter_path)
-            if len(linter_path) > 0
-            else _get_linter_version_by_module(module)
-        )
-    except Exception:  # pylint: disable=broad-except
-        return options
-
-    for ver in filter(lambda k: not k == "default", raw_options["patterns"].keys()):
-        if version >= parse(ver):
-            options = {
-                "name": name,
-                "module": module,
-                "columnStartsAt1": raw_options["patterns"][ver]["columnStartsAt1"],
-                "lineStartsAt1": raw_options["patterns"][ver]["lineStartsAt1"],
-                "args": raw_options["patterns"][ver]["args"],
-                "regex": raw_options["patterns"][ver]["regex"],
-                "useStdin": raw_options["patterns"][ver]["useStdin"],
-            }
-
-    return options
+    return parse(imported.__getattr__("__version__"))
 
 
 # pylint: disable-next=too-few-public-methods
@@ -159,7 +131,20 @@ def redirect_io(stream: str, new_stream):
     setattr(sys, stream, old_stream)
 
 
-def run_module(
+_cwd_lock = threading.Lock()
+_old_cwd = os.getcwd()  # Save the working directory used when loading this module
+
+
+@contextlib.contextmanager
+def change_cwd(new_cwd):
+    """Change working directory before running code."""
+    with _cwd_lock:
+        os.chdir(new_cwd)
+        yield
+        os.chdir(_old_cwd)
+
+
+def _run_module(
     module: str, argv: Sequence[str], use_stdin: bool, source: str = None
 ) -> LinterResult:
     """Runs linter as a module."""
@@ -170,7 +155,7 @@ def run_module(
         with substitute_attr(sys, "argv", argv):
             with redirect_io("stdout", str_output):
                 with redirect_io("stderr", str_error):
-                    if use_stdin and source:
+                    if use_stdin and source is not None:
                         str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
                         with redirect_io("stdin", str_input):
                             str_input.write(source)
@@ -184,7 +169,19 @@ def run_module(
     return LinterResult(str_output.get_value(), str_error.get_value())
 
 
-def run_path(argv: Sequence[str], use_stdin: bool, source: str = None) -> LinterResult:
+def run_module(
+    module: str, argv: Sequence[str], use_stdin: bool, cwd: str, source: str = None
+) -> LinterResult:
+    """Runs linter as a module."""
+    if is_same_path(os.getcwd(), cwd):
+        return _run_module(module, argv, use_stdin, source)
+    with change_cwd(cwd):
+        return _run_module(module, argv, use_stdin, source)
+
+
+def run_path(
+    argv: Sequence[str], use_stdin: bool, cwd: str, source: str = None
+) -> LinterResult:
     """Runs linter as an executable."""
     if use_stdin:
         with subprocess.Popen(
@@ -193,6 +190,7 @@ def run_path(argv: Sequence[str], use_stdin: bool, source: str = None) -> Linter
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdin=subprocess.PIPE,
+            cwd=cwd,
         ) as process:
             return LinterResult(*process.communicate(input=source))
     else:
@@ -202,5 +200,6 @@ def run_path(argv: Sequence[str], use_stdin: bool, source: str = None) -> Linter
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=False,
+            cwd=cwd,
         )
         return LinterResult(result.stdout, result.stderr)

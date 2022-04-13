@@ -236,7 +236,7 @@ def test_severity_setting(lint_code):
     actual = []
     with session.LspSession() as ls_session:
         init_options = defaults.VSCODE_DEFAULT_INITIALIZE["initializationOptions"]
-        init_options["settings"]["severity"][lint_code] = "Error"
+        init_options["settings"][0]["severity"][lint_code] = "Error"
         ls_session.initialize(defaults.VSCODE_DEFAULT_INITIALIZE)
 
         done = Event()

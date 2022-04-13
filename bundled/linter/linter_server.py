@@ -5,6 +5,7 @@ Implementation of linting support over LSP.
 """
 
 import json
+import os
 import pathlib
 import sys
 from typing import Dict, Sequence, Union
@@ -14,25 +15,17 @@ sys.path.append(str(pathlib.Path(__file__).parent.parent / "libs"))
 
 # pylint: disable=wrong-import-position,import-error
 import utils
-from pygls import lsp, protocol, server
+from pygls import lsp, protocol, server, uris, workspace
 from pygls.lsp import types
 
-all_configurations = {
+SETTINGS = {}
+LINTER = {
     "name": "Pylint",
     "module": "pylint",
-    "patterns": {
-        "default": {
-            "regex": "",
-            "args": ["--reports=n", "--output-format=json"],
-            "lineStartsAt1": True,
-            "columnStartsAt1": False,
-            "useStdin": True,
-        }
-    },
+    "args": ["--reports=n", "--output-format=json"],
 }
-
-SETTINGS = {}
-LINTER = {}
+WORKSPACE_SETTINGS = {}
+RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
 MAX_WORKERS = 5
 LSP_SERVER = server.LanguageServer(max_workers=MAX_WORKERS)
@@ -57,16 +50,13 @@ def _get_severity(
 
 def _parse_output(
     content: str,
-    line_at_1: bool,
-    column_at_1: bool,
     severity: Dict[str, str],
-    additional_offset: int = 0,
 ) -> Sequence[types.Diagnostic]:
     """Parses linter messages and return LSP diagnostic object for each message."""
     diagnostics = []
 
-    line_offset = (1 if line_at_1 else 0) + additional_offset
-    col_offset = 1 if column_at_1 else 0
+    line_offset = 1
+    col_offset = 0
 
     messages = json.loads(content)
     for data in messages:
@@ -100,6 +90,30 @@ def _parse_output(
     return diagnostics
 
 
+def _update_workspace_settings(settings):
+    for setting in settings:
+        key = uris.to_fs_path(setting["workspace"])
+        WORKSPACE_SETTINGS[key] = {
+            **setting,
+            "workspaceFS": key,
+        }
+
+
+def _get_settings_by_document(document: workspace.Document):
+    if len(WORKSPACE_SETTINGS) == 1 or document.path is None:
+        return list(WORKSPACE_SETTINGS.values())[0]
+
+    document_workspace = pathlib.Path(document.path)
+    workspaces = [s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()]
+
+    while True:
+        if str(document_workspace) in workspaces:
+            break
+        document_workspace = document_workspace.parent
+
+    return WORKSPACE_SETTINGS[str(document_workspace)]
+
+
 def _lint_and_publish_diagnostics(
     params: Union[types.DidOpenTextDocumentParams, types.DidSaveTextDocumentParams]
 ) -> None:
@@ -114,62 +128,83 @@ def _lint_and_publish_diagnostics(
         LSP_SERVER.publish_diagnostics(document.uri, [])
         return
 
-    module = LINTER["module"]
-    use_stdin = LINTER["useStdin"]
-    use_path = len(SETTINGS["path"]) > 0
+    settings = _get_settings_by_document(document)
 
-    argv = SETTINGS["path"] if use_path else [module]
-    argv += LINTER["args"] + SETTINGS["args"]
-    argv += ["--from-stdin", document.path] if use_stdin else [document.path]
+    module = LINTER["module"]
+    cwd = settings["workspaceFS"]
+
+    if len(settings["path"]) > 0:
+        # 'path' setting takes priority over everything.
+        use_path = True
+        argv = settings["path"]
+    elif len(settings["interpreter"]) > 0 and not utils.is_current_interpreter(
+        settings["interpreter"][0]
+    ):
+        # If there is a different interpreter set use that interpreter.
+        argv = settings["interpreter"] + [str(RUNNER), module]
+        use_path = True
+    else:
+        # if the interpreter is same as the interpreter running this
+        # process then run as module.
+        argv = [LINTER["module"]]
+        use_path = False
+
+    argv += LINTER["args"] + settings["args"]
+    argv += ["--from-stdin", document.path]
 
     LSP_SERVER.show_message_log(" ".join(argv))
+    LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
+
     if use_path:
-        result = utils.run_path(argv, use_stdin, document.source)
+        result = utils.run_path(
+            argv=argv,
+            use_stdin=True,
+            cwd=cwd,
+            source=document.source.replace("\r\n", "\n"),
+        )
     else:
         # This is needed to preserve sys.path, pylint modifies
         # sys.path and that might not work for this scenario
         # next time around.
         with utils.substitute_attr(sys, "path", sys.path[:]):
-            result = utils.run_module(module, argv, use_stdin, document.source)
+            result = utils.run_module(
+                module=module,
+                argv=argv,
+                use_stdin=True,
+                cwd=cwd,
+                source=document.source,
+            )
 
     if result.stderr:
         LSP_SERVER.show_message_log(result.stderr, msg_type=lsp.MessageType.Error)
-
     LSP_SERVER.show_message_log(f"{document.uri} :\r\n{result.stdout}")
 
-    diagnostics = _parse_output(
-        result.stdout,
-        LINTER["lineStartsAt1"],
-        LINTER["columnStartsAt1"],
-        SETTINGS["severity"],
-    )
-
+    diagnostics = _parse_output(result.stdout, settings["severity"])
     LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
 
 
 @LSP_SERVER.feature(lsp.INITIALIZE)
 def initialize(params: types.InitializeParams):
     """LSP handler for initialize request."""
-    paths = "\r\n".join(sys.path)
-    LSP_SERVER.show_message_log(f"sys.path used to run Linter:\r\n{paths}")
-    # First get workspace settings to know if we are using linter
-    # module or binary.
+    LSP_SERVER.show_message_log(f"CWD Linter Server: {os.getcwd()}")
+
+    paths = "\r\n   ".join(sys.path)
+    LSP_SERVER.show_message_log(f"sys.path used to run Linter:\r\n   {paths}")
+
     global SETTINGS  # pylint: disable=global-statement
     SETTINGS = params.initialization_options["settings"]
-
-    global LINTER  # pylint: disable=global-statement
-    LINTER = utils.get_linter_options_by_version(
-        all_configurations,
-        SETTINGS["path"] if len(SETTINGS["path"]) > 0 else None,
-    )
+    _update_workspace_settings(SETTINGS)
 
     if isinstance(LSP_SERVER.lsp, protocol.LanguageServerProtocol):
-        if SETTINGS["trace"] == "debug":
-            LSP_SERVER.lsp.trace = lsp.Trace.Verbose
-        elif SETTINGS["trace"] == "off":
-            LSP_SERVER.lsp.trace = lsp.Trace.Off
-        else:
-            LSP_SERVER.lsp.trace = lsp.Trace.Messages
+        trace = lsp.Trace.Off
+        for setting in SETTINGS:
+            if setting["trace"] == "debug":
+                trace = lsp.Trace.Verbose
+                break
+            if setting["trace"] == "off":
+                continue
+            trace = lsp.Trace.Messages
+        LSP_SERVER.lsp.trace = trace
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_OPEN)

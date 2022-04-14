@@ -131,17 +131,16 @@ def redirect_io(stream: str, new_stream):
     setattr(sys, stream, old_stream)
 
 
-_cwd_lock = threading.Lock()
-_old_cwd = os.getcwd()  # Save the working directory used when loading this module
-
-
 @contextlib.contextmanager
 def change_cwd(new_cwd):
     """Change working directory before running code."""
-    with _cwd_lock:
-        os.chdir(new_cwd)
-        yield
-        os.chdir(_old_cwd)
+    os.chdir(new_cwd)
+    yield
+    os.chdir(_old_cwd)
+
+
+_cwd_lock = threading.Lock()
+_old_cwd = os.getcwd()  # Save the working directory used when loading this module
 
 
 def _run_module(
@@ -173,10 +172,11 @@ def run_module(
     module: str, argv: Sequence[str], use_stdin: bool, cwd: str, source: str = None
 ) -> LinterResult:
     """Runs linter as a module."""
-    if is_same_path(os.getcwd(), cwd):
-        return _run_module(module, argv, use_stdin, source)
-    with change_cwd(cwd):
-        return _run_module(module, argv, use_stdin, source)
+    with _cwd_lock:
+        if is_same_path(os.getcwd(), cwd):
+            return _run_module(module, argv, use_stdin, source)
+        with change_cwd(cwd):
+            return _run_module(module, argv, use_stdin, source)
 
 
 def run_path(

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, OutputChannel } from 'vscode';
+import { Disposable, OutputChannel, WorkspaceFolder } from 'vscode';
 import { State } from 'vscode-languageclient';
 import {
     LanguageClient,
@@ -13,19 +13,36 @@ import { LINTER_SCRIPT_PATH } from './constants';
 import { traceInfo, traceVerbose } from './logging';
 import { ISettings } from './settings';
 import { traceLevelToLSTrace } from './utilities';
-import { isVirtualWorkspace } from './vscodeapi';
+import { getWorkspaceFolders, isVirtualWorkspace } from './vscodeapi';
 
-export type ILinterInitOptions = { settings: ISettings };
+export type ILinterInitOptions = { settings: ISettings[] };
+
+function getProjectRoot() {
+    const workspaces: readonly WorkspaceFolder[] = getWorkspaceFolders();
+    if (workspaces.length === 1) {
+        return workspaces[0].uri.fsPath;
+    } else {
+        let root = workspaces[0].uri.fsPath;
+        for (const w of workspaces) {
+            if (root.length > w.uri.fsPath.length) {
+                root = w.uri.fsPath;
+            }
+        }
+        return root;
+    }
+}
 
 export async function createLinterServer(
-    interpreter: string,
+    interpreter: string[],
     serverName: string,
     outputChannel: OutputChannel,
     initializationOptions: ILinterInitOptions,
 ): Promise<LanguageClient> {
+    const command = interpreter.shift() ?? 'python';
     const serverOptions: ServerOptions = {
-        command: interpreter,
-        args: [LINTER_SCRIPT_PATH],
+        command,
+        args: interpreter.concat([LINTER_SCRIPT_PATH]),
+        options: { cwd: getProjectRoot() },
     };
 
     // Options to control the language client
@@ -51,7 +68,7 @@ export async function createLinterServer(
 
 let _disposables: Disposable[] = [];
 export async function restartLinterServer(
-    interpreter: string,
+    interpreter: string[],
     serverName: string,
     outputChannel: OutputChannel,
     initializationOptions: ILinterInitOptions,
@@ -64,7 +81,7 @@ export async function restartLinterServer(
         _disposables = [];
     }
     const newLSClient = await createLinterServer(interpreter, serverName, outputChannel, initializationOptions);
-    newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings.trace);
+    newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings[0].trace);
     traceInfo(`Server: Start requested.`);
     _disposables.push(
         newLSClient.onDidChangeState((e) => {

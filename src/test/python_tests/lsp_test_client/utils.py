@@ -60,12 +60,15 @@ def get_initialization_options():
     linter = package_json["linter"]
 
     properties = package_json["contributes"]["configuration"]["properties"]
-    settings = {
-        "trace": "error",
-        "args": [],
-        "severity": properties[f"{linter['module']}.severity"]["default"],
-        "path": [],
-        "logPath": None,
-    }
+    settings = [
+        {
+            "trace": "error",
+            "args": [],
+            "severity": properties[f"{linter['module']}.severity"]["default"],
+            "path": [],
+            "workspace": as_uri(str(PROJECT_ROOT)),
+            "interpreter": [],
+        }
+    ]
 
     return {"settings": settings}

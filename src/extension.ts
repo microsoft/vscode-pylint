@@ -6,18 +6,20 @@ import { LanguageClient } from 'vscode-languageclient/node';
 import { restartLinterServer } from './common/linterLS';
 import { initializeFileLogging, registerLogger, setLoggingLevel, traceLog, traceVerbose } from './common/logging';
 import { OutputChannelLogger } from './common/outputChannelLogger';
-import { getInterpreterPath, initializePython, onDidChangePythonInterpreter } from './common/python';
+import { getInterpreterDetails, initializePython, onDidChangePythonInterpreter } from './common/python';
 import { checkIfConfigurationChanged, getLinterExtensionSettings, ISettings } from './common/settings';
 import { loadLinterDefaults } from './common/setup';
 import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';
 
-function setupLogging(settings: ISettings, outputChannel: vscode.OutputChannel, disposables: vscode.Disposable[]) {
-    setLoggingLevel(settings.trace);
-
+function setupLogging(settings: ISettings[], outputChannel: vscode.OutputChannel, disposables: vscode.Disposable[]) {
     // let error: unknown;
-    // if (settings.logPath && settings.logPath.length > 0) {
-    //     error = initializeFileLogging(settings.logPath, disposables);
-    // }
+    if (settings.length > 0) {
+        setLoggingLevel(settings[0].trace);
+
+        // if (settings.logPath && settings.logPath.length > 0) {
+        //     error = initializeFileLogging(settings.logPath, disposables);
+        // }
+    }
 
     disposables.push(registerLogger(new OutputChannelLogger(outputChannel)));
 
@@ -33,7 +35,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // the first thing that we do in this extension.
     const linter = loadLinterDefaults();
 
-    const settings = getLinterExtensionSettings(linter.module);
+    const settings = await getLinterExtensionSettings(linter.module);
 
     // Setup logging
     const outputChannel = createOutputChannel(linter.name);
@@ -44,39 +46,40 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     traceLog(`Linter Module: ${linter.module}`);
     traceVerbose(`Linter configuration: ${JSON.stringify(linter)}`);
 
-    const runServer = async (interpreterPath: string) => {
-        lsClient = await restartLinterServer(
-            interpreterPath,
-            linter.name,
-            outputChannel,
-            {
-                settings: getLinterExtensionSettings(linter.module),
-            },
-            lsClient,
-        );
+    const runServer = async () => {
+        const interpreter = await getInterpreterDetails();
+        if (interpreter.path) {
+            lsClient = await restartLinterServer(
+                interpreter.path,
+                linter.name,
+                outputChannel,
+                {
+                    settings: await getLinterExtensionSettings(linter.module, true),
+                },
+                lsClient,
+            );
+        }
     };
 
     context.subscriptions.push(
-        onDidChangePythonInterpreter(async (interpreterPath: string) => {
-            await runServer(interpreterPath);
+        onDidChangePythonInterpreter(async () => {
+            await runServer();
         }),
     );
 
     context.subscriptions.push(
         registerCommand(`${linter.module}.restart`, async () => {
-            const interpreterPath = await getInterpreterPath(context.subscriptions);
-            await runServer(interpreterPath);
+            await runServer();
         }),
     );
 
     context.subscriptions.push(
         onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
             if (checkIfConfigurationChanged(e, linter.module)) {
-                const newSettings = getLinterExtensionSettings(linter.module);
-                setLoggingLevel(newSettings.trace);
+                const newSettings = await getLinterExtensionSettings(linter.module);
+                setLoggingLevel(newSettings[0].trace);
 
-                const interpreterPath = await getInterpreterPath(context.subscriptions);
-                await runServer(interpreterPath);
+                await runServer();
             }
         }),
     );

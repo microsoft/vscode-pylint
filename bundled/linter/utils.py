@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 """
-Utility functions and classes for use with linting over LSP.
+Utility functions and classes for use with running tools over LSP.
 """
 
 
@@ -57,10 +57,10 @@ def is_stdlib_file(file_path) -> bool:
     return os.path.normcase(os.path.normpath(file_path)).startswith(_site_paths)
 
 
-def get_linter_version_by_path(
+def get_executable_version(
     settings_path: List[str],
 ):
-    """Extract version number when using path to run linter."""
+    """Extract version number when using path to run."""
     try:
         args = settings_path + ["--version"]
         result = subprocess.run(
@@ -82,15 +82,15 @@ def get_linter_version_by_path(
     return parse(first_line.split(" ")[1])
 
 
-def get_linter_version_by_module(module):
+def get_module_version(module):
     """Extracts linter version when using the module to lint."""
     imported = importlib.import_module(module)
     return parse(imported.__getattr__("__version__"))
 
 
 # pylint: disable-next=too-few-public-methods
-class LinterResult:
-    """Object to hold result from running linter."""
+class RunResult:
+    """Object to hold result from running tool."""
 
     def __init__(self, stdout, stderr):
         self.stdout = stdout
@@ -145,7 +145,7 @@ def change_cwd(new_cwd):
 
 def _run_module(
     module: str, argv: Sequence[str], use_stdin: bool, source: str = None
-) -> LinterResult:
+) -> RunResult:
     """Runs linter as a module."""
     str_output = CustomIO("<stdout>", encoding="utf-8")
     str_error = CustomIO("<stderr>", encoding="utf-8")
@@ -165,12 +165,12 @@ def _run_module(
     except SystemExit:
         pass
 
-    return LinterResult(str_output.get_value(), str_error.get_value())
+    return RunResult(str_output.get_value(), str_error.get_value())
 
 
 def run_module(
     module: str, argv: Sequence[str], use_stdin: bool, cwd: str, source: str = None
-) -> LinterResult:
+) -> RunResult:
     """Runs linter as a module."""
     with CWD_LOCK:
         if is_same_path(os.getcwd(), cwd):
@@ -181,7 +181,7 @@ def run_module(
 
 def run_path(
     argv: Sequence[str], use_stdin: bool, cwd: str, source: str = None
-) -> LinterResult:
+) -> RunResult:
     """Runs linter as an executable."""
     if use_stdin:
         with subprocess.Popen(
@@ -192,7 +192,7 @@ def run_path(
             stdin=subprocess.PIPE,
             cwd=cwd,
         ) as process:
-            return LinterResult(*process.communicate(input=source))
+            return RunResult(*process.communicate(input=source))
     else:
         result = subprocess.run(
             argv,
@@ -202,4 +202,4 @@ def run_path(
             check=False,
             cwd=cwd,
         )
-        return LinterResult(result.stdout, result.stderr)
+        return RunResult(result.stdout, result.stderr)

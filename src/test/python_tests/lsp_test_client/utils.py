@@ -66,7 +66,6 @@ def get_initialization_options():
             "args": [],
             "severity": properties[f"{linter['module']}.severity"]["default"],
             "path": [],
-            "logPath": None,
             "workspace": as_uri(str(PROJECT_ROOT)),
             "interpreter": [],
         }

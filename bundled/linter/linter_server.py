@@ -10,7 +10,7 @@ import pathlib
 import sys
 from typing import Dict, Sequence, Union
 
-# Ensure that will can import LSP libraries, and other bundled linter libraries
+# Ensure that we can import LSP libraries, and other bundled linter libraries
 sys.path.append(str(pathlib.Path(__file__).parent.parent / "libs"))
 
 # pylint: disable=wrong-import-position,import-error
@@ -18,7 +18,6 @@ import utils
 from pygls import lsp, protocol, server, uris, workspace
 from pygls.lsp import types
 
-SETTINGS = {}
 LINTER = {
     "name": "Pylint",
     "module": "pylint",
@@ -106,7 +105,7 @@ def _get_settings_by_document(document: workspace.Document):
     document_workspace = pathlib.Path(document.path)
     workspaces = [s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()]
 
-    while True:
+    while document_workspace != document_workspace.parent:
         if str(document_workspace) in workspaces:
             break
         document_workspace = document_workspace.parent
@@ -191,13 +190,15 @@ def initialize(params: types.InitializeParams):
     paths = "\r\n   ".join(sys.path)
     LSP_SERVER.show_message_log(f"sys.path used to run Linter:\r\n   {paths}")
 
-    global SETTINGS  # pylint: disable=global-statement
-    SETTINGS = params.initialization_options["settings"]
-    _update_workspace_settings(SETTINGS)
+    settings = params.initialization_options["settings"]
+    _update_workspace_settings(settings)
+    LSP_SERVER.show_message_log(
+        f"Settings used to run Linter:\r\n{json.dumps(settings, indent=4, ensure_ascii=False)}\r\n"
+    )
 
     if isinstance(LSP_SERVER.lsp, protocol.LanguageServerProtocol):
         trace = lsp.Trace.Off
-        for setting in SETTINGS:
+        for setting in settings:
             if setting["trace"] == "debug":
                 trace = lsp.Trace.Verbose
                 break

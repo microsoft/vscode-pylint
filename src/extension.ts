@@ -46,33 +46,30 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     traceLog(`Linter Module: ${linter.module}`);
     traceVerbose(`Linter configuration: ${JSON.stringify(linter)}`);
 
-    const runServer = async (interpreter: string[]) => {
-        lsClient = await restartLinterServer(
-            interpreter,
-            linter.name,
-            outputChannel,
-            {
-                settings: await getLinterExtensionSettings(linter.module, true),
-            },
-            lsClient,
-        );
+    const runServer = async () => {
+        const interpreter = await getInterpreterDetails();
+        if (interpreter.path) {
+            lsClient = await restartLinterServer(
+                interpreter.path,
+                linter.name,
+                outputChannel,
+                {
+                    settings: await getLinterExtensionSettings(linter.module, true),
+                },
+                lsClient,
+            );
+        }
     };
 
     context.subscriptions.push(
         onDidChangePythonInterpreter(async () => {
-            const interpreter = await getInterpreterDetails();
-            if (interpreter.path) {
-                await runServer(interpreter.path);
-            }
+            await runServer();
         }),
     );
 
     context.subscriptions.push(
         registerCommand(`${linter.module}.restart`, async () => {
-            const interpreter = await getInterpreterDetails();
-            if (interpreter.path) {
-                await runServer(interpreter.path);
-            }
+            await runServer();
         }),
     );
 
@@ -82,10 +79,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 const newSettings = await getLinterExtensionSettings(linter.module);
                 setLoggingLevel(newSettings[0].trace);
 
-                const interpreter = await getInterpreterDetails();
-                if (interpreter.path) {
-                    await runServer(interpreter.path);
-                }
+                await runServer();
             }
         }),
     );

@@ -20,6 +20,11 @@ from typing import Any, List, Sequence, Tuple, Union
 from packaging.version import parse
 
 
+# Save the working directory used when loading this module
+SERVER_CWD = os.getcwd()
+CWD_LOCK = threading.Lock()
+
+
 def as_list(content: Union[Any, List[Any], Tuple[Any]]) -> Union[List[Any], Tuple[Any]]:
     """Ensures we always get a list"""
     if isinstance(content, (list, tuple)):
@@ -136,11 +141,7 @@ def change_cwd(new_cwd):
     """Change working directory before running code."""
     os.chdir(new_cwd)
     yield
-    os.chdir(_old_cwd)
-
-
-_cwd_lock = threading.Lock()
-_old_cwd = os.getcwd()  # Save the working directory used when loading this module
+    os.chdir(SERVER_CWD)
 
 
 def _run_module(
@@ -172,7 +173,7 @@ def run_module(
     module: str, argv: Sequence[str], use_stdin: bool, cwd: str, source: str = None
 ) -> LinterResult:
     """Runs linter as a module."""
-    with _cwd_lock:
+    with CWD_LOCK:
         if is_same_path(os.getcwd(), cwd):
             return _run_module(module, argv, use_stdin, source)
         with change_cwd(cwd):

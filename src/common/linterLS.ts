@@ -19,7 +19,7 @@ export type ILinterInitOptions = { settings: ISettings[] };
 
 function getProjectRoot() {
     const workspaces: readonly WorkspaceFolder[] = getWorkspaceFolders();
-    if (workspaces.length == 1) {
+    if (workspaces.length === 1) {
         return workspaces[0].uri.fsPath;
     } else {
         let root = workspaces[0].uri.fsPath;

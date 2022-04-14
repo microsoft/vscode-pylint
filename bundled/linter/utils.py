@@ -19,7 +19,6 @@ from typing import Any, List, Sequence, Tuple, Union
 
 from packaging.version import parse
 
-
 # Save the working directory used when loading this module
 SERVER_CWD = os.getcwd()
 CWD_LOCK = threading.Lock()

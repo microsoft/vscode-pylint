@@ -190,6 +190,9 @@ def initialize(params: types.InitializeParams):
     paths = "\r\n   ".join(sys.path)
     LSP_SERVER.show_message_log(f"sys.path used to run Linter:\r\n   {paths}")
 
+    envs = "\r\n   ".join(f"{k}={os.environ[k]}" for k in os.environ)
+    LSP_SERVER.show_message_log(f"Environment variables used:\r\n    {envs}")
+
     settings = params.initialization_options["settings"]
     _update_workspace_settings(settings)
     LSP_SERVER.show_message_log(

@@ -23,10 +23,11 @@ updates:
       - 'code health'
     commit-message:
       include: 'scope'
+      prefix: 'pip'
 
   - package-ecosystem: 'npm'
     directory: /
     schedule:
       interval: weekly
-    default_labels:
+    labels:
       - 'skip news'

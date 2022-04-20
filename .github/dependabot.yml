@@ -36,3 +36,4 @@ updates:
       - 'code health'
     ignore:
       - dependency-name: '@types/vscode'
+      - dependency-name: '@types/node'

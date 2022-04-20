@@ -34,3 +34,5 @@ updates:
     labels:
       - 'skip news'
       - 'code health'
+    ignore:
+      - dependency-name: '@types/vscode'

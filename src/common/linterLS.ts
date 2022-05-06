@@ -38,10 +38,10 @@ export async function createLinterServer(
     outputChannel: OutputChannel,
     initializationOptions: ILinterInitOptions,
 ): Promise<LanguageClient> {
-    const command = interpreter.shift() ?? 'python';
+    const command = interpreter[0];
     const serverOptions: ServerOptions = {
         command,
-        args: interpreter.concat([LINTER_SCRIPT_PATH]),
+        args: interpreter.slice(1).concat([LINTER_SCRIPT_PATH]),
         options: { cwd: getProjectRoot() },
     };
 

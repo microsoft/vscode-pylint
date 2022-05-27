@@ -4,6 +4,7 @@
 Implementation of linting support over LSP.
 """
 
+import copy
 import json
 import os
 import pathlib
@@ -15,7 +16,9 @@ from typing import Any, Dict, List, Sequence, Union
 sys.path.append(str(pathlib.Path(__file__).parent.parent / "libs"))
 
 # pylint: disable=wrong-import-position,import-error
+import jsonrpc
 import utils
+from packaging.version import parse as parse_version
 from pygls import lsp, protocol, server, uris, workspace
 from pygls.lsp import types
 
@@ -115,6 +118,60 @@ def _get_settings_by_document(document: workspace.Document):
     return WORKSPACE_SETTINGS[str(document_workspace)]
 
 
+def _log_version_info() -> None:
+    for value in WORKSPACE_SETTINGS.values():
+        try:
+            settings = copy.deepcopy(value)
+            code_workspace = settings["workspaceFS"]
+            module = LINTER["module"]
+            if len(settings["path"]) > 0:
+                result = utils.run_path(
+                    [*settings["path"], "--version"], False, code_workspace
+                )
+            elif len(settings["interpreter"]) > 0 and not utils.is_current_interpreter(
+                settings["interpreter"][0]
+            ):
+                result = jsonrpc.run_over_json_rpc(
+                    workspace=code_workspace,
+                    interpreter=settings["interpreter"],
+                    module=module,
+                    argv=[module, "--version"],
+                    use_stdin=False,
+                    cwd=code_workspace,
+                )
+            else:
+                result = utils.run_module(
+                    module, [module, "--version"], False, code_workspace
+                )
+            LSP_SERVER.show_message_log(
+                f"Version info for linter running for {code_workspace}:\r\n{result.stdout}"
+            )
+
+            # minimum version of pylint supported.
+            min_version = "2.12.2"
+
+            # This is text we get from running `pylint --version`
+            # pylint 2.12.2 <--- This is the version we want.
+            # astroid 2.9.3
+            first_line = result.stdout.splitlines(keepends=False)[0]
+            actual_version = first_line.split(" ")[1]
+
+            version = parse_version(actual_version)
+            min_version = parse_version(min_version)
+
+            if version < min_version:
+                LSP_SERVER.show_message_log(
+                    f"Version of linter running for {code_workspace} is NOT supported:\r\n"
+                    f"SUPPORTED {module}>={min_version}\r\nFOUND {module}=={actual_version}\r\n"
+                )
+            else:
+                LSP_SERVER.show_message_log(
+                    f"SUPPORTED {module}>={min_version}\r\nFOUND {module}=={actual_version}\r\n"
+                )
+        except:  # pylint: disable=bare-except
+            pass
+
+
 def _lint_and_publish_diagnostics(
     params: Union[types.DidOpenTextDocumentParams, types.DidSaveTextDocumentParams]
 ) -> None:
@@ -129,11 +186,14 @@ def _lint_and_publish_diagnostics(
         LSP_SERVER.publish_diagnostics(document.uri, [])
         return
 
-    settings = _get_settings_by_document(document)
+    settings = copy.deepcopy(_get_settings_by_document(document))
 
     module = LINTER["module"]
+    code_workspace = settings["workspaceFS"]
     cwd = settings["workspaceFS"]
 
+    use_path = False
+    use_rpc = False
     if len(settings["path"]) > 0:
         # 'path' setting takes priority over everything.
         use_path = True
@@ -141,29 +201,46 @@ def _lint_and_publish_diagnostics(
     elif len(settings["interpreter"]) > 0 and not utils.is_current_interpreter(
         settings["interpreter"][0]
     ):
-        # If there is a different interpreter set use that interpreter.
-        argv = settings["interpreter"] + [str(RUNNER), module]
-        use_path = True
+        # If there is a different interpreter set use JSON-RPC to the subprocess
+        # running under that interpreter.
+        argv = [LINTER["module"]]
+        use_rpc = True
     else:
         # if the interpreter is same as the interpreter running this
         # process then run as module.
         argv = [LINTER["module"]]
-        use_path = False
 
     argv += LINTER["args"] + settings["args"]
     argv += ["--from-stdin", document.path]
 
-    LSP_SERVER.show_message_log(" ".join(argv))
-    LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
-
     if use_path:
+        # This mode is used when running pylint.exe
+        LSP_SERVER.show_message_log(" ".join(argv))
+        LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
         result = utils.run_path(
             argv=argv,
             use_stdin=True,
             cwd=cwd,
             source=document.source.replace("\r\n", "\n"),
         )
+    elif use_rpc:
+        # This mode is used if the interpreter running this server is different from
+        # the interpreter used for linting.
+        LSP_SERVER.show_message_log(" ".join(settings["interpreter"] + ["-m"] + argv))
+        LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
+        result = jsonrpc.run_over_json_rpc(
+            workspace=code_workspace,
+            interpreter=settings["interpreter"],
+            module=module,
+            argv=argv,
+            use_stdin=True,
+            cwd=cwd,
+            source=document.source,
+        )
     else:
+        # In this mode pylint is run as a module in the same process as the language server.
+        LSP_SERVER.show_message_log(" ".join([sys.executable, "-m"] + argv))
+        LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
         # This is needed to preserve sys.path, pylint modifies
         # sys.path and that might not work for this scenario
         # next time around.
@@ -214,6 +291,8 @@ def initialize(params: types.InitializeParams):
             trace = lsp.Trace.Messages
         LSP_SERVER.lsp.trace = trace
 
+    _log_version_info()
+
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_OPEN)
 def did_open(_server: server.LanguageServer, params: types.DidOpenTextDocumentParams):
@@ -233,6 +312,12 @@ def did_close(_server: server.LanguageServer, params: types.DidCloseTextDocument
     # Publishing empty diagnostics to clear the entries for this file.
     text_document = LSP_SERVER.workspace.get_document(params.text_document.uri)
     LSP_SERVER.publish_diagnostics(text_document.uri, [])
+
+
+@LSP_SERVER.feature(lsp.EXIT)
+def on_exit():
+    """Handle clean up on exit."""
+    jsonrpc.shutdown_json_rpc()
 
 
 if __name__ == "__main__":

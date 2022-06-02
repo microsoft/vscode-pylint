@@ -85,7 +85,7 @@ def get_executable_version(
 def get_module_version(module):
     """Extracts linter version when using the module to lint."""
     imported = importlib.import_module(module)
-    return parse(imported.__getattr__("__version__"))
+    return parse(getattr(imported, "__version__"))
 
 
 # pylint: disable-next=too-few-public-methods

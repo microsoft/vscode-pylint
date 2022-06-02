@@ -23,7 +23,8 @@ def install_bundled_libs(session):
         "py",
         "--no-deps",
         "--upgrade",
-        "-r" "./requirements.txt",
+        "-r",
+        "./requirements.txt",
     )
 
 
@@ -39,8 +40,8 @@ def tests(session):
 
 @nox.session()
 def lint(session):
-    """Runs linter and formater checks on python files."""
-    session.install("-r" "./requirements.txt")
+    """Runs linter and formatter checks on python files."""
+    session.install("-r", "./requirements.txt")
     session.install("-r", "src/test/python_tests/requirements.txt")
 
     session.run("pylint", "./bundled/linter")

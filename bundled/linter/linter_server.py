@@ -64,7 +64,7 @@ def _parse_output(
             character=int(data["column"]) - col_offset,
         )
 
-        if data["endLine"] is not None:
+        if "endLine" in data and data["endLine"] is not None:
             end = types.Position(
                 line=int(data["endLine"]) - line_offset,
                 character=int(data["endColumn"]) - col_offset,

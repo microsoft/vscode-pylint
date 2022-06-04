@@ -3,6 +3,7 @@
     "displayName": "Pylint",
     "description": "Linting support for python files using `pylint`.",
     "version": "2022.1.0-dev",
+    "preview": true,
     "linter": {
         "name": "Pylint",
         "module": "pylint"

@@ -8,7 +8,8 @@ import json
 import os
 import pathlib
 import sys
-from typing import Dict, Sequence, Union
+import traceback
+from typing import Any, Dict, List, Sequence, Union
 
 # Ensure that we can import LSP libraries, and other bundled linter libraries
 sys.path.append(str(pathlib.Path(__file__).parent.parent / "libs"))
@@ -53,37 +54,38 @@ def _parse_output(
 ) -> Sequence[types.Diagnostic]:
     """Parses linter messages and return LSP diagnostic object for each message."""
     diagnostics = []
-
     line_offset = 1
-    col_offset = 0
 
-    messages = json.loads(content)
+    messages: List[Dict[str, Any]] = json.loads(content)
     for data in messages:
         start = types.Position(
-            line=int(data["line"]) - line_offset,
-            character=int(data["column"]) - col_offset,
+            line=int(data.get("line")) - line_offset,
+            character=int(data.get("column")),
         )
 
-        if "endLine" in data and data["endLine"] is not None:
+        if data.get("endLine") is not None:
             end = types.Position(
-                line=int(data["endLine"]) - line_offset,
-                character=int(data["endColumn"]) - col_offset,
+                line=int(data.get("endLine")) - line_offset,
+                character=int(data.get("endColumn", 0)),
             )
         else:
+            # If there is no endLine we can use `start` for end position.
+            # According to LSP range will include the character at `start`
+            # but will exclude character at `end`. The LSP client in this
+            # case can decide the actual range based on th token this
+            # points to.
             end = start
 
         diagnostic = types.Diagnostic(
-            range=types.Range(
-                start=start,
-                end=end,
-            ),
-            message=data["message"],
+            range=types.Range(start=start, end=end),
+            message=data.get("message"),
             severity=_get_severity(
-                data["symbol"], data["message-id"], data["type"], severity
+                data.get("symbol"), data.get("message-id"), data.get("type"), severity
             ),
-            code=f"{data['message-id']}:{ data['symbol']}",
+            code=f"{data.get('message-id')}:{data.get('symbol')}",
             source=LINTER["name"],
         )
+
         diagnostics.append(diagnostic)
 
     return diagnostics
@@ -178,8 +180,13 @@ def _lint_and_publish_diagnostics(
         LSP_SERVER.show_message_log(result.stderr, msg_type=lsp.MessageType.Error)
     LSP_SERVER.show_message_log(f"{document.uri} :\r\n{result.stdout}")
 
-    diagnostics = _parse_output(result.stdout, settings["severity"])
-    LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
+    try:
+        diagnostics = _parse_output(result.stdout, settings["severity"])
+        LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
+    except Exception:  # pylint: disable=broad-except
+        LSP_SERVER.show_message_log(
+            f"Error while parsing output:\r\n{traceback.format_exc()}"
+        )
 
 
 @LSP_SERVER.feature(lsp.INITIALIZE)

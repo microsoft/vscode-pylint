@@ -1,5 +1,5 @@
 # Change Log
 
-## 2022.1.0-dev
+## 2022.2.0
 
--   Initial release
+-   Initial release of vscode-pylint extension, with `pylint` version `2.14.1`.

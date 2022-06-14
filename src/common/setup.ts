@@ -5,14 +5,14 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR } from './constants';
 
-export interface ILinter {
+export interface IServerInfo {
     name: string;
     module: string;
 }
 
-export function loadLinterDefaults(): ILinter {
-    const linterJson = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    const content = fs.readFileSync(linterJson).toString();
+export function loadServerDefaults(): IServerInfo {
+    const packageJson = path.join(EXTENSION_ROOT_DIR, 'package.json');
+    const content = fs.readFileSync(packageJson).toString();
     const config = JSON.parse(content);
-    return config.linter as ILinter;
+    return config.serverInfo as IServerInfo;
 }

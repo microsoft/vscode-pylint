@@ -45,11 +45,11 @@ class PythonFile:
         os.unlink(self.fullpath)
 
 
-def get_linter_defaults():
-    """Returns linter details from package.json"""
+def get_server_info_defaults():
+    """Returns server info from package.json"""
     package_json_path = PROJECT_ROOT / "package.json"
     package_json = json.loads(package_json_path.read_text())
-    return package_json["linter"]
+    return package_json["serverInfo"]
 
 
 def get_initialization_options():
@@ -57,14 +57,15 @@ def get_initialization_options():
     package_json_path = PROJECT_ROOT / "package.json"
     package_json = json.loads(package_json_path.read_text())
 
-    linter = package_json["linter"]
+    server_info = package_json["serverInfo"]
+    module = server_info["module"]
 
     properties = package_json["contributes"]["configuration"]["properties"]
     settings = [
         {
             "trace": "error",
             "args": [],
-            "severity": properties[f"{linter['module']}.severity"]["default"],
+            "severity": properties[f"{module}.severity"]["default"],
             "path": [],
             "workspace": as_uri(str(PROJECT_ROOT)),
             "interpreter": [],

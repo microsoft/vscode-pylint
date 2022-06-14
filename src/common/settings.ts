@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
+import { ConfigurationChangeEvent } from 'vscode';
 import { getInterpreterDetails } from './python';
-import { LoggingLevelSettingType } from './types';
+import { LoggingLevelSettingType } from './log/types';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
 
 export interface ISettings {
@@ -15,10 +15,7 @@ export interface ISettings {
     interpreter: string[];
 }
 
-export async function getLinterExtensionSettings(
-    moduleName: string,
-    includeInterpreter?: boolean,
-): Promise<ISettings[]> {
+export async function getExtensionSettings(moduleName: string, includeInterpreter?: boolean): Promise<ISettings[]> {
     const settings: ISettings[] = [];
     const workspaces = getWorkspaceFolders();
 

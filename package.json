@@ -4,7 +4,7 @@
     "description": "Linting support for python files using `pylint`.",
     "version": "2022.3.0-dev",
     "preview": true,
-    "linter": {
+    "serverInfo": {
         "name": "Pylint",
         "module": "pylint"
     },
@@ -126,7 +126,7 @@
         },
         "commands": [
             {
-                "title": "Restart Linter",
+                "title": "Restart Server",
                 "category": "Pylint",
                 "command": "pylint.restart"
             }

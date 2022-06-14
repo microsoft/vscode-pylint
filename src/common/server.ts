@@ -10,12 +10,12 @@ import {
     ServerOptions,
 } from 'vscode-languageclient/node';
 import { LINTER_SCRIPT_PATH } from './constants';
-import { traceInfo, traceVerbose } from './logging';
+import { traceInfo, traceVerbose } from './log/logging';
 import { ISettings } from './settings';
 import { traceLevelToLSTrace } from './utilities';
 import { getWorkspaceFolders, isVirtualWorkspace } from './vscodeapi';
 
-export type ILinterInitOptions = { settings: ISettings[] };
+export type IInitOptions = { settings: ISettings[] };
 
 function getProjectRoot() {
     const workspaces: readonly WorkspaceFolder[] = getWorkspaceFolders();
@@ -32,11 +32,11 @@ function getProjectRoot() {
     }
 }
 
-export async function createLinterServer(
+export async function createServer(
     interpreter: string[],
     serverName: string,
     outputChannel: OutputChannel,
-    initializationOptions: ILinterInitOptions,
+    initializationOptions: IInitOptions,
 ): Promise<LanguageClient> {
     const command = interpreter[0];
     const serverOptions: ServerOptions = {
@@ -66,11 +66,11 @@ export async function createLinterServer(
 }
 
 let _disposables: Disposable[] = [];
-export async function restartLinterServer(
+export async function restartServer(
     interpreter: string[],
     serverName: string,
     outputChannel: OutputChannel,
-    initializationOptions: ILinterInitOptions,
+    initializationOptions: IInitOptions,
     lsClient?: LanguageClient,
 ): Promise<LanguageClient> {
     if (lsClient) {
@@ -79,7 +79,7 @@ export async function restartLinterServer(
         _disposables.forEach((d) => d.dispose());
         _disposables = [];
     }
-    const newLSClient = await createLinterServer(interpreter, serverName, outputChannel, initializationOptions);
+    const newLSClient = await createServer(interpreter, serverName, outputChannel, initializationOptions);
     newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings[0].trace);
     traceInfo(`Server: Start requested.`);
     _disposables.push(

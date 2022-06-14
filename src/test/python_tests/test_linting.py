@@ -14,7 +14,7 @@ from .lsp_test_client import constants, defaults, session, utils
 
 TEST_FILE_PATH = constants.TEST_DATA / "sample1" / "sample.py"
 TEST_FILE_URI = utils.as_uri(str(TEST_FILE_PATH))
-LINTER = utils.get_linter_defaults()
+LINTER = utils.get_server_info_defaults()
 TIMEOUT = 10  # 10 seconds
 
 

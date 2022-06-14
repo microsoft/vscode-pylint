@@ -3,58 +3,41 @@
 
 import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
-import { restartLinterServer } from './common/linterLS';
-import { initializeFileLogging, registerLogger, setLoggingLevel, traceLog, traceVerbose } from './common/logging';
-import { OutputChannelLogger } from './common/outputChannelLogger';
+import { restartServer } from './common/server';
+import { registerLogger, setLoggingLevel, traceLog, traceVerbose } from './common/log/logging';
+import { OutputChannelLogger } from './common/log/outputChannelLogger';
 import { getInterpreterDetails, initializePython, onDidChangePythonInterpreter } from './common/python';
-import { checkIfConfigurationChanged, getLinterExtensionSettings, ISettings } from './common/settings';
-import { loadLinterDefaults } from './common/setup';
+import { checkIfConfigurationChanged, getExtensionSettings, ISettings } from './common/settings';
+import { loadServerDefaults } from './common/setup';
 import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';
-
-function setupLogging(settings: ISettings[], outputChannel: vscode.OutputChannel, disposables: vscode.Disposable[]) {
-    // let error: unknown;
-    if (settings.length > 0) {
-        setLoggingLevel(settings[0].trace);
-
-        // if (settings.logPath && settings.logPath.length > 0) {
-        //     error = initializeFileLogging(settings.logPath, disposables);
-        // }
-    }
-
-    disposables.push(registerLogger(new OutputChannelLogger(outputChannel)));
-
-    // if (error) {
-    //     // Capture and show log file creation error in the output channel
-    //     traceLog(`Failed to create log file: ${settings.logPath} \r\n`, error);
-    // }
-}
 
 let lsClient: LanguageClient | undefined;
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    // This is required to get linter name and module. This should be
+    // This is required to get server name and module. This should be
     // the first thing that we do in this extension.
-    const linter = loadLinterDefaults();
+    const serverInfo = loadServerDefaults();
 
-    const settings = await getLinterExtensionSettings(linter.module);
+    const settings: ISettings[] = await getExtensionSettings(serverInfo.module);
 
     // Setup logging
-    const outputChannel = createOutputChannel(linter.name);
+    const outputChannel = createOutputChannel(serverInfo.name);
     context.subscriptions.push(outputChannel);
-    setupLogging(settings, outputChannel, context.subscriptions);
+    setLoggingLevel(settings[0].trace);
+    context.subscriptions.push(registerLogger(new OutputChannelLogger(outputChannel)));
 
-    traceLog(`Linter Name: ${linter.name}`);
-    traceLog(`Linter Module: ${linter.module}`);
-    traceVerbose(`Linter configuration: ${JSON.stringify(linter)}`);
+    traceLog(`Name: ${serverInfo.name}`);
+    traceLog(`Module: ${serverInfo.module}`);
+    traceVerbose(`Configuration: ${JSON.stringify(serverInfo)}`);
 
     const runServer = async () => {
         const interpreter = await getInterpreterDetails();
         if (interpreter.path) {
-            lsClient = await restartLinterServer(
+            lsClient = await restartServer(
                 interpreter.path,
-                linter.name,
+                serverInfo.name,
                 outputChannel,
                 {
-                    settings: await getLinterExtensionSettings(linter.module, true),
+                    settings: await getExtensionSettings(serverInfo.module, true),
                 },
                 lsClient,
             );
@@ -68,15 +51,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     context.subscriptions.push(
-        registerCommand(`${linter.module}.restart`, async () => {
+        registerCommand(`${serverInfo.module}.restart`, async () => {
             await runServer();
         }),
     );
 
     context.subscriptions.push(
         onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
-            if (checkIfConfigurationChanged(e, linter.module)) {
-                const newSettings = await getLinterExtensionSettings(linter.module);
+            if (checkIfConfigurationChanged(e, serverInfo.module)) {
+                const newSettings = await getExtensionSettings(serverInfo.module);
                 setLoggingLevel(newSettings[0].trace);
 
                 await runServer();

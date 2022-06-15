@@ -15,12 +15,12 @@ export interface ISettings {
     interpreter: string[];
 }
 
-export async function getExtensionSettings(moduleName: string, includeInterpreter?: boolean): Promise<ISettings[]> {
+export async function getExtensionSettings(namespace: string, includeInterpreter?: boolean): Promise<ISettings[]> {
     const settings: ISettings[] = [];
     const workspaces = getWorkspaceFolders();
 
     for (const workspace of workspaces) {
-        const config = getConfiguration(moduleName, workspace.uri);
+        const config = getConfiguration(namespace, workspace.uri);
         const interpreter = includeInterpreter ? (await getInterpreterDetails(workspace.uri)).path : [];
         const workspaceSetting = {
             workspace: workspace.uri.toString(),
@@ -37,8 +37,8 @@ export async function getExtensionSettings(moduleName: string, includeInterprete
     return settings;
 }
 
-export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, moduleName: string): boolean {
-    const settings = [`${moduleName}.trace`, `${moduleName}.args`, `${moduleName}.severity`, `${moduleName}.path`];
+export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
+    const settings = [`${namespace}.trace`, `${namespace}.args`, `${namespace}.severity`, `${namespace}.path`];
     const changed = settings.map((s) => e.affectsConfiguration(s));
     return changed.includes(true);
 }

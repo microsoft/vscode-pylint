@@ -34,6 +34,7 @@ function getProjectRoot() {
 
 export async function createServer(
     interpreter: string[],
+    serverId: string,
     serverName: string,
     outputChannel: OutputChannel,
     initializationOptions: IInitOptions,
@@ -62,12 +63,13 @@ export async function createServer(
         initializationOptions,
     };
 
-    return new LanguageClient(serverName, serverName, serverOptions, clientOptions);
+    return new LanguageClient(serverId, serverName, serverOptions, clientOptions);
 }
 
 let _disposables: Disposable[] = [];
 export async function restartServer(
     interpreter: string[],
+    serverId: string,
     serverName: string,
     outputChannel: OutputChannel,
     initializationOptions: IInitOptions,
@@ -79,7 +81,7 @@ export async function restartServer(
         _disposables.forEach((d) => d.dispose());
         _disposables = [];
     }
-    const newLSClient = await createServer(interpreter, serverName, outputChannel, initializationOptions);
+    const newLSClient = await createServer(interpreter, serverId, serverName, outputChannel, initializationOptions);
     newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings[0].trace);
     traceInfo(`Server: Start requested.`);
     _disposables.push(

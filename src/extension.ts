@@ -16,16 +16,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // This is required to get server name and module. This should be
     // the first thing that we do in this extension.
     const serverInfo = loadServerDefaults();
+    const serverName = serverInfo.name;
+    const serverId = serverInfo.module;
 
-    const settings: ISettings[] = await getExtensionSettings(serverInfo.module);
+    const settings: ISettings[] = await getExtensionSettings(serverId);
 
     // Setup logging
-    const outputChannel = createOutputChannel(serverInfo.name);
+    const outputChannel = createOutputChannel(serverName);
     context.subscriptions.push(outputChannel);
     setLoggingLevel(settings[0].trace);
     context.subscriptions.push(registerLogger(new OutputChannelLogger(outputChannel)));
 
-    traceLog(`Name: ${serverInfo.name}`);
+    traceLog(`Name: ${serverName}`);
     traceLog(`Module: ${serverInfo.module}`);
     traceVerbose(`Configuration: ${JSON.stringify(serverInfo)}`);
 
@@ -34,10 +36,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         if (interpreter.path) {
             lsClient = await restartServer(
                 interpreter.path,
-                serverInfo.name,
+                serverId,
+                serverName,
                 outputChannel,
                 {
-                    settings: await getExtensionSettings(serverInfo.module, true),
+                    settings: await getExtensionSettings(serverId, true),
                 },
                 lsClient,
             );
@@ -51,15 +54,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     context.subscriptions.push(
-        registerCommand(`${serverInfo.module}.restart`, async () => {
+        registerCommand(`${serverId}.restart`, async () => {
             await runServer();
         }),
     );
 
     context.subscriptions.push(
         onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
-            if (checkIfConfigurationChanged(e, serverInfo.module)) {
-                const newSettings = await getExtensionSettings(serverInfo.module);
+            if (checkIfConfigurationChanged(e, serverId)) {
+                const newSettings = await getExtensionSettings(serverId);
                 setLoggingLevel(newSettings[0].trace);
 
                 await runServer();

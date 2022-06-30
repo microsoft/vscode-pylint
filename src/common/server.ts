@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { dirname } from 'path';
 import { Disposable, OutputChannel, WorkspaceFolder } from 'vscode';
 import { State } from 'vscode-languageclient';
 import {
@@ -9,26 +10,29 @@ import {
     RevealOutputChannelOn,
     ServerOptions,
 } from 'vscode-languageclient/node';
-import { LINTER_SCRIPT_PATH } from './constants';
+import { DEBUG_SERVER_SCRIPT_PATH, SERVER_SCRIPT_PATH } from './constants';
 import { traceInfo, traceVerbose } from './log/logging';
-import { ISettings } from './settings';
+import { getDebuggerPath } from './python';
+import { getWorkspaceSettings, ISettings } from './settings';
 import { traceLevelToLSTrace } from './utilities';
 import { getWorkspaceFolders, isVirtualWorkspace } from './vscodeapi';
 
 export type IInitOptions = { settings: ISettings[] };
 
-function getProjectRoot() {
+function getProjectRoot(): WorkspaceFolder {
     const workspaces: readonly WorkspaceFolder[] = getWorkspaceFolders();
     if (workspaces.length === 1) {
-        return workspaces[0].uri.fsPath;
+        return workspaces[0];
     } else {
         let root = workspaces[0].uri.fsPath;
+        let rootWorkspace = workspaces[0];
         for (const w of workspaces) {
             if (root.length > w.uri.fsPath.length) {
                 root = w.uri.fsPath;
+                rootWorkspace = w;
             }
         }
-        return root;
+        return rootWorkspace;
     }
 }
 
@@ -40,10 +44,27 @@ export async function createServer(
     initializationOptions: IInitOptions,
 ): Promise<LanguageClient> {
     const command = interpreter[0];
+    const cwd = getProjectRoot().uri.fsPath;
+
+    // Set debugger path needed for debugging python code.
+    const debugEnv = process.env;
+    const debuggerPath = await getDebuggerPath();
+    if (debugEnv.USE_DEBUGPY && debuggerPath) {
+        debugEnv.DEBUGPY_PATH = debuggerPath;
+    } else {
+        debugEnv.USE_DEBUGPY = 'False';
+    }
+
+    const args =
+        debugEnv.USE_DEBUGPY === 'False'
+            ? interpreter.slice(1).concat([SERVER_SCRIPT_PATH])
+            : interpreter.slice(1).concat([DEBUG_SERVER_SCRIPT_PATH]);
+    traceInfo(`Server run command: ${[command, ...args].join(' ')}`);
+
     const serverOptions: ServerOptions = {
         command,
-        args: interpreter.slice(1).concat([LINTER_SCRIPT_PATH]),
-        options: { cwd: getProjectRoot() },
+        args,
+        options: { cwd, env: debugEnv },
     };
 
     // Options to control the language client
@@ -82,7 +103,8 @@ export async function restartServer(
         _disposables = [];
     }
     const newLSClient = await createServer(interpreter, serverId, serverName, outputChannel, initializationOptions);
-    newLSClient.trace = traceLevelToLSTrace(initializationOptions.settings[0].trace);
+    const workspaceSetting = await getWorkspaceSettings(getProjectRoot(), serverId);
+    newLSClient.trace = traceLevelToLSTrace(workspaceSetting.logLevel);
     traceInfo(`Server: Start requested.`);
     _disposables.push(
         newLSClient.onDidChangeState((e) => {

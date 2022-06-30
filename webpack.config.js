@@ -7,6 +7,30 @@ const path = require('path');
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
 
+const loaders = [];
+loaders.push({
+    test: /\.ts$/,
+    exclude: /node_modules/,
+    use: [
+        {
+            loader: 'ts-loader',
+        },
+    ],
+});
+
+if (process.env.DISABLE_TRANSLATIONS !== 'true') {
+    // This is so we can get builds from PR-check and test it.
+    loaders.push({
+        // vscode-nls-dev loader:
+        // * rewrite nls-calls
+        loader: 'vscode-nls-dev/lib/webpack-loader',
+        options: {
+            // start with this being set to where your package.json is
+            base: __dirname,
+        },
+    });
+}
+
 /** @type WebpackConfig */
 const extensionConfig = {
     target: 'node', // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
@@ -28,17 +52,7 @@ const extensionConfig = {
         extensions: ['.ts', '.js'],
     },
     module: {
-        rules: [
-            {
-                test: /\.ts$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: 'ts-loader',
-                    },
-                ],
-            },
-        ],
+        rules: loaders,
     },
     devtool: 'source-map',
     infrastructureLogging: {

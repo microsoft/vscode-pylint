@@ -58,18 +58,16 @@ def get_initialization_options():
     package_json = json.loads(package_json_path.read_text())
 
     server_info = package_json["serverInfo"]
-    module = server_info["module"]
+    server_id = server_info["module"]
 
     properties = package_json["contributes"]["configuration"]["properties"]
-    settings = [
-        {
-            "trace": "error",
-            "args": [],
-            "severity": properties[f"{module}.severity"]["default"],
-            "path": [],
-            "workspace": as_uri(str(PROJECT_ROOT)),
-            "interpreter": [],
-        }
-    ]
+    setting = {}
+    for prop in properties:
+        name = prop[len(server_id) + 1 :]
+        value = properties[prop]["default"]
+        setting[name] = value
 
-    return {"settings": settings}
+    setting["workspace"] = as_uri(str(PROJECT_ROOT))
+    setting["interpreter"] = []
+
+    return {"settings": [setting]}

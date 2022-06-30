@@ -1,6 +1,6 @@
 # Pylint extension for Visual Studio Code
 
-A Visual Studio Code extension with support for the `pylint` linter. The extension ships with `pylint=2.14.1`.
+A Visual Studio Code extension with support for the `pylint` linter. The extension ships with `pylint=2.14.4`.
 
 Note:
 
@@ -27,4 +27,4 @@ If you want to disable pylint, you can [disable this extension](https://code.vis
 
 | Command                | Description                       |
 | ---------------------- | --------------------------------- |
-| Pylint: Restart Linter | Force re-start the linter server. |
+| Pylint: Restart Server | Force re-start the linter server. |

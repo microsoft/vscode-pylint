@@ -91,7 +91,7 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
             # deep copy here to prevent accidentally updating global settings.
             settings = copy.deepcopy(_get_settings_by_document(document))
             return _parse_output(result.stdout, severity=settings["severity"])
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         LSP_SERVER.show_message_log(
             f"Linting failed with error:\r\n{traceback.format_exc()}",
             lsp.MessageType.Error,
@@ -220,11 +220,13 @@ def _log_version_info() -> None:
             if version < min_version:
                 LSP_SERVER.show_message_log(
                     f"Version of linter running for {code_workspace} is NOT supported:\r\n"
-                    f"SUPPORTED {TOOL_MODULE}>={min_version}\r\nFOUND {TOOL_MODULE}=={actual_version}\r\n"
+                    f"SUPPORTED {TOOL_MODULE}>={min_version}\r\n"
+                    f"FOUND {TOOL_MODULE}=={actual_version}\r\n"
                 )
             else:
                 LSP_SERVER.show_message_log(
-                    f"SUPPORTED {TOOL_MODULE}>={min_version}\r\nFOUND {TOOL_MODULE}=={actual_version}\r\n"
+                    f"SUPPORTED {TOOL_MODULE}>={min_version}\r\n"
+                    f"FOUND {TOOL_MODULE}=={actual_version}\r\n"
                 )
         except:  # pylint: disable=bare-except
             pass

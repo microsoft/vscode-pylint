@@ -46,8 +46,15 @@ def _setup_template_environment(session: nox.Session) -> None:
 
 
 @nox.session(python="3.7")
+def install_bundled_libs(session):
+    """Installs the libraries that will be bundled with the extension."""
+    session.install("wheel")
+    _install_bundle(session)
+
+
+@nox.session(python="3.7")
 def setup(session: nox.Session) -> None:
-    """Sets up the template for development."""
+    """Sets up the extension for development."""
     _setup_template_environment(session)
 
 

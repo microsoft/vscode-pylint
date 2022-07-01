@@ -1,7 +1,7 @@
 {
     "name": "pylint",
     "displayName": "Pylint",
-    "description": "Linting support for python files using `pylint`.",
+    "description": "%extension.description%",
     "version": "2022.3.0-dev",
     "preview": true,
     "serverInfo": {
@@ -69,9 +69,9 @@
         ],
         "configuration": {
             "properties": {
-                "pylint.trace": {
+                "pylint.logLevel": {
                     "default": "error",
-                    "description": "The trace level the extension logs at, defaults to 'error'",
+                    "description": "%settings.logLevel.description%",
                     "enum": [
                         "debug",
                         "error",
@@ -80,11 +80,18 @@
                         "warn"
                     ],
                     "scope": "window",
-                    "type": "string"
+                    "type": "string",
+                    "enumDescriptions": [
+                        "%settings.logLevel.debug.description%",
+                        "%settings.logLevel.error.description%",
+                        "%settings.logLevel.info.description%",
+                        "%settings.logLevel.off.description%",
+                        "%settings.logLevel.warn.description%"
+                    ]
                 },
                 "pylint.args": {
                     "default": [],
-                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "description": "%settings.args.description%",
                     "items": {
                         "type": "string"
                     },
@@ -109,24 +116,34 @@
                             "Warning"
                         ]
                     },
-                    "description": "Mapping from severity of `pylint` message type to severity shown in problem window.",
+                    "description": "%settings.severity.description%",
                     "scope": "resource",
                     "type": "object"
                 },
                 "pylint.path": {
                     "default": [],
-                    "description": "When set to a path to pylint binary, extension will use that for linting. NOTE: Using this option may slowdown linting.",
+                    "description": "%settings.path.description%",
                     "scope": "resource",
                     "items": {
                         "type": "string"
                     },
-                    "type": "array"
+                    "type": "array",
+                    "examples": [
+                        [
+                            "~/global_env/pylint"
+                        ],
+                        [
+                            "~/.env/python",
+                            "-m",
+                            "pylint"
+                        ]
+                    ]
                 }
             }
         },
         "commands": [
             {
-                "title": "Restart Server",
+                "title": "%command.restartServer%",
                 "category": "Pylint",
                 "command": "pylint.restart"
             }
@@ -134,7 +151,8 @@
     },
     "dependencies": {
         "fs-extra": "^10.1.0",
-        "vscode-languageclient": "^7.0.0"
+        "vscode-languageclient": "^7.0.0",
+        "vscode-nls": "^5.0.1"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
@@ -151,6 +169,7 @@
         "ts-loader": "^9.3.0",
         "webpack": "^5.73.0",
         "webpack-cli": "^4.10.0",
-        "vsce": "^2.9.1"
+        "vsce": "^2.9.1",
+        "vscode-nls-dev": "^4.0.0"
     }
 }

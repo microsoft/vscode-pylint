@@ -266,6 +266,7 @@ def _get_settings_by_document(document: workspace.Document | None):
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
+# pylint: disable=too-many-branches
 def _run_tool_on_document(
     document: workspace.Document,
     use_stdin: bool = False,
@@ -446,22 +447,26 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
 def log_to_output(
     message: str, msg_type: lsp.MessageType = lsp.MessageType.Log
 ) -> None:
+    """Logs messages to Output > Pylint channel only."""
     LSP_SERVER.show_message_log(message, msg_type)
 
 
 def log_error(message: str) -> None:
+    """Logs messages with notification on error."""
     LSP_SERVER.show_message_log(message, lsp.MessageType.Error)
     if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["onError", "onWarning", "always"]:
         LSP_SERVER.show_message(message, lsp.MessageType.Error)
 
 
 def log_warning(message: str) -> None:
+    """Logs messages with notification on warning."""
     LSP_SERVER.show_message_log(message, lsp.MessageType.Warning)
     if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["onWarning", "always"]:
         LSP_SERVER.show_message(message, lsp.MessageType.Warning)
 
 
 def log_always(message: str) -> None:
+    """Logs messages with notification."""
     LSP_SERVER.show_message_log(message, lsp.MessageType.Info)
     if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["always"]:
         LSP_SERVER.show_message(message, lsp.MessageType.Info)

@@ -45,7 +45,7 @@ while not EXIT_NOW:
         continue
 
     if method == "run":
-        is_exception = False
+        is_exception = False  # pylint: disable=invalid-name
         # This is needed to preserve sys.path, pylint modifies
         # sys.path and that might not work for this scenario
         # next time around.
@@ -60,7 +60,7 @@ while not EXIT_NOW:
                 )
             except Exception:  # pylint: disable=broad-except
                 result = utils.RunResult("", traceback.format_exc(chain=True))
-                is_exception = True
+                is_exception = True  # pylint: disable=invalid-name
 
         response = {"id": msg["id"]}
         if result.stderr:

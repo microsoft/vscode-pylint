@@ -198,6 +198,7 @@ def get_or_start_json_rpc(
     return res
 
 
+# pylint: disable=too-few-public-methods
 class RpcRunResult:
     """Object to hold result from running tool over RPC."""
 

@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes ./requirements.in
 #
-astroid==2.11.6 \
-    --hash=sha256:4f933d0bf5e408b03a6feb5d23793740c27e07340605f236496cd6ce552043d6 \
-    --hash=sha256:ba33a82a9a9c06a5ceed98180c5aab16e29c285b828d94696bf32d6015ea82a9
+astroid==2.11.7 \
+    --hash=sha256:86b0a340a512c65abf4368b80252754cda17c02cdbbd3f587dddf98112233e7b \
+    --hash=sha256:bb24615c77f4837c707669d16907331374ae8a964650a66999da3f5ca68dc946
     # via pylint
 colorama==0.4.5 \
     --hash=sha256:854bf444933e37f5824ae7bfc1e98d5bce2ebe4160d46b5edf346a89358e99da \
@@ -112,9 +112,9 @@ pygls==0.12 \
     --hash=sha256:452586db4e153f67d3e0505ceb98234e2cf1425c882f089fd458271a721b7809 \
     --hash=sha256:93f8cd9458edb0cb8524588affa0f5fd7f75a4cdb5e2d450437b913e657df65b
     # via -r ./requirements.in
-pylint==2.14.4 \
-    --hash=sha256:47705453aa9dce520e123a7d51843d5f0032cbfa06870f89f00927aa1f735a4a \
-    --hash=sha256:89b61867db16eefb7b3c5b84afc94081edaf11544189e2b238154677529ad69f
+pylint==2.14.5 \
+    --hash=sha256:487ce2192eee48211269a0e976421f334cf94de1806ca9d0a99449adcdf0285e \
+    --hash=sha256:fabe30000de7d07636d2e82c9a518ad5ad7908590fe135ace169b44839c15f90
     # via -r ./requirements.in
 pyparsing==3.0.9 \
     --hash=sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb \

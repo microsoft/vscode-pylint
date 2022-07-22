@@ -138,6 +138,47 @@
                             "pylint"
                         ]
                     ]
+                },
+                "pylint.importStrategy": {
+                    "default": "fromEnvironment",
+                    "description": "%settings.importStrategy.description%",
+                    "enum": [
+                        "useBundled",
+                        "fromEnvironment"
+                    ],
+                    "enumDescriptions": [
+                        "%settings.importStrategy.useBundled.description%",
+                        "%settings.importStrategy.fromEnvironment.description%"
+                    ],
+                    "scope": "window",
+                    "type": "string"
+                },
+                "pylint.interpreter": {
+                    "default": [],
+                    "description": "%settings.interpreter.description%",
+                    "scope": "window",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "pylint.showNotifications": {
+                    "default": "off",
+                    "description": "%settings.showNotifications.description%",
+                    "enum": [
+                        "off",
+                        "onError",
+                        "onWarning",
+                        "always"
+                    ],
+                    "enumDescriptions": [
+                        "%settings.showNotifications.off.description%",
+                        "%settings.showNotifications.onError.description%",
+                        "%settings.showNotifications.onWarning.description%",
+                        "%settings.showNotifications.always.description%"
+                    ],
+                    "scope": "machine",
+                    "type": "string"
                 }
             }
         },
@@ -172,4 +213,4 @@
         "vsce": "^2.10.0",
         "vscode-nls-dev": "^4.0.0"
     }
-}
+}

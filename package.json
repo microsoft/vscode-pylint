@@ -140,7 +140,7 @@
                     ]
                 },
                 "pylint.importStrategy": {
-                    "default": "fromEnvironment",
+                    "default": "useBundled",
                     "description": "%settings.importStrategy.description%",
                     "enum": [
                         "useBundled",

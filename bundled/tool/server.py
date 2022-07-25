@@ -15,19 +15,22 @@ from typing import Any, Dict, List, Sequence
 # **********************************************************
 # Update sys.path before importing any bundled libraries.
 # **********************************************************
-def update_sys_path(path_to_add: str, append: bool = True) -> None:
+def update_sys_path(path_to_add: str, strategy: str) -> None:
     """Add given path to `sys.path`."""
     if path_to_add not in sys.path and os.path.isdir(path_to_add):
-        if append:
-            sys.path.append(path_to_add)
-        else:
+        if strategy == "useBundled":
             sys.path.insert(0, path_to_add)
+        elif strategy == "fromEnvironment":
+            # no need to append, just pull from the environment.
+            pass
+        else:
+            sys.path.append(path_to_add)
 
 
 # Ensure that we can import LSP libraries, and other bundled libraries.
 update_sys_path(
     os.fspath(pathlib.Path(__file__).parent.parent / "libs"),
-    os.getenv("LS_IMPORT_STRATEGY", "fromEnvironment") == "fromEnvironment",
+    os.getenv("LS_IMPORT_STRATEGY", "fromEnvironment"),
 )
 
 # **********************************************************
@@ -277,9 +280,11 @@ def _run_tool_on_document(
     tool via stdin.
     """
     if str(document.uri).startswith("vscode-notebook-cell"):
+        log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
     if utils.is_stdlib_file(document.path):
+        log_warning(f"Skipping standard library file: {document.path}")
         return None
 
     # deep copy here to prevent accidentally updating global settings.
@@ -351,7 +356,7 @@ def _run_tool_on_document(
         log_to_output(f"CWD Linter: {cwd}")
         # This is needed to preserve sys.path, in cases where the tool modifies
         # sys.path and that might not work for this scenario next time around.
-        with utils.substitute_attr(sys, "path", sys.path[:]):
+        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
             try:
                 result = utils.run_module(
                     module=TOOL_MODULE,
@@ -426,7 +431,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         log_to_output(f"CWD Linter: {cwd}")
         # This is needed to preserve sys.path, in cases where the tool modifies
         # sys.path and that might not work for this scenario next time around.
-        with utils.substitute_attr(sys, "path", sys.path[:]):
+        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
             try:
                 result = utils.run_module(
                     module=TOOL_MODULE, argv=argv, use_stdin=True, cwd=cwd

@@ -1,3 +1,5 @@
 [MESSAGES CONTROL]
-disable=duplicate-code
+disable=
+    duplicate-code,
+    import-outside-toplevel
 

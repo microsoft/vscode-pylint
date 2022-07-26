@@ -12,7 +12,7 @@
     "settings.path.description": "When set to a path to `pylint` binary, extension will use that for linting. NOTE: Using this option may slowdown linting.",
     "settings.importStrategy.description": "Defines where `pylint` is imported from. This setting may be ignored if `pylint.path` is set.",
     "settings.importStrategy.useBundled.description": "Always use the bundled version of `pylint`.",
-    "settings.importStrategy.fromEnvironment.description": "Use `pylint` available from the selected python environment only.",
+    "settings.importStrategy.fromEnvironment.description": "Use `pylint` from environment, fallback to bundled version only if `pylint` not available in the environment.",
     "settings.interpreter.description": "When set to a path to python executable, extension will use that to launch the server and any subprocess.",
     "settings.showNotifications.description": "Controls when notifications are shown by this extension.",
     "settings.showNotifications.off.description": "All notifications are turned off, any errors or warning are still available in the logs.",

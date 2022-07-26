@@ -52,7 +52,7 @@ while not EXIT_NOW:
         # This is needed to preserve sys.path, pylint modifies
         # sys.path and that might not work for this scenario
         # next time around.
-        with utils.substitute_attr(sys, "path", sys.path[:]):
+        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
             try:
                 result = utils.run_module(
                     module=msg["module"],

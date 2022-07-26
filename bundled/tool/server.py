@@ -21,9 +21,6 @@ def update_sys_path(path_to_add: str, strategy: str) -> None:
         if strategy == "useBundled":
             sys.path.insert(0, path_to_add)
         elif strategy == "fromEnvironment":
-            # no need to append, just pull from the environment.
-            pass
-        else:
             sys.path.append(path_to_add)
 
 
@@ -39,7 +36,6 @@ update_sys_path(
 # pylint: disable=wrong-import-position,import-error
 import jsonrpc
 import utils
-from packaging.version import parse as parse_version
 from pygls import lsp, protocol, server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
@@ -207,6 +203,8 @@ def on_exit():
 def _log_version_info() -> None:
     for value in WORKSPACE_SETTINGS.values():
         try:
+            from packaging.version import parse as parse_version
+
             settings = copy.deepcopy(value)
             result = _run_tool(["--version"], settings)
             code_workspace = settings["workspaceFS"]
@@ -235,7 +233,9 @@ def _log_version_info() -> None:
                     f"FOUND {TOOL_MODULE}=={actual_version}\r\n"
                 )
         except:  # pylint: disable=bare-except
-            pass
+            log_to_output(
+                f"Error while detecting pylint version:\r\n{traceback.format_exc()}"
+            )
 
 
 # *****************************************************

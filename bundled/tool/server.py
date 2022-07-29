@@ -15,17 +15,20 @@ from typing import Any, Dict, List, Sequence
 # **********************************************************
 # Update sys.path before importing any bundled libraries.
 # **********************************************************
-def update_sys_path(path_to_add: str, append: bool = True) -> None:
+def update_sys_path(path_to_add: str, strategy: str) -> None:
     """Add given path to `sys.path`."""
     if path_to_add not in sys.path and os.path.isdir(path_to_add):
-        if append:
-            sys.path.append(path_to_add)
-        else:
+        if strategy == "useBundled":
             sys.path.insert(0, path_to_add)
+        elif strategy == "fromEnvironment":
+            sys.path.append(path_to_add)
 
 
 # Ensure that we can import LSP libraries, and other bundled libraries.
-update_sys_path(os.fspath(pathlib.Path(__file__).parent.parent / "libs"))
+update_sys_path(
+    os.fspath(pathlib.Path(__file__).parent.parent / "libs"),
+    os.getenv("LS_IMPORT_STRATEGY", "useBundled"),
+)
 
 # **********************************************************
 # Imports needed for the language server goes below this.
@@ -33,7 +36,6 @@ update_sys_path(os.fspath(pathlib.Path(__file__).parent.parent / "libs"))
 # pylint: disable=wrong-import-position,import-error
 import jsonrpc
 import utils
-from packaging.version import parse as parse_version
 from pygls import lsp, protocol, server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
@@ -169,14 +171,14 @@ def _parse_output(
 @LSP_SERVER.feature(lsp.INITIALIZE)
 def initialize(params: lsp.InitializeParams) -> None:
     """LSP handler for initialize request."""
-    LSP_SERVER.show_message_log(f"CWD Server: {os.getcwd()}")
+    log_to_output(f"CWD Server: {os.getcwd()}")
 
     paths = "\r\n   ".join(sys.path)
-    LSP_SERVER.show_message_log(f"sys.path used to run Server:\r\n   {paths}")
+    log_to_output(f"sys.path used to run Server:\r\n   {paths}")
 
     settings = params.initialization_options["settings"]
     _update_workspace_settings(settings)
-    LSP_SERVER.show_message_log(
+    log_to_output(
         f"Settings used to run Server:\r\n{json.dumps(settings, indent=4, ensure_ascii=False)}\r\n"
     )
 
@@ -201,10 +203,12 @@ def on_exit():
 def _log_version_info() -> None:
     for value in WORKSPACE_SETTINGS.values():
         try:
+            from packaging.version import parse as parse_version
+
             settings = copy.deepcopy(value)
             result = _run_tool(["--version"], settings)
             code_workspace = settings["workspaceFS"]
-            LSP_SERVER.show_message_log(
+            log_to_output(
                 f"Version info for linter running for {code_workspace}:\r\n{result.stdout}"
             )
 
@@ -218,18 +222,20 @@ def _log_version_info() -> None:
             min_version = parse_version(MIN_VERSION)
 
             if version < min_version:
-                LSP_SERVER.show_message_log(
+                log_error(
                     f"Version of linter running for {code_workspace} is NOT supported:\r\n"
                     f"SUPPORTED {TOOL_MODULE}>={min_version}\r\n"
                     f"FOUND {TOOL_MODULE}=={actual_version}\r\n"
                 )
             else:
-                LSP_SERVER.show_message_log(
+                log_to_output(
                     f"SUPPORTED {TOOL_MODULE}>={min_version}\r\n"
                     f"FOUND {TOOL_MODULE}=={actual_version}\r\n"
                 )
         except:  # pylint: disable=bare-except
-            pass
+            log_to_output(
+                f"Error while detecting pylint version:\r\n{traceback.format_exc()}"
+            )
 
 
 # *****************************************************
@@ -263,6 +269,7 @@ def _get_settings_by_document(document: workspace.Document | None):
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
+# pylint: disable=too-many-branches
 def _run_tool_on_document(
     document: workspace.Document,
     use_stdin: bool = False,
@@ -273,9 +280,11 @@ def _run_tool_on_document(
     tool via stdin.
     """
     if str(document.uri).startswith("vscode-notebook-cell"):
+        log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
     if utils.is_stdlib_file(document.path):
+        log_warning(f"Skipping standard library file: {document.path}")
         return None
 
     # deep copy here to prevent accidentally updating global settings.
@@ -311,19 +320,22 @@ def _run_tool_on_document(
 
     if use_path:
         # This mode is used when running executables.
-        LSP_SERVER.show_message_log(" ".join(argv))
-        LSP_SERVER.show_message_log(f"CWD Server: {cwd}")
+        log_to_output(" ".join(argv))
+        log_to_output(f"CWD Server: {cwd}")
         result = utils.run_path(
             argv=argv,
             use_stdin=use_stdin,
             cwd=cwd,
             source=document.source.replace("\r\n", "\n"),
         )
+        if result.stderr:
+            log_to_output(result.stderr)
     elif use_rpc:
         # This mode is used if the interpreter running this server is different from
         # the interpreter used for running this server.
-        LSP_SERVER.show_message_log(" ".join(settings["interpreter"] + ["-m"] + argv))
-        LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
+        log_to_output(" ".join(settings["interpreter"] + ["-m"] + argv))
+        log_to_output(f"CWD Linter: {cwd}")
+
         result = jsonrpc.run_over_json_rpc(
             workspace=code_workspace,
             interpreter=settings["interpreter"],
@@ -333,24 +345,33 @@ def _run_tool_on_document(
             cwd=cwd,
             source=document.source,
         )
+        if result.exception:
+            log_error(result.exception)
+            result = utils.RunResult(result.stdout, result.stderr)
+        elif result.stderr:
+            log_to_output(result.stderr)
     else:
         # In this mode the tool is run as a module in the same process as the language server.
-        LSP_SERVER.show_message_log(" ".join([sys.executable, "-m"] + argv))
-        LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
+        log_to_output(" ".join([sys.executable, "-m"] + argv))
+        log_to_output(f"CWD Linter: {cwd}")
         # This is needed to preserve sys.path, in cases where the tool modifies
         # sys.path and that might not work for this scenario next time around.
-        with utils.substitute_attr(sys, "path", sys.path[:]):
-            result = utils.run_module(
-                module=TOOL_MODULE,
-                argv=argv,
-                use_stdin=use_stdin,
-                cwd=cwd,
-                source=document.source,
-            )
+        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
+            try:
+                result = utils.run_module(
+                    module=TOOL_MODULE,
+                    argv=argv,
+                    use_stdin=use_stdin,
+                    cwd=cwd,
+                    source=document.source,
+                )
+            except Exception:
+                log_error(traceback.format_exc(chain=True))
+                raise
+        if result.stderr:
+            log_to_output(result.stderr)
 
-    if result.stderr:
-        LSP_SERVER.show_message_log(result.stderr, msg_type=lsp.MessageType.Error)
-    LSP_SERVER.show_message_log(f"{document.uri} :\r\n{result.stdout}")
+    log_to_output(f"{document.uri} :\r\n{result.stdout}")
     return result
 
 
@@ -381,14 +402,16 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
 
     if use_path:
         # This mode is used when running executables.
-        LSP_SERVER.show_message_log(" ".join(argv))
-        LSP_SERVER.show_message_log(f"CWD Server: {cwd}")
+        log_to_output(" ".join(argv))
+        log_to_output(f"CWD Server: {cwd}")
         result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd)
+        if result.stderr:
+            log_to_output(result.stderr)
     elif use_rpc:
         # This mode is used if the interpreter running this server is different from
         # the interpreter used for running this server.
-        LSP_SERVER.show_message_log(" ".join(settings["interpreter"] + ["-m"] + argv))
-        LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
+        log_to_output(" ".join(settings["interpreter"] + ["-m"] + argv))
+        log_to_output(f"CWD Linter: {cwd}")
         result = jsonrpc.run_over_json_rpc(
             workspace=code_workspace,
             interpreter=settings["interpreter"],
@@ -397,22 +420,65 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
             use_stdin=True,
             cwd=cwd,
         )
+        if result.exception:
+            log_error(result.exception)
+            result = utils.RunResult(result.stdout, result.stderr)
+        elif result.stderr:
+            log_to_output(result.stderr)
     else:
         # In this mode the tool is run as a module in the same process as the language server.
-        LSP_SERVER.show_message_log(" ".join([sys.executable, "-m"] + argv))
-        LSP_SERVER.show_message_log(f"CWD Linter: {cwd}")
+        log_to_output(" ".join([sys.executable, "-m"] + argv))
+        log_to_output(f"CWD Linter: {cwd}")
         # This is needed to preserve sys.path, in cases where the tool modifies
         # sys.path and that might not work for this scenario next time around.
-        with utils.substitute_attr(sys, "path", sys.path[:]):
-            result = utils.run_module(
-                module=TOOL_MODULE, argv=argv, use_stdin=True, cwd=cwd
-            )
+        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
+            try:
+                result = utils.run_module(
+                    module=TOOL_MODULE, argv=argv, use_stdin=True, cwd=cwd
+                )
+            except Exception:
+                log_error(traceback.format_exc(chain=True))
+                raise
+        if result.stderr:
+            log_to_output(result.stderr)
 
-    if result.stderr:
-        LSP_SERVER.show_message_log(result.stderr, msg_type=lsp.MessageType.Error)
-    LSP_SERVER.show_message_log(f"\r\n{result.stdout}\r\n")
+    log_to_output(f"\r\n{result.stdout}\r\n")
     return result
 
 
+# *****************************************************
+# Logging and notification.
+# *****************************************************
+def log_to_output(
+    message: str, msg_type: lsp.MessageType = lsp.MessageType.Log
+) -> None:
+    """Logs messages to Output > Pylint channel only."""
+    LSP_SERVER.show_message_log(message, msg_type)
+
+
+def log_error(message: str) -> None:
+    """Logs messages with notification on error."""
+    LSP_SERVER.show_message_log(message, lsp.MessageType.Error)
+    if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["onError", "onWarning", "always"]:
+        LSP_SERVER.show_message(message, lsp.MessageType.Error)
+
+
+def log_warning(message: str) -> None:
+    """Logs messages with notification on warning."""
+    LSP_SERVER.show_message_log(message, lsp.MessageType.Warning)
+    if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["onWarning", "always"]:
+        LSP_SERVER.show_message(message, lsp.MessageType.Warning)
+
+
+def log_always(message: str) -> None:
+    """Logs messages with notification."""
+    LSP_SERVER.show_message_log(message, lsp.MessageType.Info)
+    if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["always"]:
+        LSP_SERVER.show_message(message, lsp.MessageType.Info)
+
+
+# *****************************************************
+# Start the server.
+# *****************************************************
 if __name__ == "__main__":
     LSP_SERVER.start_io()

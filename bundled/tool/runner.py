@@ -9,11 +9,28 @@ import pathlib
 import sys
 import traceback
 
-# Ensure that we can import LSP libraries, and other bundled linter libraries.
-lib_path = os.fspath(pathlib.Path(__file__).parent.parent / "libs")
-if lib_path not in sys.path and os.path.isdir(lib_path):
-    sys.path.append(lib_path)
-del lib_path
+
+# **********************************************************
+# Update sys.path before importing any bundled libraries.
+# **********************************************************
+def update_sys_path(path_to_add: str, strategy: str) -> None:
+    """Add given path to `sys.path`."""
+    if path_to_add not in sys.path and os.path.isdir(path_to_add):
+        if strategy == "useBundled":
+            sys.path.insert(0, path_to_add)
+        elif strategy == "fromEnvironment":
+            # no need to append, just pull from the environment.
+            pass
+        else:
+            sys.path.append(path_to_add)
+
+
+# Ensure that we can import LSP libraries, and other bundled libraries.
+update_sys_path(
+    os.fspath(pathlib.Path(__file__).parent.parent / "libs"),
+    os.getenv("LS_IMPORT_STRATEGY", "useBundled"),
+)
+
 
 # pylint: disable=wrong-import-position,import-error
 import jsonrpc
@@ -31,10 +48,11 @@ while not EXIT_NOW:
         continue
 
     if method == "run":
+        is_exception = False  # pylint: disable=invalid-name
         # This is needed to preserve sys.path, pylint modifies
         # sys.path and that might not work for this scenario
         # next time around.
-        with utils.substitute_attr(sys, "path", sys.path[:]):
+        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
             try:
                 result = utils.run_module(
                     module=msg["module"],
@@ -44,11 +62,13 @@ while not EXIT_NOW:
                     source=msg["source"] if "source" in msg else None,
                 )
             except Exception:  # pylint: disable=broad-except
-                result = utils.RunResult("", traceback.format_exc())
+                result = utils.RunResult("", traceback.format_exc(chain=True))
+                is_exception = True  # pylint: disable=invalid-name
 
         response = {"id": msg["id"]}
         if result.stderr:
             response["error"] = result.stderr
+            response["exception"] = is_exception
         elif result.stdout:
             response["result"] = result.stdout
 

@@ -9,7 +9,7 @@ from .lsp_test_client import constants, defaults, session, utils
 
 FORMATTER = utils.get_server_info_defaults()
 TIMEOUT = 10  # 10 seconds
-FORMATTED_TEST_FILE_PATH = constants.TEST_DATA / "sample1" / "sample.py"
+TEST_FILE = constants.TEST_DATA / "sample1" / "sample.py"
 
 
 class CallbackObject:
@@ -35,10 +35,10 @@ def test_path():
     init_params["initializationOptions"]["settings"][0]["path"] = ["pylint"]
 
     argv_callback_object = CallbackObject()
-    contents = FORMATTED_TEST_FILE_PATH.read_text()
+    contents = TEST_FILE.read_text()
 
     actual = []
-    with utils.python_file(contents, FORMATTED_TEST_FILE_PATH.parent) as file:
+    with utils.python_file(contents, TEST_FILE.parent) as file:
         uri = utils.as_uri(str(file))
 
         with session.LspSession() as ls_session:
@@ -81,10 +81,10 @@ def test_interpreter():
     init_params["initializationOptions"]["settings"][0]["interpreter"] = ["python"]
 
     argv_callback_object = CallbackObject()
-    contents = FORMATTED_TEST_FILE_PATH.read_text()
+    contents = TEST_FILE.read_text()
 
     actual = []
-    with utils.python_file(contents, FORMATTED_TEST_FILE_PATH.parent) as file:
+    with utils.python_file(contents, TEST_FILE.parent) as file:
         uri = utils.as_uri(str(file))
 
         with session.LspSession() as ls_session:

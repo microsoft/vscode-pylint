@@ -345,11 +345,7 @@ def _run_tool_on_document(
             cwd=cwd,
             source=document.source,
         )
-        if result.exception:
-            log_error(result.exception)
-            result = utils.RunResult(result.stdout, result.stderr)
-        elif result.stderr:
-            log_to_output(result.stderr)
+        result = _to_run_result_with_logging(result)
     else:
         # In this mode the tool is run as a module in the same process as the language server.
         log_to_output(" ".join([sys.executable, "-m"] + argv))
@@ -420,11 +416,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
             use_stdin=True,
             cwd=cwd,
         )
-        if result.exception:
-            log_error(result.exception)
-            result = utils.RunResult(result.stdout, result.stderr)
-        elif result.stderr:
-            log_to_output(result.stderr)
+        result = _to_run_result_with_logging(result)
     else:
         # In this mode the tool is run as a module in the same process as the language server.
         log_to_output(" ".join([sys.executable, "-m"] + argv))
@@ -444,6 +436,17 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
 
     log_to_output(f"\r\n{result.stdout}\r\n")
     return result
+
+
+def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunResult:
+    error = ""
+    if rpc_result.exception:
+        log_error(rpc_result.exception)
+        error = rpc_result.exception
+    elif rpc_result.stderr:
+        log_to_output(rpc_result.stderr)
+        error = rpc_result.stderr
+    return utils.RunResult(rpc_result.stdout, error)
 
 
 # *****************************************************

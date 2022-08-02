@@ -26,7 +26,6 @@ class CallbackObject:
         """checks if argv duplication exists and sets result boolean"""
         if argv["type"] == 4 and argv["message"].split().count("--from-stdin") > 1:
             self.result = True
-            return None
 
 
 def test_path():

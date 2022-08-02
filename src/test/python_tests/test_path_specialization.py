@@ -59,6 +59,7 @@ def test_path():
                 }
             )
 
+            # Call this second time to detect arg duplication.
             ls_session.notify_did_open(
                 {
                     "textDocument": {
@@ -105,6 +106,7 @@ def test_interpreter():
                 }
             )
 
+            # Call this second time to detect arg duplication.
             ls_session.notify_did_open(
                 {
                     "textDocument": {

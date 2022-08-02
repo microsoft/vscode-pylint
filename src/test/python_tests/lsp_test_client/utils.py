@@ -27,6 +27,7 @@ def as_uri(path: str) -> str:
 
 @contextlib.contextmanager
 def python_file(contents: str, root: pathlib.Path):
+    """Creates a temporary python file."""
     try:
         basename = (
             "".join(random.choice("abcdefghijklmnopqrstuvwxyz") for _ in range(9))

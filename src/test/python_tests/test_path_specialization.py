@@ -24,7 +24,7 @@ class CallbackObject:
 
     def check_for_argv_duplication(self, argv):
         """checks if argv duplication exists and sets result boolean"""
-        if argv["type"] == 4 and argv["message"].split().count("--stdin-filename") > 1:
+        if argv["type"] == 4 and argv["message"].split().count("--from-stdin") > 1:
             self.result = True
             return None
 
@@ -34,7 +34,6 @@ def test_path():
 
     init_params = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
     init_params["initializationOptions"]["settings"][0]["path"] = ["pylint"]
-    EXPECTED = False
 
     argv_callback_object = CallbackObject()
     contents = FORMATTED_TEST_FILE_PATH.read_text()
@@ -74,14 +73,13 @@ def test_path():
 
             actual = argv_callback_object.check_result()
 
-    assert_that(actual, is_(EXPECTED))
+    assert_that(actual, is_(False))
 
 
 def test_interpreter():
     """Test linting using specific python path."""
     init_params = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
     init_params["initializationOptions"]["settings"][0]["interpreter"] = ["python"]
-    EXPECTED = False
 
     argv_callback_object = CallbackObject()
     contents = FORMATTED_TEST_FILE_PATH.read_text()
@@ -121,4 +119,4 @@ def test_interpreter():
 
             actual = argv_callback_object.check_result()
 
-    assert_that(actual, is_(EXPECTED))
+    assert_that(actual, is_(False))

@@ -9,7 +9,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 
 # **********************************************************
@@ -275,13 +275,16 @@ def _get_settings_by_document(document: workspace.Document | None):
 def _run_tool_on_document(
     document: workspace.Document,
     use_stdin: bool = False,
-    extra_args: Sequence[str] = [],
+    extra_args: Optional[Sequence[str]] = None,
 ) -> utils.RunResult | None:
     """Runs tool on the given document.
 
     if use_stdin is true then contents of the document is passed to the
     tool via stdin.
     """
+    if extra_args is None:
+        extra_args = []
+
     if str(document.uri).startswith("vscode-notebook-cell"):
         log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None

@@ -90,6 +90,8 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
     try:
         result = _run_tool_on_document(document, use_stdin=True)
         if result and result.stdout:
+            log_to_output(f"{document.uri} :\r\n{result.stdout}")
+
             # deep copy here to prevent accidentally updating global settings.
             settings = copy.deepcopy(_get_settings_by_document(document))
             return _parse_output(result.stdout, severity=settings["severity"])
@@ -273,6 +275,7 @@ def _get_settings_by_document(document: workspace.Document | None):
 def _run_tool_on_document(
     document: workspace.Document,
     use_stdin: bool = False,
+    extra_args: Sequence[str] = [],
 ) -> utils.RunResult | None:
     """Runs tool on the given document.
 
@@ -311,7 +314,7 @@ def _run_tool_on_document(
         # process then run as module.
         argv = [TOOL_MODULE]
 
-    argv += TOOL_ARGS + settings["args"]
+    argv += TOOL_ARGS + settings["args"] + extra_args
 
     if use_stdin:
         argv += ["--from-stdin", document.path]
@@ -367,7 +370,6 @@ def _run_tool_on_document(
         if result.stderr:
             log_to_output(result.stderr)
 
-    log_to_output(f"{document.uri} :\r\n{result.stdout}")
     return result
 
 

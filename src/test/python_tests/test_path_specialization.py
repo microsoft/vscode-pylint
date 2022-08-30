@@ -2,14 +2,16 @@
 Test for path and interpreter settings.
 """
 import copy
+from threading import Event
+from typing import Dict
 
 from hamcrest import assert_that, is_
 
 from .lsp_test_client import constants, defaults, session, utils
 
-FORMATTER = utils.get_server_info_defaults()
+TEST_FILE_PATH = constants.TEST_DATA / "sample1" / "sample.py"
+TEST_FILE_URI = utils.as_uri(str(TEST_FILE_PATH))
 TIMEOUT = 10  # 10 seconds
-TEST_FILE = constants.TEST_DATA / "sample1" / "sample.py"
 
 
 class CallbackObject:
@@ -22,10 +24,12 @@ class CallbackObject:
         """returns Boolean result"""
         return self.result
 
-    def check_for_argv_duplication(self, argv):
+    def check_for_argv_duplication(self, argv: Dict[str, str]):
         """checks if argv duplication exists and sets result boolean"""
-        if argv["type"] == 4 and argv["message"].split().count("--from-stdin") > 1:
-            self.result = True
+        if argv["type"] == 4 and argv["message"].find("--from-stdin") >= 0:
+            parts = argv["message"].split()
+            count = len([x for x in parts if x.startswith("--from-stdin")])
+            self.result = count > 1
 
 
 def test_path():
@@ -35,43 +39,54 @@ def test_path():
     init_params["initializationOptions"]["settings"][0]["path"] = ["pylint"]
 
     argv_callback_object = CallbackObject()
-    contents = TEST_FILE.read_text()
+    contents = TEST_FILE_PATH.read_text()
 
-    actual = []
-    with utils.python_file(contents, TEST_FILE.parent) as file:
-        uri = utils.as_uri(str(file))
+    actual = True
+    with session.LspSession() as ls_session:
+        ls_session.set_notification_callback(
+            session.WINDOW_LOG_MESSAGE,
+            argv_callback_object.check_for_argv_duplication,
+        )
 
-        with session.LspSession() as ls_session:
-            ls_session.set_notification_callback(
-                session.WINDOW_LOG_MESSAGE,
-                argv_callback_object.check_for_argv_duplication,
-            )
+        done = Event()
 
-            ls_session.initialize(init_params)
-            ls_session.notify_did_open(
-                {
-                    "textDocument": {
-                        "uri": uri,
-                        "languageId": "python",
-                        "version": 1,
-                        "text": contents,
-                    }
+        def _handler(_params):
+            done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+
+        ls_session.initialize(init_params)
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
                 }
-            )
+            }
+        )
 
-            # Call this second time to detect arg duplication.
-            ls_session.notify_did_open(
-                {
-                    "textDocument": {
-                        "uri": uri,
-                        "languageId": "python",
-                        "version": 1,
-                        "text": contents,
-                    }
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+        done.clear()
+
+        # Call this second time to detect arg duplication.
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
                 }
-            )
+            }
+        )
 
-            actual = argv_callback_object.check_result()
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+
+        actual = argv_callback_object.check_result()
 
     assert_that(actual, is_(False))
 
@@ -82,42 +97,53 @@ def test_interpreter():
     init_params["initializationOptions"]["settings"][0]["interpreter"] = ["python"]
 
     argv_callback_object = CallbackObject()
-    contents = TEST_FILE.read_text()
+    contents = TEST_FILE_PATH.read_text()
 
-    actual = []
-    with utils.python_file(contents, TEST_FILE.parent) as file:
-        uri = utils.as_uri(str(file))
+    actual = True
+    with session.LspSession() as ls_session:
+        ls_session.set_notification_callback(
+            session.WINDOW_LOG_MESSAGE,
+            argv_callback_object.check_for_argv_duplication,
+        )
 
-        with session.LspSession() as ls_session:
-            ls_session.set_notification_callback(
-                session.WINDOW_LOG_MESSAGE,
-                argv_callback_object.check_for_argv_duplication,
-            )
+        done = Event()
 
-            ls_session.initialize(init_params)
-            ls_session.notify_did_open(
-                {
-                    "textDocument": {
-                        "uri": uri,
-                        "languageId": "python",
-                        "version": 1,
-                        "text": contents,
-                    }
+        def _handler(_params):
+            done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+
+        ls_session.initialize(init_params)
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
                 }
-            )
+            }
+        )
 
-            # Call this second time to detect arg duplication.
-            ls_session.notify_did_open(
-                {
-                    "textDocument": {
-                        "uri": uri,
-                        "languageId": "python",
-                        "version": 1,
-                        "text": contents,
-                    }
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+        done.clear()
+
+        # Call this second time to detect arg duplication.
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
                 }
-            )
+            }
+        )
 
-            actual = argv_callback_object.check_result()
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+
+        actual = argv_callback_object.check_result()
 
     assert_that(actual, is_(False))

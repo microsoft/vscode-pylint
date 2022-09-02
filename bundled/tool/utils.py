@@ -107,6 +107,21 @@ def change_cwd(new_cwd):
     os.chdir(SERVER_CWD)
 
 
+class LSPServerError(Exception):
+    """Base class for errors while working with LSP server."""
+
+
+class QuickFixRegistrationError(LSPServerError):
+    """Represents error while registering code actions quick fixes."""
+
+    def __init__(self, diagnostic_code):
+        super().__init__()
+        self.diagnostic_code = diagnostic_code
+
+    def __repr__(self):
+        return f'Quick Fix for "{self.diagnostic_code}" is already registered.'
+
+
 def _run_module(
     module: str, argv: Sequence[str], use_stdin: bool, source: str = None
 ) -> RunResult:

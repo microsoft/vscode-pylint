@@ -141,6 +141,23 @@ class LspSession(MethodDispatcher):
         """Sends did close notification to LSP Server."""
         self._send_notification("textDocument/didClose", params=did_close_params)
 
+    def text_document_formatting(self, formatting_params):
+        """Sends text document format request to LSP server."""
+        fut = self._send_request("textDocument/formatting", params=formatting_params)
+        return fut.result()
+
+    def text_document_code_action(self, code_action_params):
+        """Sends text document code actions request to LSP server."""
+        fut = self._send_request("textDocument/codeAction", params=code_action_params)
+        return fut.result()
+
+    def code_action_resolve(self, code_action_resolve_params):
+        """Sends text document code actions resolve request to LSP server."""
+        fut = self._send_request(
+            "codeAction/resolve", params=code_action_resolve_params
+        )
+        return fut.result()
+
     def set_notification_callback(self, notification_name, callback):
         """Set custom LS notification handler."""
         self._notification_callbacks[notification_name] = callback

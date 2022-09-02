@@ -9,7 +9,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 
 # **********************************************************
@@ -165,6 +165,127 @@ def _parse_output(
 
 # **********************************************************
 # Linting features end here
+# **********************************************************
+
+# **********************************************************
+# Code Action features start here
+# **********************************************************
+class QuickFixSolutions:
+    """Manages quick fixes registered using the quick fix decorator."""
+
+    def __init__(self):
+        self._solutions: Dict[
+            str,
+            Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]],
+        ] = {}
+
+    def quick_fix(
+        self,
+        codes: Union[str, List[str]],
+    ):
+        """Decorator used for registering quick fixes."""
+
+        def decorator(
+            func: Callable[
+                [workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]
+            ]
+        ):
+            if isinstance(codes, str):
+                if codes in self._solutions:
+                    raise utils.QuickFixRegistrationError(codes)
+                self._solutions[codes] = func
+            else:
+                for code in codes:
+                    if code in self._solutions:
+                        raise utils.QuickFixRegistrationError(code)
+                    self._solutions[code] = func
+
+        return decorator
+
+    def solutions(
+        self, code: str
+    ) -> Optional[
+        Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]]
+    ]:
+        """Given a pylint error code returns a function, if available, that provides
+        quick fix code actions."""
+
+        try:
+            return self._solutions[code]
+        except KeyError:
+            return None
+
+
+QUICK_FIXES = QuickFixSolutions()
+
+
+@LSP_SERVER.feature(
+    lsp.CODE_ACTION,
+    lsp.CodeActionOptions(code_action_kinds=[lsp.CodeActionKind.QuickFix]),
+)
+def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
+    """LSP handler for textDocument/codeAction request."""
+    diagnostics = list(
+        d for d in params.context.diagnostics if d.source == TOOL_DISPLAY
+    )
+
+    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+
+    code_actions = []
+    for diagnostic in diagnostics:
+        func = QUICK_FIXES.solutions(diagnostic.code)
+        if func:
+            code_actions.extend(func(document, [diagnostic]))
+
+    return code_actions
+
+
+@QUICK_FIXES.quick_fix(codes=["C0301:line-too-long"])
+def fix_format(
+    _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+) -> List[lsp.CodeAction]:
+    """Provides quick fixes which involve formatting document."""
+    return [
+        _command_quick_fix(
+            diagnostics=diagnostics,
+            title=f"{TOOL_DISPLAY}: Run document formatting",
+            command="editor.action.formatDocument",
+        )
+    ]
+
+
+def _command_quick_fix(
+    diagnostics: List[lsp.Diagnostic],
+    title: str,
+    command: str,
+    args: Optional[List[Any]] = None,
+) -> lsp.CodeAction:
+    return lsp.CodeAction(
+        title=title,
+        kind=lsp.CodeActionKind.QuickFix,
+        diagnostics=diagnostics,
+        command=lsp.Command(title=title, command=command, arguments=args),
+    )
+
+
+def _create_workspace_edits(
+    document: workspace.Document, results: Optional[List[lsp.TextEdit]]
+):
+    return lsp.WorkspaceEdit(
+        document_changes=[
+            lsp.TextDocumentEdit(
+                text_document=lsp.VersionedTextDocumentIdentifier(
+                    uri=document.uri,
+                    version=0 if document.version is None else document.version,
+                ),
+                edits=results,
+            )
+        ],
+    )
+
+
+# **********************************************************
+# Code Action features end here
 # **********************************************************
 
 # **********************************************************

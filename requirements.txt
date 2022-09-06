@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes ./requirements.in
 #
-astroid==2.12.5 \
-    --hash=sha256:396c88d0a58d7f8daadf730b2ce90838bf338c6752558db719ec6f99c18ec20e \
-    --hash=sha256:d612609242996c4365aeb0345e61edba34363eaaba55f1c0addf6a98f073bef6
+astroid==2.12.6 \
+    --hash=sha256:bf0fe7ff5d28f697f5eddc9f33140ad6086941c472f53e9dbbb9aaa6bc8952cb \
+    --hash=sha256:cfef6fa5aeba225d01f217e435472da458711bceb949c6eccb07dc93701edd29
     # via pylint
 colorama==0.4.5 \
     --hash=sha256:854bf444933e37f5824ae7bfc1e98d5bce2ebe4160d46b5edf346a89358e99da \

@@ -1,70 +1,13 @@
-{
-    "name": "pylint",
-    "displayName": "Pylint",
-    "description": "%extension.description%",
-    "version": "2022.5.0-dev",
-    "preview": true,
-    "serverInfo": {
-        "name": "Pylint",
-        "module": "pylint"
-    },
-    "publisher": "ms-python",
-    "license": "MIT",
-    "homepage": "https://github.com/Microsoft/vscode-pylint",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/microsoft/vscode-pylint.git"
-    },
+{  
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-pylint/issues"
     },
-    "icon": "icon.png",
-    "galleryBanner": {
-        "color": "#1e415e",
-        "theme": "dark"
-    },
-    "keywords": [
-        "python",
-        "linting",
-        "pylint"
-    ],
-    "engines": {
-        "vscode": "^1.64.0"
-    },
-    "categories": [
-        "Programming Languages",
-        "Linters"
-    ],
-    "extensionDependencies": [
-        "ms-python.python"
-    ],
-    "activationEvents": [
-        "onLanguage:python",
-        "workspaceContains:.pylintrc",
-        "workspaceContains:*.py",
-        "onCommand:pylint.restart"
-    ],
-    "main": "./dist/extension.js",
-    "scripts": {
-        "vscode:prepublish": "npm run package",
-        "compile": "webpack",
-        "watch": "webpack --watch",
-        "package": "webpack --mode production --devtool source-map --config ./webpack.config.js",
-        "compile-tests": "tsc -p . --outDir out",
-        "watch-tests": "tsc -p . -w --outDir out",
-        "pretest": "npm run compile-tests && npm run compile && npm run lint",
-        "lint": "eslint src --ext ts",
-        "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.yml' '.github/**/*.yml'",
-        "test": "node ./out/test/runTest.js",
-        "vsce-package": "vsce package -o pylint.vsix"
-    },
-    "contributes": {
-        "languages": [
+    "contributes": { 
+        "commands": [
             {
-                "filenames": [
-                    ".pylintrc"
-                ],
-                "id": "ini"
+                "title": "%command.restartServer%",
+                "category": "Pylint",
+                "command": "pylint.restart"
             }
         ],
         "configuration": {
@@ -182,19 +125,26 @@
                 }
             }
         },
-        "commands": [
+        "languages": [
             {
-                "title": "%command.restartServer%",
-                "category": "Pylint",
-                "command": "pylint.restart"
+                "filenames": [
+                    ".pylintrc"
+                ],
+                "id": "ini"
             }
         ]
     },
+    "categories": [
+        "Programming Languages",
+        "Linters"
+    ],
+    "displayName": "Pylint",
+    "description": "%extension.description%",
     "dependencies": {
         "fs-extra": "^10.1.0",
         "vscode-languageclient": "^7.0.0",
         "vscode-nls": "^5.2.0"
-    },
+    }, 
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
         "@types/vscode": "^1.64.0",
@@ -212,5 +162,49 @@
         "webpack-cli": "^4.10.0",
         "vsce": "^2.11.0",
         "vscode-nls-dev": "^4.0.1"
-    }
+    },
+    "engines": {
+        "vscode": "^1.64.0"
+    },
+    "extensionDependencies": [
+        "ms-python.python"
+    ],
+    "galleryBanner": {
+        "color": "#1e415e",
+        "theme": "dark"
+    },
+    "homepage": "https://github.com/Microsoft/vscode-pylint",
+    "icon": "icon.png",
+    "keywords": [
+        "python",
+        "linting",
+        "pylint"
+    ],
+    "license": "MIT",
+    "main": "./dist/extension.js",
+    "name": "pylint",
+    "preview": true,
+    "publisher": "ms-python",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/vscode-pylint.git"
+    },
+    "serverInfo": {
+        "name": "Pylint",
+        "module": "pylint"
+    },
+        "scripts": {
+        "vscode:prepublish": "npm run package",
+        "compile": "webpack",
+        "watch": "webpack --watch",
+        "package": "webpack --mode production --devtool source-map --config ./webpack.config.js",
+        "compile-tests": "tsc -p . --outDir out",
+        "watch-tests": "tsc -p . -w --outDir out",
+        "pretest": "npm run compile-tests && npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.yml' '.github/**/*.yml'",
+        "test": "node ./out/test/runTest.js",
+        "vsce-package": "vsce package -o pylint.vsix"
+    },
+    "version": "2022.5.0-dev"
 }

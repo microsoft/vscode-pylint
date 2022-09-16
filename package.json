@@ -69,26 +69,6 @@
         ],
         "configuration": {
             "properties": {
-                "pylint.logLevel": {
-                    "default": "error",
-                    "description": "%settings.logLevel.description%",
-                    "enum": [
-                        "debug",
-                        "error",
-                        "info",
-                        "off",
-                        "warn"
-                    ],
-                    "scope": "window",
-                    "type": "string",
-                    "enumDescriptions": [
-                        "%settings.logLevel.debug.description%",
-                        "%settings.logLevel.error.description%",
-                        "%settings.logLevel.info.description%",
-                        "%settings.logLevel.off.description%",
-                        "%settings.logLevel.warn.description%"
-                    ]
-                },
                 "pylint.args": {
                     "default": [],
                     "description": "%settings.args.description%",
@@ -97,47 +77,6 @@
                     },
                     "scope": "resource",
                     "type": "array"
-                },
-                "pylint.severity": {
-                    "default": {
-                        "convention": "Information",
-                        "error": "Error",
-                        "fatal": "Error",
-                        "refactor": "Hint",
-                        "warning": "Warning",
-                        "info": "Information"
-                    },
-                    "additionalProperties": {
-                        "type": "string",
-                        "enum": [
-                            "Error",
-                            "Hint",
-                            "Information",
-                            "Warning"
-                        ]
-                    },
-                    "description": "%settings.severity.description%",
-                    "scope": "resource",
-                    "type": "object"
-                },
-                "pylint.path": {
-                    "default": [],
-                    "description": "%settings.path.description%",
-                    "scope": "resource",
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array",
-                    "examples": [
-                        [
-                            "~/global_env/pylint"
-                        ],
-                        [
-                            "~/.env/python",
-                            "-m",
-                            "pylint"
-                        ]
-                    ]
                 },
                 "pylint.importStrategy": {
                     "default": "useBundled",
@@ -161,6 +100,67 @@
                         "type": "string"
                     },
                     "type": "array"
+                },
+                "pylint.logLevel": {
+                    "default": "error",
+                    "description": "%settings.logLevel.description%",
+                    "enum": [
+                        "debug",
+                        "error",
+                        "info",
+                        "off",
+                        "warn"
+                    ],
+                    "scope": "window",
+                    "type": "string",
+                    "enumDescriptions": [
+                        "%settings.logLevel.debug.description%",
+                        "%settings.logLevel.error.description%",
+                        "%settings.logLevel.info.description%",
+                        "%settings.logLevel.off.description%",
+                        "%settings.logLevel.warn.description%"
+                    ]
+                },
+                "pylint.path": {
+                    "default": [],
+                    "description": "%settings.path.description%",
+                    "scope": "resource",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array",
+                    "examples": [
+                        [
+                            "~/global_env/pylint"
+                        ],
+                        [
+                            "~/.env/python",
+                            "-m",
+                            "pylint"
+                        ]
+                    ]
+                },
+                "pylint.severity": {
+                    "default": {
+                        "convention": "Information",
+                        "error": "Error",
+                        "fatal": "Error",
+                        "refactor": "Hint",
+                        "warning": "Warning",
+                        "info": "Information"
+                    },
+                    "additionalProperties": {
+                        "type": "string",
+                        "enum": [
+                            "Error",
+                            "Hint",
+                            "Information",
+                            "Warning"
+                        ]
+                    },
+                    "description": "%settings.severity.description%",
+                    "scope": "resource",
+                    "type": "object"
                 },
                 "pylint.showNotifications": {
                     "default": "off",

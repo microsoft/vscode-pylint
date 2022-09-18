@@ -30,6 +30,21 @@ LINTER = utils.get_server_info_defaults()["name"]
         )
     ],
 )
+
+@pytest.mark.parametrize(
+    ("code", "contents", "command"),
+    [
+        (
+            "C0305:trailing-newlines",
+            "VEGGIE = ['carrot\n', 'radish\n', 'cucumber\n', 'potato\n', '\n']",  # # pylint: disable=trailing-newlines
+            {
+                "title": f"{LINTER}: Run document formatting",
+                "command": "editor.action.formatDocument",
+                "arguments": None,
+            },
+        )
+    ],
+)
 def test_command_code_action(code, contents, command):
     """Tests for code actions which run a command."""
     with utils.python_file(contents, TEST_FILE_PATH.parent) as temp_file:

@@ -11,6 +11,11 @@ import sys
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
+from pygls import lsp, protocol, server, uris, workspace
+
+import jsonrpc
+import utils
+
 
 # **********************************************************
 # Update sys.path before importing any bundled libraries.
@@ -30,13 +35,11 @@ update_sys_path(
     os.getenv("LS_IMPORT_STRATEGY", "useBundled"),
 )
 
+
 # **********************************************************
 # Imports needed for the language server goes below this.
 # **********************************************************
 # pylint: disable=wrong-import-position,import-error
-import jsonrpc
-import utils
-from pygls import lsp, protocol, server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
@@ -152,7 +155,8 @@ def _parse_output(
             range=lsp.Range(start=start, end=end),
             message=data.get("message"),
             severity=_get_severity(
-                data.get("symbol"), data.get("message-id"), data.get("type"), severity
+                data.get("symbol"), data.get(
+                    "message-id"), data.get("type"), severity
             ),
             code=f"{data.get('message-id')}:{data.get('symbol')}",
             source=TOOL_DISPLAY,
@@ -176,7 +180,8 @@ class QuickFixSolutions:
     def __init__(self):
         self._solutions: Dict[
             str,
-            Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]],
+            Callable[[workspace.Document, List[lsp.Diagnostic]],
+                     List[lsp.CodeAction]],
         ] = {}
 
     def quick_fix(
@@ -205,7 +210,8 @@ class QuickFixSolutions:
     def solutions(
         self, code: str
     ) -> Optional[
-        Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]]
+        Callable[[workspace.Document, List[lsp.Diagnostic]],
+                 List[lsp.CodeAction]]
     ]:
         """Given a pylint error code returns a function, if available, that provides
         quick fix code actions."""
@@ -240,7 +246,7 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     return code_actions
 
 
-@QUICK_FIXES.quick_fix(codes=["C0301:line-too-long"])
+@QUICK_FIXES.quick_fix(codes=["C0301:line-too-long. C0305:trailing-newlines"])
 def fix_format(
     _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
@@ -407,7 +413,8 @@ def _run_tool_on_document(
         extra_args = []
 
     if str(document.uri).startswith("vscode-notebook-cell"):
-        log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
+        log_warning(
+            f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
     if utils.is_stdlib_file(document.path):

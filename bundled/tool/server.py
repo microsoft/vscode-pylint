@@ -246,7 +246,7 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     return code_actions
 
 
-@QUICK_FIXES.quick_fix(codes=["C0301:line-too-long. C0305:trailing-newlines"])
+@QUICK_FIXES.quick_fix(codes=["C0301:line-too-long, C0305:trailing-newlines"])
 def fix_format(
     _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:

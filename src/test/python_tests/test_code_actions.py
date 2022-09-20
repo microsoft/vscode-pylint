@@ -21,7 +21,8 @@ LINTER = utils.get_server_info_defaults()["name"]
     [
         (
             "C0301:line-too-long",
-            "FRUIT = ['apricot', 'blackcurrant', 'cantaloupe', 'dragon fruit', 'elderberry', 'fig', 'grapefruit']",  # # pylint: disable=line-too-long
+            # # pylint: disable=line-too-long
+            "FRUIT = ['apricot', 'blackcurrant', 'cantaloupe', 'dragon fruit', 'elderberry', 'fig', 'grapefruit']",
             {
                 "title": f"{LINTER}: Run document formatting",
                 "command": "editor.action.formatDocument",
@@ -30,13 +31,13 @@ LINTER = utils.get_server_info_defaults()["name"]
         )
     ],
 )
-
 @pytest.mark.parametrize(
     ("code", "contents", "command"),
     [
         (
             "C0305:trailing-newlines",
-            "VEGGIE = ['carrot\n', 'radish\n', 'cucumber\n', 'potato\n', '\n']",  # # pylint: disable=trailing-newlines
+            # # pylint: disable=trailing-newlines
+            "VEGGIE = ['carrot\n', 'radish\n', 'cucumber\n', 'potato\n', '\n']",
             {
                 "title": f"{LINTER}: Run document formatting",
                 "command": "editor.action.formatDocument",

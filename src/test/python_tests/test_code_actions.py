@@ -23,6 +23,13 @@ LINTER = utils.get_server_info_defaults()["name"]
             "C0301:line-too-long", "C0305:trailing-newlines",
             # # pylint: disable=line-too-long
             "FRUIT = ['apricot', 'blackcurrant', 'cantaloupe', 'dragon fruit', 'elderberry', 'fig', 'grapefruit']",
+            {
+                "title": f"{LINTER}: Run document formatting",
+                "command": "editor.action.formatDocument",
+                "arguments": None,
+            },
+        ),
+        (
             # # pylint: disable=trailing-newlines
             "VEGGIE = ['carrot\n', 'radish\n', 'cucumber\n', 'potato\n', '\n']",
             {

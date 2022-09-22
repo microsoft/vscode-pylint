@@ -11,6 +11,11 @@ import sys
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
+from pygls import lsp, protocol, server, uris, workspace
+
+import jsonrpc
+import utils
+
 
 # **********************************************************
 # Update sys.path before importing any bundled libraries.

@@ -20,8 +20,8 @@ LINTER = utils.get_server_info_defaults()["name"]
     ("code", "contents", "command"),
     [
         (
-            "C0301:line-too-long", 
-            # # pylint: disable=line-too-long
+            "C0301:line-too-long",
+            # pylint: disable=line-too-long
             "FRUIT = ['apricot', 'blackcurrant', 'cantaloupe', 'dragon fruit', 'elderberry', 'fig', 'grapefruit']",
             {
                 "title": f"{LINTER}: Run document formatting",
@@ -31,14 +31,13 @@ LINTER = utils.get_server_info_defaults()["name"]
         ),
         (
             "C0305:trailing-newlines",
-            # # pylint: disable=trailing-newlines
-            "VEGGIE = ['carrot\n', 'radish\n', 'cucumber\n', 'potato\n', '\n']",
+            "VEGGIE = ['carrot', 'radish', 'cucumber', 'potato']\n\n\n",
             {
                 "title": f"{LINTER}: Run document formatting",
                 "command": "editor.action.formatDocument",
                 "arguments": None,
             },
-        )
+        ),
     ],
 )
 def test_command_code_action(code, contents, command):

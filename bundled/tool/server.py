@@ -152,8 +152,7 @@ def _parse_output(
             range=lsp.Range(start=start, end=end),
             message=data.get("message"),
             severity=_get_severity(
-                data.get("symbol"), data.get(
-                    "message-id"), data.get("type"), severity
+                data.get("symbol"), data.get("message-id"), data.get("type"), severity
             ),
             code=f"{data.get('message-id')}:{data.get('symbol')}",
             source=TOOL_DISPLAY,
@@ -177,8 +176,7 @@ class QuickFixSolutions:
     def __init__(self):
         self._solutions: Dict[
             str,
-            Callable[[workspace.Document, List[lsp.Diagnostic]],
-                     List[lsp.CodeAction]],
+            Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]],
         ] = {}
 
     def quick_fix(
@@ -207,8 +205,7 @@ class QuickFixSolutions:
     def solutions(
         self, code: str
     ) -> Optional[
-        Callable[[workspace.Document, List[lsp.Diagnostic]],
-                 List[lsp.CodeAction]]
+        Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]]
     ]:
         """Given a pylint error code returns a function, if available, that provides
         quick fix code actions."""
@@ -410,8 +407,7 @@ def _run_tool_on_document(
         extra_args = []
 
     if str(document.uri).startswith("vscode-notebook-cell"):
-        log_warning(
-            f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
+        log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
     if utils.is_stdlib_file(document.path):

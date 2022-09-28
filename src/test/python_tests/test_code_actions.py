@@ -20,7 +20,7 @@ LINTER = utils.get_server_info_defaults()["name"]
     ("code", "contents", "command"),
     [
         (
-            "C0301:line-too-long", "C0305:trailing-newlines",
+            "C0301:line-too-long", 
             # # pylint: disable=line-too-long
             "FRUIT = ['apricot', 'blackcurrant', 'cantaloupe', 'dragon fruit', 'elderberry', 'fig', 'grapefruit']",
             {
@@ -30,6 +30,7 @@ LINTER = utils.get_server_info_defaults()["name"]
             },
         ),
         (
+            "C0305:trailing-newlines",
             # # pylint: disable=trailing-newlines
             "VEGGIE = ['carrot\n', 'radish\n', 'cucumber\n', 'potato\n', '\n']",
             {

@@ -11,6 +11,8 @@ import sys
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
+from pygls import lsp, protocol, server, uris, workspace
+
 
 # **********************************************************
 # Update sys.path before importing any bundled libraries.
@@ -30,13 +32,13 @@ update_sys_path(
     os.getenv("LS_IMPORT_STRATEGY", "useBundled"),
 )
 
+
 # **********************************************************
 # Imports needed for the language server goes below this.
 # **********************************************************
 # pylint: disable=wrong-import-position,import-error
 import jsonrpc
 import utils
-from pygls import lsp, protocol, server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
@@ -240,7 +242,13 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     return code_actions
 
 
-@QUICK_FIXES.quick_fix(codes=["C0301:line-too-long", "C0305:trailing-newlines", "C0304:missing-final-newline"])
+@QUICK_FIXES.quick_fix(
+    codes=[
+        "C0301:line-too-long",
+        "C0305:trailing-newlines",
+        "C0304:missing-final-newline",
+    ]
+)
 def fix_format(
     _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:

@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import './setupNLS.ts';
 import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
-import { restartServer } from './common/server';
 import { registerLogger, setLoggingLevel, traceLog, traceVerbose } from './common/log/logging';
 import { OutputChannelLogger } from './common/log/outputChannelLogger';
 import {
@@ -13,6 +11,7 @@ import {
     onDidChangePythonInterpreter,
     runPythonExtensionCommand,
 } from './common/python';
+import { restartServer } from './common/server';
 import {
     checkIfConfigurationChanged,
     getExtensionSettings,
@@ -20,8 +19,9 @@ import {
     ISettings,
 } from './common/settings';
 import { loadServerDefaults } from './common/setup';
-import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';
 import { getProjectRoot } from './common/utilities';
+import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';
+import './setupNLS.ts';
 
 let lsClient: LanguageClient | undefined;
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -36,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Setup logging
     const outputChannel = createOutputChannel(serverName);
     context.subscriptions.push(outputChannel);
-    setLoggingLevel(settings[0].logLevel);
+    setLoggingLevel(settings.length > 0 ? settings[0].logLevel : undefined);
     context.subscriptions.push(registerLogger(new OutputChannelLogger(outputChannel)));
 
     traceLog(`Name: ${serverName}`);

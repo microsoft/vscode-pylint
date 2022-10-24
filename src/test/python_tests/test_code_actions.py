@@ -54,7 +54,7 @@ LINTER = utils.get_server_info_defaults()["name"]
                 },
                 {
                     "title": f"{LINTER}: Run sort imports",
-                    "command": "python.sortImports",
+                    "command": "editor.action.organizeImports",
                     "arguments": None,
                 },
             ],

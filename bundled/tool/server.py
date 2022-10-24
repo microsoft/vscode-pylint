@@ -268,7 +268,7 @@ def organize_imports(
         _command_quick_fix(
             diagnostics=diagnostics,
             title=f"{TOOL_DISPLAY}: Run sort imports",
-            command="python.sortImports",
+            command="editor.action.organizeImports",
         ),
     ]
 

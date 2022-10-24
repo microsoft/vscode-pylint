@@ -253,8 +253,11 @@ def fix_format(
         )
     ]
 
+
 @QUICK_FIXES.quick_fix(codes=["C0413:wrong-import-position"])
-def organize_imports(_document: workspace.Document, diagnostics: List[lsp.Diagnostic]) -> List[lsp.CodeAction]:
+def organize_imports(
+    _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+) -> List[lsp.CodeAction]:
     """Provides quick fixes for code ordering issues."""
     return [
         _command_quick_fix(
@@ -268,6 +271,7 @@ def organize_imports(_document: workspace.Document, diagnostics: List[lsp.Diagno
             command="python.sortImports",
         ),
     ]
+
 
 def _command_quick_fix(
     diagnostics: List[lsp.Diagnostic],

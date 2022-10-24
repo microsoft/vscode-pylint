@@ -24,34 +24,38 @@ LINTER = utils.get_server_info_defaults()["name"]
             "C0301:line-too-long",
             # pylint: disable=line-too-long
             "FRUIT = ['apricot', 'blackcurrant', 'cantaloupe', 'dragon fruit', 'elderberry', 'fig', 'grapefruit']",
-            [{
-                "title": f"{LINTER}: Run document formatting",
-                "command": "editor.action.formatDocument",
-                "arguments": None,
-            }],
+            [
+                {
+                    "title": f"{LINTER}: Run document formatting",
+                    "command": "editor.action.formatDocument",
+                    "arguments": None,
+                }
+            ],
         ),
         (
             "C0305:trailing-newlines",
             "VEGGIE = ['carrot', 'radish', 'cucumber', 'potato']\n\n\n",
-            [{
-                "title": f"{LINTER}: Run document formatting",
-                "command": "editor.action.formatDocument",
-                "arguments": None,
-            }],
+            [
+                {
+                    "title": f"{LINTER}: Run document formatting",
+                    "command": "editor.action.formatDocument",
+                    "arguments": None,
+                }
+            ],
         ),
         (
             "C0413:wrong-import-position",
             "import os\nprint('shitaki mushroom')\nimport sys",
             [
                 {
-                "title": f"{LINTER}: Run document formatting",
-                "command": "editor.action.formatDocument",
-                "arguments": None,
+                    "title": f"{LINTER}: Run document formatting",
+                    "command": "editor.action.formatDocument",
+                    "arguments": None,
                 },
                 {
-                "title": f"{LINTER}: Run sort imports",
-                "command": "python.sortImports",
-                "arguments": None,
+                    "title": f"{LINTER}: Run sort imports",
+                    "command": "python.sortImports",
+                    "arguments": None,
                 },
             ],
         ),
@@ -99,11 +103,14 @@ def test_command_code_action(code, contents, commands: List[dict]):
                 }
             )
 
-            expected = [{
-                "title": command["title"],
-                "kind": "quickfix",
-                "diagnostics": diagnostics,
-                "command": command,
-            } for command in commands]
+            expected = [
+                {
+                    "title": command["title"],
+                    "kind": "quickfix",
+                    "diagnostics": diagnostics,
+                    "command": command,
+                }
+                for command in commands
+            ]
 
         assert_that(actual_code_actions, is_(expected))

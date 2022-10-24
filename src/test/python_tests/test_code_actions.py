@@ -30,6 +30,16 @@ LINTER = utils.get_server_info_defaults()["name"]
             },
         ),
         (
+            "C0303:trailing-whitespace",
+            # pylint: disable=trailing-whitespace
+            "NUT = ['peanut', 'cashew', 'pecan', 'walnut']    ",
+            {
+                "title": f"{LINTER}: Run document formatting",
+                "command": "editor.action.formatDocument",
+                "arguments": None,
+            },
+        ),
+        (
             "C0305:trailing-newlines",
             "VEGGIE = ['carrot', 'radish', 'cucumber', 'potato']\n\n\n",
             {

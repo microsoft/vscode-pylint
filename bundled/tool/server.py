@@ -259,9 +259,14 @@ def organize_imports(_document: workspace.Document, diagnostics: List[lsp.Diagno
     return [
         _command_quick_fix(
             diagnostics=diagnostics,
+            title=f"{TOOL_DISPLAY}: Run document formatting",
+            command="editor.action.formatDocument",
+        ),
+        _command_quick_fix(
+            diagnostics=diagnostics,
             title=f"{TOOL_DISPLAY}: Run sort imports",
-            command="editor.action.organizeImports",
-        )
+            command="python.sortImports",
+        ),
     ]
 
 def _command_quick_fix(

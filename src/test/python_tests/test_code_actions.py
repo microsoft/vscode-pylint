@@ -5,6 +5,7 @@ Test for code actions over LSP.
 """
 
 import os
+from typing import List
 
 import pytest
 from hamcrest import assert_that, is_
@@ -17,39 +18,46 @@ LINTER = utils.get_server_info_defaults()["name"]
 
 
 @pytest.mark.parametrize(
-    ("code", "contents", "command"),
+    ("code", "contents", "commands"),
     [
         (
             "C0301:line-too-long",
             # pylint: disable=line-too-long
             "FRUIT = ['apricot', 'blackcurrant', 'cantaloupe', 'dragon fruit', 'elderberry', 'fig', 'grapefruit']",
-            {
+            [{
                 "title": f"{LINTER}: Run document formatting",
                 "command": "editor.action.formatDocument",
                 "arguments": None,
-            },
+            }],
         ),
         (
             "C0305:trailing-newlines",
             "VEGGIE = ['carrot', 'radish', 'cucumber', 'potato']\n\n\n",
-            {
+            [{
                 "title": f"{LINTER}: Run document formatting",
                 "command": "editor.action.formatDocument",
                 "arguments": None,
-            },
+            }],
         ),
         (
             "C0413:wrong-import-position",
             "import os\nprint('shitaki mushroom')\nimport sys",
-            {
-                "title": f"{LINTER}: Run sort imports",
-                "command": "editor.action.organizeImports",
+            [
+                {
+                "title": f"{LINTER}: Run document formatting",
+                "command": "editor.action.formatDocument",
                 "arguments": None,
-            },
+                },
+                {
+                "title": f"{LINTER}: Run sort imports",
+                "command": "python.sortImports",
+                "arguments": None,
+                },
+            ],
         ),
     ],
 )
-def test_command_code_action(code, contents, command):
+def test_command_code_action(code, contents, commands: List[dict]):
     """Tests for code actions which run a command."""
     with utils.python_file(contents, TEST_FILE_PATH.parent) as temp_file:
         uri = utils.as_uri(os.fspath(temp_file))
@@ -91,11 +99,11 @@ def test_command_code_action(code, contents, command):
                 }
             )
 
-            expected = {
+            expected = [{
                 "title": command["title"],
                 "kind": "quickfix",
                 "diagnostics": diagnostics,
                 "command": command,
-            }
+            } for command in commands]
 
-        assert_that(actual_code_actions, is_([expected]))
+        assert_that(actual_code_actions, is_(expected))

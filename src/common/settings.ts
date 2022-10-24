@@ -2,10 +2,18 @@
 // Licensed under the MIT License.
 
 import { ConfigurationChangeEvent, WorkspaceFolder } from 'vscode';
-import { getInterpreterDetails } from './python';
 import { LoggingLevelSettingType } from './log/types';
+import { getInterpreterDetails } from './python';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
 
+const DEFAULT_SEVERITY: Record<string, string> = {
+    convention: 'Information',
+    error: 'Error',
+    fatal: 'Error',
+    refactor: 'Hint',
+    warning: 'Warning',
+    info: 'Information',
+};
 export interface ISettings {
     workspace: string;
     logLevel: LoggingLevelSettingType;
@@ -29,6 +37,38 @@ export async function getExtensionSettings(namespace: string, includeInterpreter
     return settings;
 }
 
+function resolveWorkspace(workspace: WorkspaceFolder, value: string): string {
+    return value.replace('${workspaceFolder}', workspace.uri.fsPath);
+}
+
+function getArgs(namespace: string, workspace: WorkspaceFolder): string[] {
+    const config = getConfiguration(namespace, workspace.uri);
+    const args = config.get<string[]>('args', []);
+
+    if (args.length > 0) {
+        return args;
+    }
+
+    const legacyConfig = getConfiguration('python', workspace.uri);
+    return legacyConfig.get<string[]>('linting.pylintArgs', []);
+}
+
+function getPath(namespace: string, workspace: WorkspaceFolder): string[] {
+    const config = getConfiguration(namespace, workspace.uri);
+    const path = config.get<string[]>('path', []);
+
+    if (path.length > 0) {
+        return path;
+    }
+
+    const legacyConfig = getConfiguration('python', workspace.uri);
+    const legacyPath = legacyConfig.get<string>('linting.pylintPath', '');
+    if (legacyPath.length > 0 && legacyPath !== 'pylint') {
+        return [legacyPath];
+    }
+    return [];
+}
+
 export function getInterpreterFromSetting(namespace: string) {
     const config = getConfiguration(namespace);
     return config.get<string[]>('interpreter');
@@ -49,15 +89,17 @@ export async function getWorkspaceSettings(
         }
     }
 
+    const args = getArgs(namespace, workspace).map((s) => resolveWorkspace(workspace, s));
+    const path = getPath(namespace, workspace).map((s) => resolveWorkspace(workspace, s));
     const workspaceSetting = {
         workspace: workspace.uri.toString(),
-        logLevel: config.get<LoggingLevelSettingType>(`logLevel`) ?? 'error',
-        args: config.get<string[]>(`args`) ?? [],
-        severity: config.get<Record<string, string>>(`severity`) ?? {},
-        path: config.get<string[]>(`path`) ?? [],
-        interpreter: interpreter ?? [],
-        importStrategy: config.get<string>(`importStrategy`) ?? 'fromEnvironment',
-        showNotifications: config.get<string>(`showNotifications`) ?? 'off',
+        logLevel: config.get<LoggingLevelSettingType>('logLevel', 'error'),
+        args,
+        severity: config.get<Record<string, string>>('severity', DEFAULT_SEVERITY),
+        path,
+        interpreter: (interpreter ?? []).map((s) => resolveWorkspace(workspace, s)),
+        importStrategy: config.get<string>('importStrategy', 'fromEnvironment'),
+        showNotifications: config.get<string>('showNotifications', 'off'),
     };
     return workspaceSetting;
 }

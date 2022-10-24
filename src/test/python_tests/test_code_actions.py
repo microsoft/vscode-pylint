@@ -38,6 +38,15 @@ LINTER = utils.get_server_info_defaults()["name"]
                 "arguments": None,
             },
         ),
+        (
+            "C0413:wrong-import-position",
+            "import os\nprint('shitaki mushroom')\nimport sys",
+            {
+                "title": f"{LINTER}: Run sort imports",
+                "command": "editor.action.organizeImports",
+                "arguments": None,
+            },
+        ),
     ],
 )
 def test_command_code_action(code, contents, command):

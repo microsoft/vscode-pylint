@@ -122,7 +122,6 @@ def tests(session: nox.Session) -> None:
 @nox.session()
 def lint(session: nox.Session) -> None:
     """Runs linter and formatter checks on python files."""
-    session.install("-r", "./requirements.txt")
     session.install("-r", "src/test/python_tests/requirements.txt")
 
     session.install("pylint")

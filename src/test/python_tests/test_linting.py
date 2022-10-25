@@ -20,7 +20,7 @@ TIMEOUT = 10  # 10 seconds
 
 def test_publish_diagnostics_on_open():
     """Test to ensure linting on file open."""
-    contents = TEST_FILE_PATH.read_text()
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
 
     actual = []
     with session.LspSession() as ls_session:
@@ -96,7 +96,7 @@ def test_publish_diagnostics_on_open():
 
 def test_publish_diagnostics_on_save():
     """Test to ensure linting on file save."""
-    contents = TEST_FILE_PATH.read_text()
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
 
     actual = []
     with session.LspSession() as ls_session:
@@ -172,7 +172,7 @@ def test_publish_diagnostics_on_save():
 
 def test_publish_diagnostics_on_close():
     """Test to ensure diagnostic clean-up on file close."""
-    contents = TEST_FILE_PATH.read_text()
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
 
     actual = []
     with session.LspSession() as ls_session:

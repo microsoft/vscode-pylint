@@ -42,7 +42,9 @@ WORKSPACE_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
 MAX_WORKERS = 5
-LSP_SERVER = server.LanguageServer(max_workers=MAX_WORKERS)
+LSP_SERVER = server.LanguageServer(
+    name="pylint-server", version="v0.1.0", max_workers=MAX_WORKERS
+)
 
 
 # **********************************************************
@@ -244,7 +246,9 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     codes=[
         "C0301:line-too-long",
         "C0303:trailing-whitespace",
+        "C0304:missing-final-newline",
         "C0305:trailing-newlines",
+        "C0321:multiple-statements",
     ]
 )
 def fix_format(
@@ -256,6 +260,26 @@ def fix_format(
             diagnostics=diagnostics,
             title=f"{TOOL_DISPLAY}: Run document formatting",
             command="editor.action.formatDocument",
+        )
+    ]
+
+
+@QUICK_FIXES.quick_fix(
+    codes=[
+        "C0410:multiple-imports",
+        "C0411:wrong-import-order",
+        "C0412:ungrouped-imports",
+    ]
+)
+def organize_imports(
+    _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+) -> List[lsp.CodeAction]:
+    """Provides quick fixes which involve organizing imports."""
+    return [
+        _command_quick_fix(
+            diagnostics=diagnostics,
+            title=f"{TOOL_DISPLAY}: Run organize imports",
+            command="editor.action.organizeImports",
         )
     ]
 

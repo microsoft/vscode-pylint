@@ -36,7 +36,8 @@ update_sys_path(
 # pylint: disable=wrong-import-position,import-error
 import jsonrpc
 import utils
-from pygls import lsp, protocol, server, uris, workspace
+from lsprotocol import types as lsp
+from pygls import protocol, server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
@@ -222,7 +223,7 @@ QUICK_FIXES = QuickFixSolutions()
 
 
 @LSP_SERVER.feature(
-    lsp.CODE_ACTION,
+    lsp.TEXT_DOCUMENT_CODE_ACTION,
     lsp.CodeActionOptions(code_action_kinds=[lsp.CodeActionKind.QuickFix]),
 )
 def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
@@ -337,13 +338,13 @@ def initialize(params: lsp.InitializeParams) -> None:
 
     if isinstance(LSP_SERVER.lsp, protocol.LanguageServerProtocol):
         if any(setting["logLevel"] == "debug" for setting in settings):
-            LSP_SERVER.lsp.trace = lsp.Trace.Verbose
+            LSP_SERVER.lsp.trace = lsp.TraceValues.Verbose
         elif any(
             setting["logLevel"] in ["error", "warn", "info"] for setting in settings
         ):
-            LSP_SERVER.lsp.trace = lsp.Trace.Messages
+            LSP_SERVER.lsp.trace = lsp.TraceValues.Messages
         else:
-            LSP_SERVER.lsp.trace = lsp.Trace.Off
+            LSP_SERVER.lsp.trace = lsp.TraceValues.Off
     _log_version_info()
 
 

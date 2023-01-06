@@ -22,7 +22,6 @@ def _expected_format_command():
     return {
         "title": f"{LINTER}: Run document formatting",
         "command": "editor.action.formatDocument",
-        "arguments": None,
     }
 
 
@@ -30,7 +29,6 @@ def _expected_organize_imports_command():
     return {
         "title": f"{LINTER}: Run organize imports",
         "command": "editor.action.organizeImports",
-        "arguments": None,
     }
 
 

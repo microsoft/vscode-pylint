@@ -55,7 +55,7 @@ TOOL_MODULE = "pylint"
 TOOL_DISPLAY = "Pylint"
 
 # Default arguments always passed to pylint.
-TOOL_ARGS = ["--reports=n", "--output-format=json"]
+TOOL_ARGS = ["--reports=n", "--output-format=json", "--clear-cache-post-run"]
 
 # Minimum version of pylint supported.
 MIN_VERSION = "2.12.2"

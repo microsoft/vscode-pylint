@@ -33,8 +33,7 @@ def test_publish_diagnostics_on_open():
             actual = params
             done.set()
 
-        ls_session.set_notification_callback(
-            session.PUBLISH_DIAGNOSTICS, _handler)
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
 
         ls_session.notify_did_open(
             {
@@ -110,8 +109,7 @@ def test_publish_diagnostics_on_save():
             actual = params
             done.set()
 
-        ls_session.set_notification_callback(
-            session.PUBLISH_DIAGNOSTICS, _handler)
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
 
         ls_session.notify_did_save(
             {
@@ -187,8 +185,7 @@ def test_publish_diagnostics_on_close():
             actual = params
             done.set()
 
-        ls_session.set_notification_callback(
-            session.PUBLISH_DIAGNOSTICS, _handler)
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
 
         ls_session.notify_did_open(
             {
@@ -249,8 +246,7 @@ def test_severity_setting(lint_code):
             actual = params
             done.set()
 
-        ls_session.set_notification_callback(
-            session.PUBLISH_DIAGNOSTICS, _handler)
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
 
         ls_session.notify_did_open(
             {

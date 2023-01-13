@@ -231,7 +231,7 @@ def test_publish_diagnostics_on_close():
 @pytest.mark.parametrize("lint_code", ["W0611", "unused-import", "warning"])
 def test_severity_setting(lint_code):
     """Test to ensure linting on file open."""
-    contents = TEST_FILE_PATH.read_text()
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
 
     actual = []
     with session.LspSession() as ls_session:

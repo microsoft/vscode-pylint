@@ -336,15 +336,6 @@ def initialize(params: lsp.InitializeParams) -> None:
         f"Settings used to run Server:\r\n{json.dumps(settings, indent=4, ensure_ascii=False)}\r\n"
     )
 
-    if isinstance(LSP_SERVER.lsp, protocol.LanguageServerProtocol):
-        if any(setting["logLevel"] == "debug" for setting in settings):
-            LSP_SERVER.lsp.trace = lsp.TraceValues.Verbose
-        elif any(
-            setting["logLevel"] in ["error", "warn", "info"] for setting in settings
-        ):
-            LSP_SERVER.lsp.trace = lsp.TraceValues.Messages
-        else:
-            LSP_SERVER.lsp.trace = lsp.TraceValues.Off
     _log_version_info()
 
 
@@ -401,7 +392,6 @@ def _update_workspace_settings(settings):
         WORKSPACE_SETTINGS[key] = {
             "workspaceFS": key,
             "workspace": uris.from_fs_path(key),
-            "logLevel": "error",
             "path": [],
             "interpreter": [sys.executable],
             "args": [],

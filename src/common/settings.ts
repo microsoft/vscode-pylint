@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { ConfigurationChangeEvent, WorkspaceFolder } from 'vscode';
+import { traceLog } from './log/logging';
 import { getInterpreterDetails } from './python';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
 
@@ -14,6 +15,7 @@ const DEFAULT_SEVERITY: Record<string, string> = {
     info: 'Information',
 };
 export interface ISettings {
+    cwd: string;
     workspace: string;
     args: string[];
     severity: Record<string, string>;
@@ -48,7 +50,13 @@ function getArgs(namespace: string, workspace: WorkspaceFolder): string[] {
     }
 
     const legacyConfig = getConfiguration('python', workspace.uri);
-    return legacyConfig.get<string[]>('linting.pylintArgs', []);
+    const legacyArgs = legacyConfig.get<string[]>('linting.pylintArgs', []);
+    if (legacyArgs.length > 0) {
+        traceLog('Using legacy Pylint args from `python.linting.pylintArgs`');
+        return legacyArgs;
+    }
+
+    return [];
 }
 
 function getPath(namespace: string, workspace: WorkspaceFolder): string[] {
@@ -62,9 +70,22 @@ function getPath(namespace: string, workspace: WorkspaceFolder): string[] {
     const legacyConfig = getConfiguration('python', workspace.uri);
     const legacyPath = legacyConfig.get<string>('linting.pylintPath', '');
     if (legacyPath.length > 0 && legacyPath !== 'pylint') {
+        traceLog('Using legacy Pylint path from `python.linting.pylintPath`');
         return [legacyPath];
     }
     return [];
+}
+
+function getCwd(namespace: string, workspace: WorkspaceFolder): string {
+    const legacyConfig = getConfiguration('python', workspace.uri);
+    const legacyCwd = legacyConfig.get<string>('linting.cwd');
+
+    if (legacyCwd) {
+        traceLog('Using cwd from `python.linting.cwd`.');
+        return resolveWorkspace(workspace, legacyCwd);
+    }
+
+    return workspace.uri.fsPath;
 }
 
 export function getInterpreterFromSetting(namespace: string) {
@@ -90,6 +111,7 @@ export async function getWorkspaceSettings(
     const args = getArgs(namespace, workspace).map((s) => resolveWorkspace(workspace, s));
     const path = getPath(namespace, workspace).map((s) => resolveWorkspace(workspace, s));
     const workspaceSetting = {
+        cwd: getCwd(namespace, workspace),
         workspace: workspace.uri.toString(),
         args,
         severity: config.get<Record<string, string>>('severity', DEFAULT_SEVERITY),

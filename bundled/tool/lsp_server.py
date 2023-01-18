@@ -390,6 +390,7 @@ def _update_workspace_settings(settings):
     if not settings:
         key = os.getcwd()
         WORKSPACE_SETTINGS[key] = {
+            "cwd": key,
             "workspaceFS": key,
             "workspace": uris.from_fs_path(key),
             "path": [],
@@ -461,7 +462,7 @@ def _run_tool_on_document(
     settings = copy.deepcopy(_get_settings_by_document(document))
 
     code_workspace = settings["workspaceFS"]
-    cwd = settings["workspaceFS"]
+    cwd = settings["cwd"]
 
     use_path = False
     use_rpc = False
@@ -543,7 +544,7 @@ def _run_tool_on_document(
 def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunResult:
     """Runs tool."""
     code_workspace = settings["workspaceFS"]
-    cwd = settings["workspaceFS"]
+    cwd = settings["cwd"]
 
     use_path = False
     use_rpc = False

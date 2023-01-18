@@ -37,7 +37,7 @@ update_sys_path(
 import lsp_jsonrpc as jsonrpc
 import lsp_utils as utils
 from lsprotocol import types as lsp
-from pygls import protocol, server, uris, workspace
+from pygls import server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"

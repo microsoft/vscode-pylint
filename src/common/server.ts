@@ -28,7 +28,7 @@ async function createServer(
     workspaceSetting: ISettings,
 ): Promise<LanguageClient> {
     const command = interpreter[0];
-     const cwd = projectRoot.uri.fsPath;
+    const cwd = projectRoot.uri.fsPath;
 
     // Set debugger path needed for debugging python code.
     const newEnv = { ...process.env };
@@ -129,9 +129,9 @@ export async function restartServer(
             }
         }),
         newLSClient.start(),
-        outputChannel.onDidChangeLogLevel((e)=>{
+        outputChannel.onDidChangeLogLevel((e) => {
             newLSClient.trace = getLSClientTraceLevel(e);
-        })
+        }),
     );
     return newLSClient;
 }

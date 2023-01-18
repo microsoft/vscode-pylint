@@ -4,7 +4,6 @@
 import * as util from 'util';
 import { Disposable, LogOutputChannel } from 'vscode';
 
-
 type Arguments = unknown[];
 class OutputChannelLogger {
     constructor(private readonly channel: LogOutputChannel) {}

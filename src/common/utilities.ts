@@ -7,7 +7,7 @@ import { env, LogLevel, Uri, WorkspaceFolder } from 'vscode';
 import { Trace, TraceValues } from 'vscode-jsonrpc/node';
 import { getWorkspaceFolders } from './vscodeapi';
 
-export function getLSClientTraceLevel(logLevel:LogLevel): Trace{
+export function getLSClientTraceLevel(logLevel: LogLevel): Trace {
     switch (logLevel) {
         case LogLevel.Error:
         case LogLevel.Warning:
@@ -35,15 +35,15 @@ export async function getProjectRoot(): Promise<WorkspaceFolder> {
         let rootWorkspace = workspaces[0];
         let root = undefined;
         for (const w of workspaces) {
-            if(await fs.pathExists(w.uri.fsPath)){
+            if (await fs.pathExists(w.uri.fsPath)) {
                 root = w.uri.fsPath;
                 rootWorkspace = w;
-                break; 
+                break;
             }
         }
-        
+
         for (const w of workspaces) {
-            if (root && root.length > w.uri.fsPath.length && await fs.pathExists(w.uri.fsPath)) {
+            if (root && root.length > w.uri.fsPath.length && (await fs.pathExists(w.uri.fsPath))) {
                 root = w.uri.fsPath;
                 rootWorkspace = w;
             }

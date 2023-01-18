@@ -11,10 +11,7 @@ import {
     runPythonExtensionCommand,
 } from './common/python';
 import { restartServer } from './common/server';
-import {
-    checkIfConfigurationChanged,
-    getInterpreterFromSetting,
-} from './common/settings';
+import { checkIfConfigurationChanged, getInterpreterFromSetting } from './common/settings';
 import { loadServerDefaults } from './common/setup';
 import { getProjectRoot } from './common/utilities';
 import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';

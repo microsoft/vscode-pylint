@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 
 export function createOutputChannel(name: string): LogOutputChannel {
-    return window.createOutputChannel(name, {log: true});
+    return window.createOutputChannel(name, { log: true });
 }
 
 export function getConfiguration(config: string, scope?: ConfigurationScope): WorkspaceConfiguration {

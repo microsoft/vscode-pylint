@@ -174,7 +174,7 @@ class ProcessManager:
 
 
 _process_manager = ProcessManager()
-atexit.register(lambda: _process_manager.stop_all_processes())
+atexit.register(_process_manager.stop_all_processes)
 
 
 def _get_json_rpc(workspace: str) -> Union[JsonRpc, None]:

@@ -3,8 +3,7 @@
 
 import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
-import { registerLogger, setLoggingLevel, traceLog, traceVerbose } from './common/log/logging';
-import { OutputChannelLogger } from './common/log/outputChannelLogger';
+import { registerLogger, traceLog, traceVerbose } from './common/log/logging';
 import {
     getInterpreterDetails,
     initializePython,
@@ -12,12 +11,7 @@ import {
     runPythonExtensionCommand,
 } from './common/python';
 import { restartServer } from './common/server';
-import {
-    checkIfConfigurationChanged,
-    getExtensionSettings,
-    getInterpreterFromSetting,
-    ISettings,
-} from './common/settings';
+import { checkIfConfigurationChanged, getInterpreterFromSetting } from './common/settings';
 import { loadServerDefaults } from './common/setup';
 import { getProjectRoot } from './common/utilities';
 import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';
@@ -30,13 +24,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const serverName = serverInfo.name;
     const serverId = serverInfo.module;
 
-    const settings: ISettings[] = await getExtensionSettings(serverId);
-
     // Setup logging
     const outputChannel = createOutputChannel(serverName);
-    context.subscriptions.push(outputChannel);
-    setLoggingLevel(settings.length > 0 ? settings[0].logLevel : undefined);
-    context.subscriptions.push(registerLogger(new OutputChannelLogger(outputChannel)));
+    context.subscriptions.push(outputChannel, registerLogger(outputChannel));
 
     traceLog(`Name: ${serverName}`);
     traceLog(`Module: ${serverInfo.module}`);
@@ -59,7 +49,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             if (interpreter?.length || interpreterDetails.path) {
                 await runServer();
             } else {
-                runPythonExtensionCommand('python.triggerEnvSelection', getProjectRoot().uri);
+                const projectRoot = await getProjectRoot();
+                runPythonExtensionCommand('python.triggerEnvSelection', projectRoot.uri);
             }
         }),
     );
@@ -67,9 +58,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
             if (checkIfConfigurationChanged(e, serverId)) {
-                const newSettings = await getExtensionSettings(serverId);
-                setLoggingLevel(newSettings[0].logLevel);
-
                 await runServer();
             }
         }),

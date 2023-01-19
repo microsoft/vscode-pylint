@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { ConfigurationChangeEvent, WorkspaceFolder } from 'vscode';
-import { LoggingLevelSettingType } from './log/types';
 import { getInterpreterDetails } from './python';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
 
@@ -16,7 +15,6 @@ const DEFAULT_SEVERITY: Record<string, string> = {
 };
 export interface ISettings {
     workspace: string;
-    logLevel: LoggingLevelSettingType;
     args: string[];
     severity: Record<string, string>;
     path: string[];
@@ -93,7 +91,6 @@ export async function getWorkspaceSettings(
     const path = getPath(namespace, workspace).map((s) => resolveWorkspace(workspace, s));
     const workspaceSetting = {
         workspace: workspace.uri.toString(),
-        logLevel: config.get<LoggingLevelSettingType>('logLevel', 'error'),
         args,
         severity: config.get<Record<string, string>>('severity', DEFAULT_SEVERITY),
         path,
@@ -106,7 +103,6 @@ export async function getWorkspaceSettings(
 
 export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
     const settings = [
-        `${namespace}.trace`,
         `${namespace}.args`,
         `${namespace}.severity`,
         `${namespace}.path`,

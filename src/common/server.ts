@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, OutputChannel } from 'vscode';
+import { Disposable, LogOutputChannel, WorkspaceFolder } from 'vscode';
 import { State } from 'vscode-languageclient';
 import {
     LanguageClient,
@@ -13,21 +13,22 @@ import { DEBUG_SERVER_SCRIPT_PATH, SERVER_SCRIPT_PATH } from './constants';
 import { traceError, traceInfo, traceVerbose } from './log/logging';
 import { getDebuggerPath } from './python';
 import { getExtensionSettings, getWorkspaceSettings, ISettings } from './settings';
-import { getProjectRoot, traceLevelToLSTrace } from './utilities';
+import { getLSClientTraceLevel, getProjectRoot } from './utilities';
 import { isVirtualWorkspace } from './vscodeapi';
 
 export type IInitOptions = { settings: ISettings[] };
 
-export async function createServer(
+async function createServer(
+    projectRoot: WorkspaceFolder,
     interpreter: string[],
     serverId: string,
     serverName: string,
-    outputChannel: OutputChannel,
+    outputChannel: LogOutputChannel,
     initializationOptions: IInitOptions,
     workspaceSetting: ISettings,
 ): Promise<LanguageClient> {
     const command = interpreter[0];
-    const cwd = getProjectRoot().uri.fsPath;
+    const cwd = projectRoot.uri.fsPath;
 
     // Set debugger path needed for debugging python code.
     const newEnv = { ...process.env };
@@ -80,7 +81,7 @@ let _disposables: Disposable[] = [];
 export async function restartServer(
     serverId: string,
     serverName: string,
-    outputChannel: OutputChannel,
+    outputChannel: LogOutputChannel,
     lsClient?: LanguageClient,
 ): Promise<LanguageClient | undefined> {
     if (lsClient) {
@@ -89,7 +90,8 @@ export async function restartServer(
         _disposables.forEach((d) => d.dispose());
         _disposables = [];
     }
-    const workspaceSetting = await getWorkspaceSettings(serverId, getProjectRoot(), true);
+    const projectRoot = await getProjectRoot();
+    const workspaceSetting = await getWorkspaceSettings(serverId, projectRoot, true);
     if (workspaceSetting.interpreter.length === 0) {
         traceError(
             'Python interpreter missing:\r\n' +
@@ -100,6 +102,7 @@ export async function restartServer(
     }
 
     const newLSClient = await createServer(
+        projectRoot,
         workspaceSetting.interpreter,
         serverId,
         serverName,
@@ -109,8 +112,7 @@ export async function restartServer(
         },
         workspaceSetting,
     );
-
-    newLSClient.trace = traceLevelToLSTrace(workspaceSetting.logLevel);
+    newLSClient.trace = getLSClientTraceLevel(outputChannel.logLevel);
     traceInfo(`Server: Start requested.`);
     _disposables.push(
         newLSClient.onDidChangeState((e) => {
@@ -127,6 +129,9 @@ export async function restartServer(
             }
         }),
         newLSClient.start(),
+        outputChannel.onDidChangeLogLevel((e) => {
+            newLSClient.trace = getLSClientTraceLevel(e);
+        }),
     );
     return newLSClient;
 }

@@ -30,6 +30,7 @@ update_sys_path(
     os.fspath(pathlib.Path(__file__).parent.parent / "libs"),
     os.getenv("LS_IMPORT_STRATEGY", "useBundled"),
 )
+update_sys_path(os.getcwd(), os.getenv("LS_IMPORT_STRATEGY", "useBundled"))
 
 
 # pylint: disable=wrong-import-position,import-error

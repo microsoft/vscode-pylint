@@ -326,6 +326,7 @@ def _create_workspace_edits(
 def initialize(params: lsp.InitializeParams) -> None:
     """LSP handler for initialize request."""
     log_to_output(f"CWD Server: {os.getcwd()}")
+    update_sys_path(os.getcwd(), os.getenv("LS_IMPORT_STRATEGY", "useBundled"))
 
     paths = "\r\n   ".join(sys.path)
     log_to_output(f"sys.path used to run Server:\r\n   {paths}")

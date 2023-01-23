@@ -20,15 +20,15 @@ export type IInitOptions = { settings: ISettings[] };
 
 async function createServer(
     projectRoot: WorkspaceFolder,
-    interpreter: string[],
+    settings: ISettings,
     serverId: string,
     serverName: string,
     outputChannel: LogOutputChannel,
     initializationOptions: IInitOptions,
     workspaceSetting: ISettings,
 ): Promise<LanguageClient> {
-    const command = interpreter[0];
-    const cwd = projectRoot.uri.fsPath;
+    const command = settings.interpreter[0];
+    const cwd = settings.cwd;
 
     // Set debugger path needed for debugging python code.
     const newEnv = { ...process.env };
@@ -47,8 +47,8 @@ async function createServer(
 
     const args =
         newEnv.USE_DEBUGPY === 'False'
-            ? interpreter.slice(1).concat([SERVER_SCRIPT_PATH])
-            : interpreter.slice(1).concat([DEBUG_SERVER_SCRIPT_PATH]);
+            ? settings.interpreter.slice(1).concat([SERVER_SCRIPT_PATH])
+            : settings.interpreter.slice(1).concat([DEBUG_SERVER_SCRIPT_PATH]);
     traceInfo(`Server run command: ${[command, ...args].join(' ')}`);
 
     const serverOptions: ServerOptions = {
@@ -103,7 +103,7 @@ export async function restartServer(
 
     const newLSClient = await createServer(
         projectRoot,
-        workspaceSetting.interpreter,
+        workspaceSetting,
         serverId,
         serverName,
         outputChannel,
@@ -112,7 +112,6 @@ export async function restartServer(
         },
         workspaceSetting,
     );
-    newLSClient.trace = getLSClientTraceLevel(outputChannel.logLevel);
     traceInfo(`Server: Start requested.`);
     _disposables.push(
         newLSClient.onDidChangeState((e) => {
@@ -133,5 +132,6 @@ export async function restartServer(
             newLSClient.trace = getLSClientTraceLevel(e);
         }),
     );
+    newLSClient.trace = getLSClientTraceLevel(outputChannel.logLevel);
     return newLSClient;
 }

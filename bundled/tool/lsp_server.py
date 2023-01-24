@@ -329,9 +329,6 @@ def initialize(params: lsp.InitializeParams) -> None:
     import_strategy = os.getenv("LS_IMPORT_STRATEGY", "useBundled")
     update_sys_path(os.getcwd(), import_strategy)
 
-    paths = "\r\n   ".join(sys.path)
-    log_to_output(f"sys.path used to run Server:\r\n   {paths}")
-
     settings = params.initialization_options["settings"]
     _update_workspace_settings(settings)
     log_to_output(
@@ -342,6 +339,9 @@ def initialize(params: lsp.InitializeParams) -> None:
     setting = _get_settings_by_path(pathlib.Path(os.getcwd()))
     for extra in setting.get("extraPaths", []):
         update_sys_path(extra, import_strategy)
+
+    paths = "\r\n   ".join(sys.path)
+    log_to_output(f"sys.path used to run Server:\r\n   {paths}")
 
     _log_version_info()
 
@@ -505,11 +505,7 @@ def _run_tool_on_document(
     if use_path or use_rpc:
         # for path and rpc modes we need to set PYTHONPATH, for module or API mode
         # we would have already set the extra paths in the initialize handler.
-        paths = _get_updated_python_path_env_var(settings["extraPaths"])
-        if paths:
-            env = {
-                "PYTHONPATH": paths,
-            }
+        env = _get_updated_env(settings)
 
     if use_path:
         # This mode is used when running executables.
@@ -594,11 +590,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
     if use_path or use_rpc:
         # for path and rpc modes we need to set PYTHONPATH, for module or API mode
         # we would have already set the extra paths in the initialize handler.
-        paths = _get_updated_python_path_env_var(settings["extraPaths"])
-        if paths:
-            env = {
-                "PYTHONPATH": paths,
-            }
+        env = _get_updated_env(settings)
 
     if use_path:
         # This mode is used when running executables.
@@ -643,11 +635,14 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
     return result
 
 
-def _get_updated_python_path_env_var(settings: Dict[str, Any]) -> str:
-    """Returns the updated PYTHONPATH environment variable."""
+def _get_updated_env(settings: Dict[str, Any]) -> str:
+    """Returns the updated environment variables."""
     extra_paths = settings.get("extraPaths", [])
     paths = os.environ.get("PYTHONPATH", "").split(os.pathsep) + extra_paths
-    return os.pathsep.join([p for p in paths if len(p) > 0])
+    python_paths = os.pathsep.join([p for p in paths if len(p) > 0])
+    if python_paths:
+        return {"PYTHONPATH": python_paths}
+    return None
 
 
 def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunResult:

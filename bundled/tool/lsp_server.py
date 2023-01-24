@@ -326,7 +326,8 @@ def _create_workspace_edits(
 def initialize(params: lsp.InitializeParams) -> None:
     """LSP handler for initialize request."""
     log_to_output(f"CWD Server: {os.getcwd()}")
-    update_sys_path(os.getcwd(), os.getenv("LS_IMPORT_STRATEGY", "useBundled"))
+    import_strategy = os.getenv("LS_IMPORT_STRATEGY", "useBundled")
+    update_sys_path(os.getcwd(), import_strategy)
 
     paths = "\r\n   ".join(sys.path)
     log_to_output(f"sys.path used to run Server:\r\n   {paths}")
@@ -336,6 +337,11 @@ def initialize(params: lsp.InitializeParams) -> None:
     log_to_output(
         f"Settings used to run Server:\r\n{json.dumps(settings, indent=4, ensure_ascii=False)}\r\n"
     )
+
+    # Add extra paths to sys.path
+    setting = _get_settings_by_path(pathlib.Path(os.getcwd()))
+    for extra in setting.get("extraPaths", []):
+        update_sys_path(extra, import_strategy)
 
     _log_version_info()
 
@@ -418,20 +424,25 @@ def _update_workspace_settings(settings):
         }
 
 
+def _get_settings_by_path(file_path: pathlib.Path):
+    workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
+
+    while file_path != file_path.parent:
+        str_file_path = str(file_path)
+        if str_file_path in workspaces:
+            return WORKSPACE_SETTINGS[str_file_path]
+        file_path = file_path.parent
+
+    setting_values = list(WORKSPACE_SETTINGS.values())
+    return setting_values[0]
+
+
 def _get_settings_by_document(document: workspace.Document | None):
     if len(WORKSPACE_SETTINGS) == 1 or document is None or document.path is None:
         return list(WORKSPACE_SETTINGS.values())[0]
 
     document_workspace = pathlib.Path(document.path)
-    workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
-
-    while document_workspace != document_workspace.parent:
-        if str(document_workspace) in workspaces:
-            return WORKSPACE_SETTINGS[str(document_workspace)]
-        document_workspace = document_workspace.parent
-
-    setting_values = list(WORKSPACE_SETTINGS.values())
-    return setting_values[0]
+    return _get_settings_by_path(document_workspace)
 
 
 # *****************************************************
@@ -490,6 +501,16 @@ def _run_tool_on_document(
     else:
         argv += [document.path]
 
+    env = None
+    if use_path or use_rpc:
+        # for path and rpc modes we need to set PYTHONPATH, for module or API mode
+        # we would have already set the extra paths in the initialize handler.
+        paths = _get_updated_python_path_env_var(settings["extraPaths"])
+        if paths:
+            env = {
+                "PYTHONPATH": paths,
+            }
+
     if use_path:
         # This mode is used when running executables.
         log_to_output(" ".join(argv))
@@ -499,6 +520,7 @@ def _run_tool_on_document(
             use_stdin=use_stdin,
             cwd=cwd,
             source=document.source.replace("\r\n", "\n"),
+            env=env,
         )
         if result.stderr:
             log_to_output(result.stderr)
@@ -516,6 +538,7 @@ def _run_tool_on_document(
             use_stdin=use_stdin,
             cwd=cwd,
             source=document.source,
+            env=env,
         )
         result = _to_run_result_with_logging(result)
     else:
@@ -567,11 +590,21 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
 
     argv += extra_args
 
+    env = None
+    if use_path or use_rpc:
+        # for path and rpc modes we need to set PYTHONPATH, for module or API mode
+        # we would have already set the extra paths in the initialize handler.
+        paths = _get_updated_python_path_env_var(settings["extraPaths"])
+        if paths:
+            env = {
+                "PYTHONPATH": paths,
+            }
+
     if use_path:
         # This mode is used when running executables.
         log_to_output(" ".join(argv))
         log_to_output(f"CWD Server: {cwd}")
-        result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd)
+        result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd, env=env)
         if result.stderr:
             log_to_output(result.stderr)
     elif use_rpc:
@@ -586,6 +619,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
             argv=argv,
             use_stdin=True,
             cwd=cwd,
+            env=env,
         )
         result = _to_run_result_with_logging(result)
     else:
@@ -607,6 +641,13 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
 
     log_to_output(f"\r\n{result.stdout}\r\n")
     return result
+
+
+def _get_updated_python_path_env_var(settings: Dict[str, Any]) -> str:
+    """Returns the updated PYTHONPATH environment variable."""
+    extra_paths = settings.get("extraPaths", [])
+    paths = os.environ.get("PYTHONPATH", "").split(os.pathsep) + extra_paths
+    return os.pathsep.join([p for p in paths if len(p) > 0])
 
 
 def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunResult:

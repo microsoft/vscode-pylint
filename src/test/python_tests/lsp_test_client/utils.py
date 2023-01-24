@@ -64,5 +64,6 @@ def get_initialization_options():
     setting["workspace"] = as_uri(str(PROJECT_ROOT))
     setting["interpreter"] = []
     setting["cwd"] = str(PROJECT_ROOT)
+    setting["extraPaths"] = []
 
     return {"settings": [setting]}

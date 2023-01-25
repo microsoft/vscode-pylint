@@ -39,7 +39,7 @@ def test_path():
     init_params["initializationOptions"]["settings"][0]["path"] = ["pylint"]
 
     argv_callback_object = CallbackObject()
-    contents = TEST_FILE_PATH.read_text()
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
 
     actual = True
     with session.LspSession() as ls_session:
@@ -97,7 +97,7 @@ def test_interpreter():
     init_params["initializationOptions"]["settings"][0]["interpreter"] = ["python"]
 
     argv_callback_object = CallbackObject()
-    contents = TEST_FILE_PATH.read_text()
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
 
     actual = True
     with session.LspSession() as ls_session:

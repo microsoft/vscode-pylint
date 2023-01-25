@@ -23,6 +23,7 @@ export interface ISettings {
     interpreter: string[];
     importStrategy: string;
     showNotifications: string;
+    extraPaths: string[];
 }
 
 export async function getExtensionSettings(namespace: string, includeInterpreter?: boolean): Promise<ISettings[]> {
@@ -88,6 +89,16 @@ function getCwd(namespace: string, workspace: WorkspaceFolder): string {
     return workspace.uri.fsPath;
 }
 
+function getExtraPaths(namespace: string, workspace: WorkspaceFolder): string[] {
+    const legacyConfig = getConfiguration('python', workspace.uri);
+    const legacyExtraPaths = legacyConfig.get<string[]>('analysis.extraPaths', []);
+
+    if (legacyExtraPaths.length > 0) {
+        traceLog('Using cwd from `python.analysis.extraPaths`.');
+    }
+    return legacyExtraPaths;
+}
+
 export function getInterpreterFromSetting(namespace: string) {
     const config = getConfiguration(namespace);
     return config.get<string[]>('interpreter');
@@ -110,6 +121,7 @@ export async function getWorkspaceSettings(
 
     const args = getArgs(namespace, workspace).map((s) => resolveWorkspace(workspace, s));
     const path = getPath(namespace, workspace).map((s) => resolveWorkspace(workspace, s));
+    const extraPaths = getExtraPaths(namespace, workspace);
     const workspaceSetting = {
         cwd: getCwd(namespace, workspace),
         workspace: workspace.uri.toString(),
@@ -119,6 +131,7 @@ export async function getWorkspaceSettings(
         interpreter: (interpreter ?? []).map((s) => resolveWorkspace(workspace, s)),
         importStrategy: config.get<string>('importStrategy', 'fromEnvironment'),
         showNotifications: config.get<string>('showNotifications', 'off'),
+        extraPaths: extraPaths.map((s) => resolveWorkspace(workspace, s)),
     };
     return workspaceSetting;
 }

@@ -41,8 +41,7 @@
     "activationEvents": [
         "onLanguage:python",
         "workspaceContains:.pylintrc",
-        "workspaceContains:*.py",
-        "onCommand:pylint.restart"
+        "workspaceContains:*.py"
     ],
     "main": "./dist/extension.js",
     "l10n": "./l10n",

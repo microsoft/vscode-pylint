@@ -31,7 +31,7 @@ def _check_files(names: List[str]) -> None:
         file_path = root_dir / name
         lines: List[str] = file_path.read_text().splitlines()
         if any(line for line in lines if line.startswith("# TODO:")):
-            raise Exception(f"Please update {os.fspath(file_path)}.")
+            raise ValueError(f"Please update {os.fspath(file_path)}.")
 
 
 def _update_pip_packages(session: nox.Session) -> None:

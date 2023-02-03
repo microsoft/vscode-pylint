@@ -65,6 +65,10 @@ MIN_VERSION = "2.12.2"
 # **********************************************************
 
 
+# Captures version of `pylint` in various workspaces.
+VERSION_TABLE: Dict[str, (int, int, int)] = {}
+
+
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_OPEN)
 def did_open(params: lsp.DidOpenTextDocumentParams) -> None:
     """LSP handler for textDocument/didOpen request."""
@@ -91,7 +95,15 @@ def did_close(params: lsp.DidCloseTextDocumentParams) -> None:
 
 def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
     try:
-        result = _run_tool_on_document(document, use_stdin=True)
+        extra_args = []
+
+        code_workspace = _get_settings_by_document(document)["workspaceFS"]
+        if VERSION_TABLE.get(code_workspace, None):
+            major, minor, _ = VERSION_TABLE[code_workspace]
+            if major == 2 and minor >= 16:
+                extra_args += ["--clear-cache-post-run=y"]
+
+        result = _run_tool_on_document(document, use_stdin=True, extra_args=extra_args)
         if result and result.stdout:
             log_to_output(f"{document.uri} :\r\n{result.stdout}")
 
@@ -380,6 +392,11 @@ def _log_version_info() -> None:
 
             version = parse_version(actual_version)
             min_version = parse_version(MIN_VERSION)
+            VERSION_TABLE[code_workspace] = (
+                version.major,
+                version.minor,
+                version.micro,
+            )
 
             if version < min_version:
                 log_error(

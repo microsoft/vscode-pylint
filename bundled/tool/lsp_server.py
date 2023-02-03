@@ -360,6 +360,7 @@ def on_shutdown(_params: Optional[Any] = None) -> None:
     jsonrpc.shutdown_json_rpc()
 
 
+VERSION_TABLE: Dict[str, (int, int, int)] = {}
 def _log_version_info() -> None:
     for value in WORKSPACE_SETTINGS.values():
         try:
@@ -380,6 +381,7 @@ def _log_version_info() -> None:
 
             version = parse_version(actual_version)
             min_version = parse_version(MIN_VERSION)
+            VERSION_TABLE[code_workspace] = (version.major, version.minor, version.micro)
 
             if version < min_version:
                 log_error(
@@ -501,6 +503,11 @@ def _run_tool_on_document(
         # if the interpreter is same as the interpreter running this
         # process then run as module.
         argv = [TOOL_MODULE]
+
+    if VERSION_TABLE.get(code_workspace, None):
+        major, minor, _ = VERSION_TABLE[code_workspace]
+        if major == 2 and minor >= 16:
+            argv += ["--clear-cache-post-run=y"]
 
     argv += TOOL_ARGS + settings["args"] + extra_args
 

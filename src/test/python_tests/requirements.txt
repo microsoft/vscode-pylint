@@ -121,7 +121,7 @@ ujson==5.7.0 \
     --hash=sha256:f7f241488879d91a136b299e0c4ce091996c684a53775e63bb442d1a8e9ae22a \
     --hash=sha256:ff0004c3f5a9a6574689a553d1b7819d1a496b4f005a7451f339dc2d9f4cf98c
     # via python-jsonrpc-server
-zipp==3.12.0 \
-    --hash=sha256:73efd63936398aac78fd92b6f4865190119d6c91b531532e798977ea8dd402eb \
-    --hash=sha256:9eb0a4c5feab9b08871db0d672745b53450d7f26992fd1e4653aa43345e97b86
+zipp==3.12.1 \
+    --hash=sha256:6c4fe274b8f85ec73c37a8e4e3fa00df9fb9335da96fb789e3b96b318e5097b3 \
+    --hash=sha256:a3cac813d40993596b39ea9e93a18e8a2076d5c378b8bc88ec32ab264e04ad02
     # via importlib-metadata

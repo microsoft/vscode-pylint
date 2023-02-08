@@ -30,3 +30,7 @@ If you want to disable pylint, you can [disable this extension](https://code.vis
 | Command                | Description                       |
 | ---------------------- | --------------------------------- |
 | Pylint: Restart Server | Force re-start the linter server. |
+
+## Logging
+
+From the command pallet, select and run `Developer: Set Log Level...` command. From the quick pick menu, select `Pylint` extension from the `Extension logs` group. Then select the log level you want to set.

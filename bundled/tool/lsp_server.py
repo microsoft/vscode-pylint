@@ -40,6 +40,7 @@ from lsprotocol import types as lsp
 from pygls import server, uris, workspace
 
 WORKSPACE_SETTINGS = {}
+GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
 MAX_WORKERS = 5
@@ -343,10 +344,15 @@ def initialize(params: lsp.InitializeParams) -> None:
     import_strategy = os.getenv("LS_IMPORT_STRATEGY", "useBundled")
     update_sys_path(os.getcwd(), import_strategy)
 
+    GLOBAL_SETTINGS.update(**params.initialization_options.get("globalSettings", {}))
+
     settings = params.initialization_options["settings"]
     _update_workspace_settings(settings)
     log_to_output(
         f"Settings used to run Server:\r\n{json.dumps(settings, indent=4, ensure_ascii=False)}\r\n"
+    )
+    log_to_output(
+        f"Global settings:\r\n{json.dumps(GLOBAL_SETTINGS, indent=4, ensure_ascii=False)}\r\n"
     )
 
     # Add extra paths to sys.path
@@ -418,17 +424,14 @@ def _log_version_info() -> None:
 # *****************************************************
 # Internal functional and settings management APIs.
 # *****************************************************
-def _update_workspace_settings(settings):
-    if not settings:
-        key = os.getcwd()
-        WORKSPACE_SETTINGS[key] = {
-            "cwd": key,
-            "workspaceFS": key,
-            "workspace": uris.from_fs_path(key),
-            "path": [],
-            "interpreter": [sys.executable],
-            "args": [],
-            "severity": {
+def _get_global_defaults():
+    return {
+        "path": GLOBAL_SETTINGS.get("path", []),
+        "interpreter": GLOBAL_SETTINGS.get("interpreter", [sys.executable]),
+        "args": GLOBAL_SETTINGS.get("args", []),
+        "severity": GLOBAL_SETTINGS.get(
+            "severity",
+            {
                 "convention": "Information",
                 "error": "Error",
                 "fatal": "Error",
@@ -436,8 +439,21 @@ def _update_workspace_settings(settings):
                 "warning": "Warning",
                 "info": "Information",
             },
-            "importStrategy": "useBundled",
-            "showNotifications": "off",
+        ),
+        "importStrategy": GLOBAL_SETTINGS.get("importStrategy", "useBundled"),
+        "showNotifications": GLOBAL_SETTINGS.get("showNotifications", "off"),
+        "extraPaths": GLOBAL_SETTINGS.get("extraPaths", []),
+    }
+
+
+def _update_workspace_settings(settings):
+    if not settings:
+        key = os.getcwd()
+        WORKSPACE_SETTINGS[key] = {
+            "cwd": key,
+            "workspaceFS": key,
+            "workspace": uris.from_fs_path(key),
+            **_get_global_defaults(),
         }
         return
 
@@ -462,12 +478,36 @@ def _get_settings_by_path(file_path: pathlib.Path):
     return setting_values[0]
 
 
+def _get_document_key(document: workspace.Document):
+    if WORKSPACE_SETTINGS:
+        document_workspace = pathlib.Path(document.path)
+        workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
+
+        # Find workspace settings for the given file.
+        while document_workspace != document_workspace.parent:
+            if str(document_workspace) in workspaces:
+                return str(document_workspace)
+            document_workspace = document_workspace.parent
+
+    return None
+
+
 def _get_settings_by_document(document: workspace.Document | None):
-    if len(WORKSPACE_SETTINGS) == 1 or document is None or document.path is None:
+    if document is None or document.path is None:
         return list(WORKSPACE_SETTINGS.values())[0]
 
-    document_workspace = pathlib.Path(document.path)
-    return _get_settings_by_path(document_workspace)
+    key = _get_document_key(document)
+    if key is None:
+        # This is either a non-workspace file or there is no workspace.
+        key = os.fspath(pathlib.Path(document.path).parent)
+        return {
+            "cwd": key,
+            "workspaceFS": key,
+            "workspace": uris.from_fs_path(key),
+            **_get_global_defaults(),
+        }
+
+    return WORKSPACE_SETTINGS[str(key)]
 
 
 # *****************************************************

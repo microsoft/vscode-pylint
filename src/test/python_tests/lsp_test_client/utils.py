@@ -66,4 +66,4 @@ def get_initialization_options():
     setting["cwd"] = str(PROJECT_ROOT)
     setting["extraPaths"] = []
 
-    return {"settings": [setting]}
+    return {"settings": [setting], "globalSettings": setting}

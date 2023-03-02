@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, LogOutputChannel, WorkspaceFolder } from 'vscode';
+import * as fsapi from 'fs-extra';
+import { Disposable, env, LogOutputChannel, WorkspaceFolder } from 'vscode';
 import { State } from 'vscode-languageclient';
 import {
     LanguageClient,
@@ -19,13 +20,11 @@ import { isVirtualWorkspace } from './vscodeapi';
 export type IInitOptions = { settings: ISettings[]; globalSettings: ISettings };
 
 async function createServer(
-    projectRoot: WorkspaceFolder,
     settings: ISettings,
     serverId: string,
     serverName: string,
     outputChannel: LogOutputChannel,
     initializationOptions: IInitOptions,
-    workspaceSetting: ISettings,
 ): Promise<LanguageClient> {
     const command = settings.interpreter[0];
     const cwd = settings.cwd;
@@ -33,6 +32,7 @@ async function createServer(
     // Set debugger path needed for debugging python code.
     const newEnv = { ...process.env };
     const debuggerPath = await getDebuggerPath();
+    const isDebugScript = await fsapi.pathExists(DEBUG_SERVER_SCRIPT_PATH);
     if (newEnv.USE_DEBUGPY && debuggerPath) {
         newEnv.DEBUGPY_PATH = debuggerPath;
     } else {
@@ -40,13 +40,13 @@ async function createServer(
     }
 
     // Set import strategy
-    newEnv.LS_IMPORT_STRATEGY = workspaceSetting.importStrategy;
+    newEnv.LS_IMPORT_STRATEGY = settings.importStrategy;
 
     // Set notification type
-    newEnv.LS_SHOW_NOTIFICATION = workspaceSetting.showNotifications;
+    newEnv.LS_SHOW_NOTIFICATION = settings.showNotifications;
 
     const args =
-        newEnv.USE_DEBUGPY === 'False'
+        newEnv.USE_DEBUGPY === 'False' || !isDebugScript
             ? settings.interpreter.slice(1).concat([SERVER_SCRIPT_PATH])
             : settings.interpreter.slice(1).concat([DEBUG_SERVER_SCRIPT_PATH]);
     traceInfo(`Server run command: ${[command, ...args].join(' ')}`);
@@ -101,18 +101,10 @@ export async function restartServer(
         return undefined;
     }
 
-    const newLSClient = await createServer(
-        projectRoot,
-        workspaceSetting,
-        serverId,
-        serverName,
-        outputChannel,
-        {
-            settings: await getExtensionSettings(serverId, true),
-            globalSettings: await getGlobalSettings(serverId, false),
-        },
-        workspaceSetting,
-    );
+    const newLSClient = await createServer(workspaceSetting, serverId, serverName, outputChannel, {
+        settings: await getExtensionSettings(serverId, true),
+        globalSettings: await getGlobalSettings(serverId, false),
+    });
     traceInfo(`Server: Start requested.`);
     _disposables.push(
         newLSClient.onDidChangeState((e) => {
@@ -128,11 +120,8 @@ export async function restartServer(
                     break;
             }
         }),
-        newLSClient.start(),
-        outputChannel.onDidChangeLogLevel((e) => {
-            newLSClient.trace = getLSClientTraceLevel(e);
-        }),
     );
-    newLSClient.trace = getLSClientTraceLevel(outputChannel.logLevel);
+    await newLSClient.start();
+    await newLSClient.setTrace(getLSClientTraceLevel(outputChannel.logLevel, env.logLevel));
     return newLSClient;
 }

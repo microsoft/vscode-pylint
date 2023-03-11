@@ -17,6 +17,14 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 # Save the working directory used when loading this module
 SERVER_CWD = os.getcwd()
 CWD_LOCK = threading.Lock()
+CATEGORIES = {
+    "F": "fatal",
+    "E": "error",
+    "W": "warning",
+    "C": "convention",
+    "R": "refactor",
+    "I": "information",
+}
 
 
 def as_list(content: Union[Any, List[Any], Tuple[Any]]) -> Union[List[Any], Tuple[Any]]:
@@ -24,6 +32,11 @@ def as_list(content: Union[Any, List[Any], Tuple[Any]]) -> Union[List[Any], Tupl
     if isinstance(content, (list, tuple)):
         return content
     return [content]
+
+
+def get_message_category(code: str) -> Optional[str]:
+    """Get the full name of the message category."""
+    return CATEGORIES.get(code[0].upper())
 
 
 # pylint: disable-next=consider-using-generator

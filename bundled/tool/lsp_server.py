@@ -54,6 +54,7 @@ LSP_SERVER = server.LanguageServer(
 # **********************************************************
 TOOL_MODULE = "pylint"
 TOOL_DISPLAY = "Pylint"
+DOCUMENTATION_HOME = "https://pylint.readthedocs.io/en/latest/user_guide/messages"
 
 # Default arguments always passed to pylint.
 TOOL_ARGS = ["--reports=n", "--output-format=json"]
@@ -250,11 +251,35 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
 
     code_actions = []
     for diagnostic in diagnostics:
+        # This action is available for all messages
+        code_actions.extend(open_documentation(document, [diagnostic]))
         func = QUICK_FIXES.solutions(diagnostic.code)
         if func:
             code_actions.extend(func(document, [diagnostic]))
-
     return code_actions
+
+
+def open_documentation(
+        _: workspace.Document, diagnostics: List[lsp.Diagnostic]
+    ) -> List[lsp.CodeAction]:
+    """Open an embedded simple browser window with the good/bad examples for this message."""
+    return [
+        _command_quick_fix(
+            diagnostics=diagnostics,
+            title=f"{TOOL_DISPLAY}: Open documentation for {diagnostic.code}",
+            command="simpleBrowser.show",
+            args=[_build_message_doc_url(diagnostic)],
+        )
+        for diagnostic in diagnostics
+    ]
+
+
+def _build_message_doc_url(diagnostic: lsp.Diagnostic) -> str:
+    """Build the URL to the documentation for this diagnostic message."""
+    code, message = diagnostic.code.split(":")
+    category = utils.get_message_category(code)
+    uri = f"{category}/{message}.html"
+    return f"{DOCUMENTATION_HOME}/{uri}"
 
 
 @QUICK_FIXES.quick_fix(

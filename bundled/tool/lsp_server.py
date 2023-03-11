@@ -260,8 +260,8 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
 
 
 def open_documentation(
-        _: workspace.Document, diagnostics: List[lsp.Diagnostic]
-    ) -> List[lsp.CodeAction]:
+    _: workspace.Document, diagnostics: List[lsp.Diagnostic]
+) -> List[lsp.CodeAction]:
     """Open an embedded simple browser window with the good/bad examples for this message."""
     return [
         _command_quick_fix(

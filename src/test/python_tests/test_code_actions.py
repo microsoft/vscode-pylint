@@ -107,19 +107,19 @@ def test_command_code_action(code, contents, command):
         (
             "E1300:bad-format-character",
             "print('%s %z' % ('hello', 'world'))",
-            "error/bad-format-character.html"
+            "error/bad-format-character.html",
         ),
         (
             "W0129:assert-on-string-literal",
             "assert 'foo'",
-            "warning/assert-on-string-literal.html"
+            "warning/assert-on-string-literal.html",
         ),
         (
             "C0303:trailing-whitespace",
             "x =  1    \ny = 1\n",
-            "convention/trailing-whitespace.html"
+            "convention/trailing-whitespace.html",
         ),
-    ]
+    ],
 )
 def test_documentation_action(code, contents, uri):
     """Tests that for messages a code action linking to the online documentation exists"""
@@ -131,7 +131,9 @@ def test_documentation_action(code, contents, uri):
         command = {
             "title": f"Pylint: Open documentation for {code}",
             "command": "simpleBrowser.show",
-            "arguments": [f"https://pylint.readthedocs.io/en/latest/user_guide/messages/{uri}"]
+            "arguments": [
+                f"https://pylint.readthedocs.io/en/latest/user_guide/messages/{uri}"
+            ],
         }
 
         expected = [
@@ -198,6 +200,5 @@ def _get_diagnostics_and_code_actions_for_file(temp_file, contents, code):
 def _remove_generic_actions(code_actions):
     """Remove all code actions that are not specific to a single message."""
     return [
-        action for action in code_actions
-        if "Open documentation" not in action["title"]
+        action for action in code_actions if "Open documentation" not in action["title"]
     ]

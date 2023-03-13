@@ -299,6 +299,63 @@ def organize_imports(
     ]
 
 
+@QUICK_FIXES.quick_fix(
+    codes=[
+        "W1406:redundant-u-string-prefix",
+        "W1401:anomalous-backslash-in-string",
+    ]
+)
+def fix_string_prefix_and_backslash(
+    document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+) -> List[lsp.CodeAction]:
+    """Provides quick fixes for W1406 and W1401."""
+    actions = []
+
+    for diagnostic in diagnostics:
+        if diagnostic.code == "W1406":
+            actions.append(
+                lsp.CodeAction(
+                    "Remove redundant 'u' prefix from string",
+                    kind=lsp.CodeActionKind.QuickFix,
+                    diagnostics=[diagnostic],
+                    edit=lsp.WorkspaceEdit(
+                        changes={
+                            document.uri: [
+                                lsp.TextEdit(
+                                    diagnostic.range,
+                                    diagnostic.message.replace("u'", "'")
+                                )
+                            ]
+                        }
+                    )
+                )
+            )
+        elif diagnostic.code == "W1401":
+            actions.append(
+                lsp.CodeAction(
+                    "Escape backslash in string",
+                    kind=lsp.CodeActionKind.QuickFix,
+                    diagnostics=[diagnostic],
+                    command={
+                        "title": "Replace backslash with escaped backslash",
+                        "command": "editor.action.startFindReplaceAction",
+                        "arguments": [
+                            {
+                                "query": r"\\",
+                                "replace": r"\\\\",
+                                "isRegex": True,
+                                "triggerSearch": True,
+                                "preserveCase": False,
+                                "matchWholeWord": False,
+                                "isCaseSensitive": False,
+                            }
+                        ],
+                    },
+                )
+            )
+
+    return actions
+
 def _command_quick_fix(
     diagnostics: List[lsp.Diagnostic],
     title: str,

@@ -16,6 +16,7 @@ TEST_FILE_PATH = constants.TEST_DATA / "sample1" / "sample.py"
 TEST_FILE_URI = utils.as_uri(str(TEST_FILE_PATH))
 LINTER = utils.get_server_info_defaults()
 TIMEOUT = 10  # 10 seconds
+DOCUMENTATION_HOME = "https://pylint.readthedocs.io/en/latest/user_guide/messages"
 
 
 def test_publish_diagnostics_on_open():
@@ -60,6 +61,9 @@ def test_publish_diagnostics_on_open():
                 "message": "Missing module docstring",
                 "severity": 3,
                 "code": "C0114:missing-module-docstring",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/convention/missing-module-docstring.html"
+                },
                 "source": LINTER["name"],
             },
             {
@@ -73,6 +77,9 @@ def test_publish_diagnostics_on_open():
                 "message": "Undefined variable 'x'",
                 "severity": 1,
                 "code": "E0602:undefined-variable",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/error/undefined-variable.html"
+                },
                 "source": LINTER["name"],
             },
             {
@@ -86,6 +93,9 @@ def test_publish_diagnostics_on_open():
                 "message": "Unused import sys",
                 "severity": 2,
                 "code": "W0611:unused-import",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/warning/unused-import.html"
+                },
                 "source": LINTER["name"],
             },
         ],
@@ -136,6 +146,9 @@ def test_publish_diagnostics_on_save():
                 "message": "Missing module docstring",
                 "severity": 3,
                 "code": "C0114:missing-module-docstring",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/convention/missing-module-docstring.html"
+                },
                 "source": LINTER["name"],
             },
             {
@@ -149,6 +162,9 @@ def test_publish_diagnostics_on_save():
                 "message": "Undefined variable 'x'",
                 "severity": 1,
                 "code": "E0602:undefined-variable",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/error/undefined-variable.html"
+                },
                 "source": LINTER["name"],
             },
             {
@@ -162,6 +178,9 @@ def test_publish_diagnostics_on_save():
                 "message": "Unused import sys",
                 "severity": 2,
                 "code": "W0611:unused-import",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/warning/unused-import.html"
+                },
                 "source": LINTER["name"],
             },
         ],
@@ -273,6 +292,9 @@ def test_severity_setting(lint_code):
                 "message": "Missing module docstring",
                 "severity": 3,
                 "code": "C0114:missing-module-docstring",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/convention/missing-module-docstring.html"
+                },
                 "source": LINTER["name"],
             },
             {
@@ -286,6 +308,9 @@ def test_severity_setting(lint_code):
                 "message": "Undefined variable 'x'",
                 "severity": 1,
                 "code": "E0602:undefined-variable",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/error/undefined-variable.html"
+                },
                 "source": LINTER["name"],
             },
             {
@@ -299,6 +324,9 @@ def test_severity_setting(lint_code):
                 "message": "Unused import sys",
                 "severity": 1,
                 "code": "W0611:unused-import",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/warning/unused-import.html"
+                },
                 "source": LINTER["name"],
             },
         ],

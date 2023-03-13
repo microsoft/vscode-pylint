@@ -137,6 +137,14 @@ def _get_severity(
     return lsp.DiagnosticSeverity.Error
 
 
+def _build_message_doc_url(code: str) -> str:
+    """Build the URL to the documentation for this diagnostic message."""
+    msg_id, message = code.split(":")
+    category = utils.get_message_category(msg_id)
+    uri = f"{category}/{message}.html" if category else DOCUMENTATION_HOME
+    return f"{DOCUMENTATION_HOME}/{uri}"
+
+
 def _parse_output(
     content: str,
     severity: Dict[str, str],
@@ -165,6 +173,9 @@ def _parse_output(
             # points to.
             end = start
 
+        code = f"{data.get('message-id')}:{data.get('symbol')}"
+        documentation_url = _build_message_doc_url(code)
+
         diagnostic = lsp.Diagnostic(
             range=lsp.Range(start=start, end=end),
             message=data.get("message"),
@@ -172,6 +183,7 @@ def _parse_output(
                 data.get("symbol"), data.get("message-id"), data.get("type"), severity
             ),
             code=f"{data.get('message-id')}:{data.get('symbol')}",
+            code_description=lsp.CodeDescription(href=documentation_url),
             source=TOOL_DISPLAY,
         )
 
@@ -251,35 +263,10 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
 
     code_actions = []
     for diagnostic in diagnostics:
-        # This action is available for all messages
-        code_actions.extend(open_documentation(document, [diagnostic]))
         func = QUICK_FIXES.solutions(diagnostic.code)
         if func:
             code_actions.extend(func(document, [diagnostic]))
     return code_actions
-
-
-def open_documentation(
-    _: workspace.Document, diagnostics: List[lsp.Diagnostic]
-) -> List[lsp.CodeAction]:
-    """Open an embedded simple browser window with the good/bad examples for this message."""
-    return [
-        _command_quick_fix(
-            diagnostics=diagnostics,
-            title=f"{TOOL_DISPLAY}: Open documentation for {diagnostic.code}",
-            command="simpleBrowser.show",
-            args=[_build_message_doc_url(diagnostic)],
-        )
-        for diagnostic in diagnostics
-    ]
-
-
-def _build_message_doc_url(diagnostic: lsp.Diagnostic) -> str:
-    """Build the URL to the documentation for this diagnostic message."""
-    code, message = diagnostic.code.split(":")
-    category = utils.get_message_category(code)
-    uri = f"{category}/{message}.html"
-    return f"{DOCUMENTATION_HOME}/{uri}"
 
 
 @QUICK_FIXES.quick_fix(

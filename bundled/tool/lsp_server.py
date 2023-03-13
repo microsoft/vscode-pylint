@@ -318,16 +318,7 @@ def fix_string_prefix_and_backslash(
                     "Remove redundant 'u' prefix from string",
                     kind=lsp.CodeActionKind.QuickFix,
                     diagnostics=[diagnostic],
-                    edit=lsp.WorkspaceEdit(
-                        changes={
-                            document.uri: [
-                                lsp.TextEdit(
-                                    diagnostic.range,
-                                    diagnostic.message.replace("u'", "'")
-                                )
-                            ]
-                        }
-                    )
+                    edit=_create_workspace_edits(document, [lsp.TextEdit(diagnostic.range,diagnostic.message.replace("u'", "'"))]),
                 )
             )
         elif diagnostic.code == "W1401":
@@ -355,6 +346,7 @@ def fix_string_prefix_and_backslash(
             )
 
     return actions
+
 
 def _command_quick_fix(
     diagnostics: List[lsp.Diagnostic],

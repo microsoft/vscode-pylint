@@ -31,11 +31,20 @@ def _expected_organize_imports_command():
         "command": "editor.action.organizeImports",
     }
 
+
+def _expected_fix_blackslash_string():
+    return {
+        "title": "Replace backslash with escaped backslash",
+        "edit": "editor.action.startFindReplaceAction",
+    }
+
+
 def _expected_fix_u_string():
     return {
-        "title": f"{LINTER}: Run document formatting",
-        "command": "editor.action.formatDocument",
+        "title": "Remove redundant 'u' prefix from string",
+        "edit": "editor.action.formatDocument",
     }
+
 
 @pytest.mark.parametrize(
     ("code", "contents", "command"),
@@ -81,6 +90,12 @@ def _expected_fix_u_string():
             # pylint: disable=line-too-long
             "import logging\nimport os\nimport sys\nimport logging.config\nfrom logging.handlers import WatchedFileHandler\n",
             _expected_organize_imports_command(),
+        ),
+        (
+            "W1401:anomalous-backslash-in-string",
+            # pylint: disable=anomalous-backslash-in-string
+            "string = '\z'",
+            _expected_fix_blackslash_string(),
         ),
         (
             "W1406:redundant-u-string-prefix",

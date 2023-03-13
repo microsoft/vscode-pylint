@@ -352,10 +352,7 @@ def _get_replacement(diagnostic, line):
     }
     return lsp.TextEdit(
         diagnostic.range,
-        line.replace(
-            replacements[diagnostic.code]["before"],
-            replacements[diagnostic.code]["after"],
-        ),
+        re.sub(replacements[diagnostic.code]["before"], replacements[diagnostic.code]["after"], line)
     )
 
 @QUICK_FIXES.quick_fix(

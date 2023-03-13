@@ -340,7 +340,7 @@ def _get_replacement(diagnostic, line):
         "E1141:dict-iter-missing-items": {
             "before": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
             "after": r"for $1, $2 in $3.items():"
-        }
+        },
         "E1310:bad-str-strip-call": {
             "before": r"str\.strip\(["'](.+)\1["']\)",
             "after": r"str.strip($1)"

@@ -302,34 +302,6 @@ def organize_imports(
 @QUICK_FIXES.quick_fix(
     codes=[
         "W1401:anomalous-backslash-in-string",
-    ]
-)
-def fix_blackslash(
-    _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
-) -> List[lsp.CodeAction]:
-    """Provides quick fixes which involve anomalous backslash in string."""
-    return [
-        _command_quick_fix(
-            diagnostics=diagnostics,
-            title=f"{TOOL_DISPLAY}: Escape backslash in string",
-            command="editor.action.startFindReplaceAction",
-            args=[
-                {
-                    "query": r"\\",
-                    "replace": r"\\\\",
-                    "isRegex": True,
-                    "triggerSearch": True,
-                    "preserveCase": False,
-                    "matchWholeWord": False,
-                    "isCaseSensitive": False,
-                }
-            ],
-        )
-    ]
-
-
-@QUICK_FIXES.quick_fix(
-    codes=[
         "W1406:redundant-u-string-prefix",
     ]
 )

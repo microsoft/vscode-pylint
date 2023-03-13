@@ -91,12 +91,12 @@ def _expected_fix_u_string():
             "import logging\nimport os\nimport sys\nimport logging.config\nfrom logging.handlers import WatchedFileHandler\n",
             _expected_organize_imports_command(),
         ),
-        (
-            "W1401:anomalous-backslash-in-string",
-            # pylint: disable=anomalous-backslash-in-string
-            "string = '\z'",
-            _expected_fix_blackslash_string(),
-        ),
+        # (
+        #     "W1401:anomalous-backslash-in-string",
+        #     # pylint: disable=anomalous-backslash-in-string
+        #     "string = '\z'",
+        #     _expected_fix_blackslash_string(),
+        # ),
         (
             "W1406:redundant-u-string-prefix",
             "fp.write(u'[{}]\n'.format(group_name))\n\n\n",

@@ -34,15 +34,13 @@ def _expected_organize_imports_command():
 
 def _expected_fix_blackslash_string():
     return {
-        "title": "Replace backslash with escaped backslash",
-        "command": "editor.action.startFindReplaceAction",
+        "title": f"{LINTER}: Run string replacement",
     }
 
 
 def _expected_fix_u_string():
     return {
-        "title": "Remove redundant 'u' prefix from string",
-        "edit": "editor.action.formatDocument",
+        "title": f"{LINTER}: Run string replacement",
     }
 
 

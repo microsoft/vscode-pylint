@@ -325,7 +325,7 @@ def fix_redundant_u_string(
 
     return [
         lsp.CodeAction(
-            title="Remove redundant 'u' prefix from string",
+            title=f"{TOOL_DISPLAY}: Run string replacement",
             kind=lsp.CodeActionKind.QuickFix,
             diagnostics=diagnostics,
             edit=_create_workspace_edits(

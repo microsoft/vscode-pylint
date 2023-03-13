@@ -337,6 +337,20 @@ def fix_redundant_u_string(
     _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve anomalous backslash in string."""
+
+    def get_replacement(diagnostic):
+        replacements = {
+            "W1406": {"before": "u'", "after": "'"},
+            "W1401": {"before": "\\", "after": "\\\\"},
+        }
+        return lsp.TextEdit(
+            diagnostic.range,
+            diagnostic.message.replace(
+                replacements[diagnostic.code]["before"],
+                replacements[diagnostic.code]["after"],
+            ),
+        )
+
     return [
         lsp.CodeAction(
             title="Remove redundant 'u' prefix from string",
@@ -344,11 +358,10 @@ def fix_redundant_u_string(
             diagnostics=diagnostics,
             edit=_create_workspace_edits(
                 _document,
-                [lsp.TextEdit(diagnostic.range, diagnostic.message.replace("u'", "'"))],
+                [get_replacement(diagnostic)],
             ),
         )
         for diagnostic in diagnostics
-        if diagnostic.code == "W1406"
     ]
 
 

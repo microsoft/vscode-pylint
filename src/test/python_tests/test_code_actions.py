@@ -89,17 +89,6 @@ def _expected_fix_u_string():
             "import logging\nimport os\nimport sys\nimport logging.config\nfrom logging.handlers import WatchedFileHandler\n",
             _expected_organize_imports_command(),
         ),
-        (
-            "W1401:anomalous-backslash-in-string",
-            # pylint: disable=anomalous-backslash-in-string
-            "string = '\z'",
-            _expected_fix_blackslash_string(),
-        ),
-        (
-            "W1406:redundant-u-string-prefix",
-            "fp.write(u'[{}]\n'.format(group_name))\n\n\n",
-            _expected_fix_u_string(),
-        ),
     ],
 )
 def test_command_code_action(code, contents, command):
@@ -155,6 +144,83 @@ def test_command_code_action(code, contents, command):
                     "kind": "quickfix",
                     "diagnostics": [d],
                     "command": command,
+                }
+                for d in diagnostics
+            ]
+
+        assert_that(actual_code_actions, is_(expected))
+
+
+@pytest.mark.parametrize(
+    ("code", "contents", "command"),
+    [
+        (
+            "W1401:anomalous-backslash-in-string",
+            # pylint: disable=anomalous-backslash-in-string
+            "string = '\z'",
+            _expected_fix_blackslash_string(),
+        ),
+        (
+            "W1406:redundant-u-string-prefix",
+            "fp.write(u'[{}]\n'.format(group_name))\n\n\n",
+            _expected_fix_u_string(),
+        ),
+    ],
+)
+def test_edit_code_action(code, contents, command):
+    """Tests for code actions which run a command."""
+    with utils.python_file(contents, TEST_FILE_PATH.parent) as temp_file:
+        uri = utils.as_uri(os.fspath(temp_file))
+
+        actual = {}
+        with session.LspSession() as ls_session:
+            ls_session.initialize()
+
+            done = Event()
+
+            def _handler(params):
+                nonlocal actual
+                actual = params
+                done.set()
+
+            ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+
+            ls_session.notify_did_open(
+                {
+                    "textDocument": {
+                        "uri": uri,
+                        "languageId": "python",
+                        "version": 1,
+                        "text": contents,
+                    }
+                }
+            )
+
+            # wait for some time to receive all notifications
+            done.wait(TIMEOUT)
+
+            diagnostics = [d for d in actual["diagnostics"] if d["code"] == code]
+
+            assert_that(len(diagnostics), is_(greater_than(0)))
+
+            actual_code_actions = ls_session.text_document_code_action(
+                {
+                    "textDocument": {"uri": uri},
+                    "range": {
+                        "start": {"line": 0, "character": 0},
+                        "end": {"line": 1, "character": 0},
+                    },
+                    "context": {"diagnostics": diagnostics},
+                }
+            )
+
+            expected = [
+                {
+                    "title": command["title"],
+                    "kind": "quickfix",
+                    "diagnostics": [d],
+                    "edit": command["arguments"][0],
+                    "edits": command["arguments"][0],
                 }
                 for d in diagnostics
             ]

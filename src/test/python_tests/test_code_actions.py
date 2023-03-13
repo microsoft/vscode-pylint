@@ -315,17 +315,57 @@ any(randint(-5, 5) > 0 for _ in range(10))
 """,
         ),
         (
+            "R1729:use-a-generator",
+            """all([randint(-5, 5) > 0 for _ in range(10)])""",
+            """all(randint(-5, 5) > 0 for _ in range(10))""",
+        ),
+        (
+            "R1729:use-a-generator",
+            """any([randint(-5, 5) > 0 for _ in range(10)])""",
+            """any(randint(-5, 5) > 0 for _ in range(10))""",
+        ),
+        (
             "R1735:use-dict-literal",
+            """empty_dict = dict()""",
+            """empty_dict = {}""",
+        ),
+        (
+            "R1735:use-dict-literal",
+            """new_dict = dict(foo="bar")""",
+            """new_dict = {"foo": "bar"}""",
+        ),
+        (
+            "R1735:use-dict-literal",
+            """new_dict = dict(**another_dict)""",
+            """new_dict = {**another_dict}""",
+        ),
+        (
+            "E1141:dict-iter-missing-items",
+            """for city, population in data:""",
+            """for city, population in data.items():""",
+        ),
+        (
+            "E1141:dict-iter-missing-items",
             """
-empty_dict = dict()
-new_dict = dict(foo="bar")
-new_dict = dict(**another_dict)
+data = {'Paris': 2_165_423, 'New York City': 8_804_190, 'Tokyo': 13_988_129}
+for city, population in data:  # [dict-iter-missing-items]
+    print(f"{city} has population {population}.")
 """,
             """
-empty_dict = {}
-new_dict = {"foo": "bar"}
-new_dict = {**another_dict}
+data = {'Paris': 2_165_423, 'New York City': 8_804_190, 'Tokyo': 13_988_129}
+for city, population in data.items():
+    print(f"{city} has population {population}.")
 """,
+        ),
+        (
+            "E1310:bad-str-strip-call",
+            """"Hello World".strip("Hello")""",
+            """"Hello World".strip("Helo")""",
+        ),
+        (
+            "E1310:bad-str-strip-call",
+            """"abcbc def bacabc".strip("abcbc ")""",
+            """"abcbc def bacabc".strip("abc ")""",
         ),
     ],
 )

@@ -261,7 +261,7 @@ def eat(fruit_name: str):
 import sys
 
 
-def print_python_version():  # [useless-return]
+def print_python_version():
     print(sys.version)
     return None""",
             """
@@ -348,7 +348,7 @@ any(randint(-5, 5) > 0 for _ in range(10))
             "E1141:dict-iter-missing-items",
             """
 data = {'Paris': 2_165_423, 'New York City': 8_804_190, 'Tokyo': 13_988_129}
-for city, population in data:  # [dict-iter-missing-items]
+for city, population in data:
     print(f"{city} has population {population}.")
 """,
             """

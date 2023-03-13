@@ -54,6 +54,7 @@ LSP_SERVER = server.LanguageServer(
 # **********************************************************
 TOOL_MODULE = "pylint"
 TOOL_DISPLAY = "Pylint"
+DOCUMENTATION_HOME = "https://pylint.readthedocs.io/en/latest/user_guide/messages"
 
 # Default arguments always passed to pylint.
 TOOL_ARGS = ["--reports=n", "--output-format=json"]
@@ -136,6 +137,14 @@ def _get_severity(
     return lsp.DiagnosticSeverity.Error
 
 
+def _build_message_doc_url(code: str) -> str:
+    """Build the URL to the documentation for this diagnostic message."""
+    msg_id, message = code.split(":")
+    category = utils.get_message_category(msg_id)
+    uri = f"{category}/{message}.html" if category else DOCUMENTATION_HOME
+    return f"{DOCUMENTATION_HOME}/{uri}"
+
+
 def _parse_output(
     content: str,
     severity: Dict[str, str],
@@ -164,6 +173,9 @@ def _parse_output(
             # points to.
             end = start
 
+        code = f"{data.get('message-id')}:{data.get('symbol')}"
+        documentation_url = _build_message_doc_url(code)
+
         diagnostic = lsp.Diagnostic(
             range=lsp.Range(start=start, end=end),
             message=data.get("message"),
@@ -171,6 +183,7 @@ def _parse_output(
                 data.get("symbol"), data.get("message-id"), data.get("type"), severity
             ),
             code=f"{data.get('message-id')}:{data.get('symbol')}",
+            code_description=lsp.CodeDescription(href=documentation_url),
             source=TOOL_DISPLAY,
         )
 
@@ -253,7 +266,6 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
         func = QUICK_FIXES.solutions(diagnostic.code)
         if func:
             code_actions.extend(func(document, [diagnostic]))
-
     return code_actions
 
 

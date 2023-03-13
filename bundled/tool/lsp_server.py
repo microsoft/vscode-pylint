@@ -312,8 +312,8 @@ def fix_redundant_u_string(
 
     def get_replacement(diagnostic):
         replacements = {
-            "W1406": {"before": "u'", "after": "'"},
-            "W1401": {"before": "\\", "after": "\\\\"},
+            "W1401:anomalous-backslash-in-string": {"before": "\\", "after": "\\\\"},
+            "W1406:redundant-u-string-prefix": {"before": "u'", "after": "'"},
         }
         return lsp.TextEdit(
             diagnostic.range,

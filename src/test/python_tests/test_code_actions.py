@@ -35,7 +35,7 @@ def _expected_organize_imports_command():
 def _expected_fix_blackslash_string():
     return {
         "title": "Replace backslash with escaped backslash",
-        "edit": "editor.action.startFindReplaceAction",
+        "command": "editor.action.startFindReplaceAction",
     }
 
 

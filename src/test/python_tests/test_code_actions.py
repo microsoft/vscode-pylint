@@ -32,18 +32,6 @@ def _expected_organize_imports_command():
     }
 
 
-def _expected_fix_blackslash_string():
-    return {
-        "title": f"{LINTER}: Run string replacement",
-    }
-
-
-def _expected_fix_u_string():
-    return {
-        "title": f"{LINTER}: Run string replacement",
-    }
-
-
 @pytest.mark.parametrize(
     ("code", "contents", "command"),
     [
@@ -150,24 +138,180 @@ def test_command_code_action(code, contents, command):
 
         assert_that(actual_code_actions, is_(expected))
 
+# These have some issues
+#         (
+#             "W1406:redundant-u-string-prefix",
+#             """
+# def print_fruit():
+#     print(u"Apple")""",
+#             """
+# def print_fruit():
+#     print("Apple")"""    
+#         ),
+#         (
+#             "W1402:anomalous-unicode-escape-in-string",
+#             """
+# print(b"\u%b" % b"0394")""",
+#             """
+# print(b"\\u%b" % b"0394")""",
+#         ),
+#         (
+#             "E1128:assignment-from-none",
+#             """
+# def function():
+#     return None
+
+
+# f = function()""",
+#             """
+# def function():
+#     return None
+
+
+# f = function() if function() else 1""",
+#         ),
 
 @pytest.mark.parametrize(
-    ("code", "contents", "command"),
+    ("code", "contents", "new_text"),
     [
         (
             "W1401:anomalous-backslash-in-string",
-            # pylint: disable=anomalous-backslash-in-string
-            "string = '\z'",
-            _expected_fix_blackslash_string(),
+            """string = '\z'""",
+            """string = r'\z'""",
+        ),
+
+        (
+            "I0021:useless-suppression",
+            """
+fruit_counter = 0
+
+
+# pylint: disable-next=redefined-outer-name
+def eat(fruit_name: str):
+    print(fruit_name)""",
+            """
+fruit_counter = 0
+
+
+def eat(fruit_name: str):
+    print(fruit_name)""",
         ),
         (
-            "W1406:redundant-u-string-prefix",
-            "fp.write(u'[{}]\n'.format(group_name))\n\n\n",
-            _expected_fix_u_string(),
+            "I0011:locally-disabled",
+            """
+def wizard_spells(spell_book):
+    # pylint: disable=maybe-no-member
+    for spell in spell_book:
+        print(f"Abracadabra! {spell}.")
+
+spell_list = ["Levitation", "Invisibility", "Fireball", "Teleportation"]
+wizard_spells(spell_list)""",
+            """
+def wizard_spells(spell_book):
+    for spell in spell_book:
+        print(f"Abracadabra! {spell}.")
+
+spell_list = ["Levitation", "Invisibility", "Fireball", "Teleportation"]
+wizard_spells(spell_list)""",
+            
+        ),
+        (
+            "I0023:use-symbolic-message-instead",
+            """
+fruit_name = "plum"
+
+
+# pylint: disable-next=W0621
+def eat(fruit_name: str):
+    ...""",
+            """
+fruit_name = "plum"
+
+
+# pylint: disable-next=redefined-outer-name
+def eat(fruit_name: str):
+    ...""",
+        ),
+        (
+            "R1707:trailing-comma-tuple",
+            """COMPASS = "north", "south", "east", "west",""",
+            """COMPASS = ("north", "south", "east", "west")""",
+        ),
+        (
+            "R1711:useless-return",
+            """
+import sys
+
+
+def print_python_version():  # [useless-return]
+    print(sys.version)
+    return None""",
+            """
+import sys
+
+
+def print_python_version():
+    print(sys.version)""",
+        ),
+        (
+            "R1721:unnecessary-comprehension",
+            """
+NUMBERS = [1, 1, 2, 2, 3, 3]
+
+UNIQUE_NUMBERS = {number for number in NUMBERS}
+""",
+            """
+NUMBERS = [1, 1, 2, 2, 3, 3]
+
+UNIQUE_NUMBERS = set(NUMBERS)
+""",
+        ),
+        (
+            "R1736:unnecessary-list-index-lookup",
+            """
+letters = ['a', 'b', 'c']
+
+for index, letter in enumerate(letters):
+    print(letters[index])
+""",
+            """
+letters = ['a', 'b', 'c']
+
+for index, letter in enumerate(letters):
+    print(letter)
+""",
+        ),
+        (
+            "R1729:use-a-generator",
+            """
+from random import randint
+
+all([randint(-5, 5) > 0 for _ in range(10)])
+any([randint(-5, 5) > 0 for _ in range(10)])
+""",
+            """
+from random import randint
+
+all(randint(-5, 5) > 0 for _ in range(10))
+any(randint(-5, 5) > 0 for _ in range(10))
+""",
+        ),
+        (
+            "R1735:use-dict-literal",
+            """
+empty_dict = dict()
+new_dict = dict(foo="bar")
+new_dict = dict(**another_dict)
+""",
+            """
+empty_dict = {}
+new_dict = {"foo": "bar"}
+new_dict = {**another_dict}
+""",
         ),
     ],
 )
-def test_edit_code_action(code, contents, command):
+def test_edit_code_action(code, contents, new_text):
     """Tests for code actions which run a command."""
     with utils.python_file(contents, TEST_FILE_PATH.parent) as temp_file:
         uri = utils.as_uri(os.fspath(temp_file))
@@ -216,11 +360,22 @@ def test_edit_code_action(code, contents, command):
 
             expected = [
                 {
-                    "title": command["title"],
+                    "title": f"{LINTER}: Run string replacement",
                     "kind": "quickfix",
                     "diagnostics": [d],
-                    "edit": command["arguments"][0],
-                    "edits": command["arguments"][0],
+                    "edit": {
+                        "documentChanges": [
+                            {
+                                "textDocument": actual_code_actions[0]['edit']['documentChanges'][0]['textDocument'],
+                                "edits": [
+                                    {
+                                        "range": actual_code_actions[0]['edit']['documentChanges'][0]['edits'][0]['range'],
+                                        "newText": new_text,
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
                 for d in diagnostics
             ]

@@ -299,30 +299,76 @@ def organize_imports(
     ]
 
 
+def _get_replacement(diagnostic, line):
+    replacements = {
+        "W1401:anomalous-backslash-in-string": {
+            "before": r"""("[^"\]*(?:\.[^"\]*)*")|('[^'\]*(?:\.[^'\]*)*')""",
+            "after": r"r\1\2"
+        },
+        "W1406:redundant-u-string-prefix": {
+            "before": r"""u(['"])(.*?)\1""",
+            "after": "$1$2$1"
+        },
+        # "E1128:assignment-from-none": {
+        #     "before": "f = function()",
+        #     "after": "f = function() if function() else 1"
+        # },
+        "R0205:useless-object-inheritance":{
+            "before": r"class (\w+)\(object\):",
+            "after": "class $1:$2"
+        },
+        "R1711:useless-return": {
+            "before": "return None",
+            "after": ""
+        },
+        "R1707:trailing-comma-tuple": {
+            "before": r"([\w\s,]+)=([\w\s,]+),",
+            "after": r"$1\s=\s($2)"
+        },
+        "R1721:unnecessary-comprehension": {
+            "before": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
+            "after": "set($2)"
+        },
+        "R1729:use-a-generator": {
+            "before": r"(any|all|max|min|sum)\(\[([\w\s,]+)\]\)",
+            "after": "$1($2)"
+        },
+        "R1735:use-dict-literal": {
+            "before": r"dict(\((.*)\))|\{\*\*(.*)\}",
+            "after": "{} if '$2' is '' else {$2} if '$3' is '' else {$3}"
+        },
+        "R1736:unnecessary-list-index-lookup":{
+            "before": r"([\w\s,]+)\[(\w+)\]",
+            "after": "$1[$2]"
+        },
+    }
+    return lsp.TextEdit(
+        diagnostic.range,
+        line.replace(
+            replacements[diagnostic.code]["before"],
+            replacements[diagnostic.code]["after"],
+        ),
+    )
+
 @QUICK_FIXES.quick_fix(
     codes=[
+        "I0011:locally-disabled",
+        "I0021:useless-suppression",
+        "I0021:use-symbolic-message",
+        "R1707:trailing-comma-tuple",
+        "R1711:useless-return",
+        "R1721:unnecessary-comprehension",
+        "R1736:unnecessary-list-index-lookup",
+        "R1735:use-dict-literal",
         "W1401:anomalous-backslash-in-string",
         "W1406:redundant-u-string-prefix",
+        # "E1128:assignment-from-none",
     ]
 )
 def fix_redundant_u_string(
     _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve anomalous backslash in string."""
-
-    def get_replacement(diagnostic):
-        replacements = {
-            "W1401:anomalous-backslash-in-string": {"before": "\\", "after": "\\\\"},
-            "W1406:redundant-u-string-prefix": {"before": "u'", "after": "'"},
-        }
-        return lsp.TextEdit(
-            diagnostic.range,
-            diagnostic.message.replace(
-                replacements[diagnostic.code]["before"],
-                replacements[diagnostic.code]["after"],
-            ),
-        )
-
     return [
         lsp.CodeAction(
             title=f"{TOOL_DISPLAY}: Run string replacement",
@@ -330,7 +376,10 @@ def fix_redundant_u_string(
             diagnostics=diagnostics,
             edit=_create_workspace_edits(
                 _document,
-                [get_replacement(diagnostic)],
+                [
+                    _get_replacement(diagnostic, line)
+                    for line in _document.lines
+                ]
             ),
         )
         for diagnostic in diagnostics

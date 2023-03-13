@@ -31,6 +31,11 @@ def _expected_organize_imports_command():
         "command": "editor.action.organizeImports",
     }
 
+def _expected_fix_u_string():
+    return {
+        "title": f"{LINTER}: Run document formatting",
+        "command": "editor.action.formatDocument",
+    }
 
 @pytest.mark.parametrize(
     ("code", "contents", "command"),
@@ -76,6 +81,11 @@ def _expected_organize_imports_command():
             # pylint: disable=line-too-long
             "import logging\nimport os\nimport sys\nimport logging.config\nfrom logging.handlers import WatchedFileHandler\n",
             _expected_organize_imports_command(),
+        ),
+        (
+            "W1406:redundant-u-string-prefix",
+            "fp.write(u'[{}]\n'.format(group_name))\n\n\n",
+            _expected_fix_u_string(),
         ),
     ],
 )

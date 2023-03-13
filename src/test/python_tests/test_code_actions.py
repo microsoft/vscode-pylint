@@ -331,8 +331,8 @@ any(randint(-5, 5) > 0 for _ in range(10))
         ),
         (
             "R1735:use-dict-literal",
-            "new_dict = dict(foo="bar")",
-            "new_dict = {"foo": "bar"}",
+            "new_dict = dict(foo='bar')",
+            "new_dict = {'foo': 'bar'}",
         ),
         (
             "R1735:use-dict-literal",

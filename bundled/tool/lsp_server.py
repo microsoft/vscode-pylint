@@ -301,29 +301,17 @@ def organize_imports(
 
 def _get_replacement(diagnostic, line):
     replacements = {
-        "W1401:anomalous-backslash-in-string": {
-            "before": r"""("[^"\]*(?:\.[^"\]*)*")|('[^'\]*(?:\.[^'\]*)*')""",
-            "after": r"r\1\2"
-        },
-        "W1406:redundant-u-string-prefix": {
-            "before": r"""u(['"])(.*?)\1""",
-            "after": "$1$2$1"
-        },
-        # "E1128:assignment-from-none": {
-        #     "before": "f = function()",
-        #     "after": "f = function() if function() else 1"
-        # },
         "R0205:useless-object-inheritance":{
             "before": r"class (\w+)\(object\):",
-            "after": "class $1:$2"
-        },
-        "R1711:useless-return": {
-            "before": "return None",
-            "after": ""
+            "after": "class $1"
         },
         "R1707:trailing-comma-tuple": {
             "before": r"([\w\s,]+)=([\w\s,]+),",
             "after": r"$1\s=\s($2)"
+        },
+        "R1711:useless-return": {
+            "before": "return None",
+            "after": ""
         },
         "R1721:unnecessary-comprehension": {
             "before": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
@@ -340,7 +328,19 @@ def _get_replacement(diagnostic, line):
         "R1736:unnecessary-list-index-lookup":{
             "before": r"([\w\s,]+)\[(\w+)\]",
             "after": "$1[$2]"
+        },        
+        "W1401:anomalous-backslash-in-string": {
+            "before": r"""("[^"\]*(?:\.[^"\]*)*")|('[^'\]*(?:\.[^'\]*)*')""",
+            "after": r"r\1\2"
         },
+        "W1406:redundant-u-string-prefix": {
+            "before": r"""u(['"])(.*?)\1""",
+            "after": "$1$2$1"
+        },
+        # "E1128:assignment-from-none": {
+        #     "before": "f = function()",
+        #     "after": "f = function() if function() else 1"
+        # },
     }
     return lsp.TextEdit(
         diagnostic.range,

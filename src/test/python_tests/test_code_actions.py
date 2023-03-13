@@ -176,10 +176,14 @@ def test_command_code_action(code, contents, command):
     [
         (
             "W1401:anomalous-backslash-in-string",
-            """string = '\z'""",
-            """string = r'\z'""",
+            "string = '\z'",
+            "string = r'\z'",
         ),
-
+        (
+            "I0021:useless-suppression",
+            "# pylint: disable-next=redefined-outer-name",
+            "",
+        ),
         (
             "I0021:useless-suppression",
             """
@@ -198,6 +202,11 @@ def eat(fruit_name: str):
         ),
         (
             "I0011:locally-disabled",
+            "# pylint: disable=maybe-no-member",
+            "",            
+        ),
+        (
+            "I0011:locally-disabled",
             """
 def wizard_spells(spell_book):
     # pylint: disable=maybe-no-member
@@ -212,8 +221,12 @@ def wizard_spells(spell_book):
         print(f"Abracadabra! {spell}.")
 
 spell_list = ["Levitation", "Invisibility", "Fireball", "Teleportation"]
-wizard_spells(spell_list)""",
-            
+wizard_spells(spell_list)""",            
+        ),
+        (
+            "I0023:use-symbolic-message-instead",
+            "# pylint: disable-next=W0621",
+            "",
         ),
         (
             "I0023:use-symbolic-message-instead",
@@ -236,6 +249,11 @@ def eat(fruit_name: str):
             "R1707:trailing-comma-tuple",
             """COMPASS = "north", "south", "east", "west",""",
             """COMPASS = ("north", "south", "east", "west")""",
+        ),
+        (
+            "R1711:useless-return",
+            "return None",
+            "",
         ),
         (
             "R1711:useless-return",

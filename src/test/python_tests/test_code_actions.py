@@ -250,14 +250,8 @@ def eat(fruit_name: str):
             """
 class Banana(object):
     pass""",
-            """
-class Banana:
-    pass""",
-        ),
-        (
-            "R0205:useless-object-inheritance",
-            "class Banana(object):",
-            "class Banana:",
+            """class Banana:
+""",
         ),
         (
             "R1707:trailing-comma-tuple",

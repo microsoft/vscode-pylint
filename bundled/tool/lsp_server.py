@@ -314,16 +314,16 @@ def organize_imports(
 
 REPLACEMENTS = {
     "R0205:useless-object-inheritance": {
-        "before": r"class (\w+)\(object\):",
-        "after": r"class \1:",
+        "pattern": r"class (\w+)\(object\):",
+        "repl": r"class \1:",
     },
     "R1721:unnecessary-comprehension": {
-        "before": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
-        "after": r"set(\2)",
+        "pattern": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
+        "repl": r"set(\2)",
     },
     "E1141:dict-iter-missing-items": {
-        "before": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
-        "after": r"for \1, \2 in \3.items():",
+        "pattern": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
+        "repl": r"for \1, \2 in \3.items():",
     },
 }
 
@@ -335,8 +335,8 @@ def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.T
             end=lsp.Position(line=diagnostic.range.start.line + 1, character=0),
         ),
         re.sub(
-            REPLACEMENTS[diagnostic.code]["before"],
-            REPLACEMENTS[diagnostic.code]["after"],
+            REPLACEMENTS[diagnostic.code]["pattern"],
+            REPLACEMENTS[diagnostic.code]["repl"],
             lines[diagnostic.range.start.line],
         ),
     )

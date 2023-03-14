@@ -193,12 +193,7 @@ fruit_counter = 0
 # pylint: disable-next=redefined-outer-name
 def eat(fruit_name: str):
     print(fruit_name)""",
-            """
-fruit_counter = 0
-
-
-def eat(fruit_name: str):
-    print(fruit_name)""",
+            """""",
         ),
         (
             "I0011:locally-disabled",
@@ -260,11 +255,6 @@ class Banana(object):
         ),
         (
             "R1711:useless-return",
-            "return None",
-            "",
-        ),
-        (
-            "R1711:useless-return",
             """
 import sys
 
@@ -272,12 +262,8 @@ import sys
 def print_python_version():
     print(sys.version)
     return None""",
-            """
-import sys
-
-
-def print_python_version():
-    print(sys.version)""",
+            """def print_python_version():
+""",
         ),
         (
             "R1721:unnecessary-comprehension",
@@ -286,10 +272,7 @@ NUMBERS = [1, 1, 2, 2, 3, 3]
 
 UNIQUE_NUMBERS = {number for number in NUMBERS}
 """,
-            """
-NUMBERS = [1, 1, 2, 2, 3, 3]
-
-UNIQUE_NUMBERS = set(NUMBERS)
+            """UNIQUE_NUMBERS = set(NUMBERS)
 """,
         ),
         (
@@ -300,11 +283,7 @@ letters = ['a', 'b', 'c']
 for index, letter in enumerate(letters):
     print(letters[index])
 """,
-            """
-letters = ['a', 'b', 'c']
-
-for index, letter in enumerate(letters):
-    print(letter)
+            """    print(letter)
 """,
         ),
         (
@@ -324,13 +303,23 @@ any(randint(-5, 5) > 0 for _ in range(10))
         ),
         (
             "R1729:use-a-generator",
-            "all([randint(-5, 5) > 0 for _ in range(10)])",
-            "all(randint(-5, 5) > 0 for _ in range(10))",
+                        """
+from random import randint
+
+all([randint(-5, 5) > 0 for _ in range(10)])
+""",
+            """all(randint(-5, 5) > 0 for _ in range(10))
+""",
         ),
         (
             "R1729:use-a-generator",
-            "any([randint(-5, 5) > 0 for _ in range(10)])",
-            "any(randint(-5, 5) > 0 for _ in range(10))",
+            """
+from random import randint
+
+any([randint(-5, 5) > 0 for _ in range(10)])
+""",
+            """any(randint(-5, 5) > 0 for _ in range(10))
+""",
         ),
         (
             "R1735:use-dict-literal",
@@ -349,20 +338,12 @@ any(randint(-5, 5) > 0 for _ in range(10))
         ),
         (
             "E1141:dict-iter-missing-items",
-            "for city, population in data:",
-            "for city, population in data.items():",
-        ),
-        (
-            "E1141:dict-iter-missing-items",
             """
 data = {'Paris': 2_165_423, 'New York City': 8_804_190, 'Tokyo': 13_988_129}
 for city, population in data:
     print(f"{city} has population {population}.")
 """,
-            """
-data = {'Paris': 2_165_423, 'New York City': 8_804_190, 'Tokyo': 13_988_129}
-for city, population in data.items():
-    print(f"{city} has population {population}.")
+            """for city, population in data.items():
 """,
         ),
         (

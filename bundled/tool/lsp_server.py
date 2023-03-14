@@ -318,8 +318,8 @@ REPLACEMENTS = {
         "after": r"class \1:",
     },
     "R1707:trailing-comma-tuple": {
-        "before": r"([\w\s,]+)=([\w\s,]+),",
-        "after": r"\1\s=\s(\2)",
+        "before": r"(\w+\s*=\s*\()(.+)(,\s*\)\s*)$",
+        "after": r"\1(\2)",
     },
     "R1711:useless-return": {"before": r"return None", "after": r""},
     "R1721:unnecessary-comprehension": {

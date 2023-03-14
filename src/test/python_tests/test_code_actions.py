@@ -234,10 +234,10 @@ def test_edit_code_action(code, contents, new_text):
                                         "range": text_range,
                                         "newText": new_text,
                                     }
-                                ]
+                                ],
                             }
                         ]
-                    }
+                    },
                 }
                 for d in diagnostics
             ]

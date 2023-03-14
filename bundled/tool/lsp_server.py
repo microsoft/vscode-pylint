@@ -312,84 +312,74 @@ def organize_imports(
     ]
 
 
-def _get_replacement(diagnostic, line):
-    replacements = {
-        "R0205:useless-object-inheritance":{
-            "before": r"class (\w+)\(object\):",
-            "after": r"class $1"
-        },
-        "R1707:trailing-comma-tuple": {
-            "before": r"([\w\s,]+)=([\w\s,]+),",
-            "after": r"$1\s=\s($2)"
-        },
-        "R1711:useless-return": {
-            "before": r"return None",
-            "after": r""
-        },
-        "R1721:unnecessary-comprehension": {
-            "before": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
-            "after": r"set($2)"
-        },
-        "R1729:use-a-generator": {
-            "before": r"(any|all|max|min|sum)\(\[([\w\s,]+)\]\)",
-            "after": r"$1($2)"
-        },
-        "R1735:use-dict-literal": {
-            "before": r"dict(\((.*)\))|\{\*\*(.*)\}",
-            "after": r"{} if '$2' is '' else {$2} if '$3' is '' else {$3}"
-        },
-        "R1736:unnecessary-list-index-lookup":{
-            "before": r"([\w\s,]+)\[(\w+)\]",
-            "after": r"$1[$2]"
-        },
-        "W1401:anomalous-backslash-in-string": {
-            "before": r"""("[^"\]*(?:\.[^"\]*)*")|('[^'\]*(?:\.[^'\]*)*')""",
-            "after": r"r\1\2"
-        },
-        "W1406:redundant-u-string-prefix": {
-            "before": r"""u(['"])(.*?)\1""",
-            "after": r"$1$2$1"
-        },
-        "E1141:dict-iter-missing-items": {
-            "before": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
-            "after": r"for $1, $2 in $3.items():"
-        },
-        "E1310:bad-str-strip-call": {
-            "before": r"""str\.strip\(["'](.+)\1["']\)""",
-            "after": r"str.strip($1)"
-        }
-        # "E1128:assignment-from-none": {
-        #     "before": "f = function()",
-        #     "after": "f = function() if function() else 1"
-        # },
+REPLACEMENTS = {
+    "R0205:useless-object-inheritance": {
+        "before": r"class (\w+)\(object\):",
+        "after": r"class \1:",
+    },
+    "R1707:trailing-comma-tuple": {
+        "before": r"([\w\s,]+)=([\w\s,]+),",
+        "after": r"$1\s=\s($2)",
+    },
+    "R1711:useless-return": {"before": r"return None", "after": r""},
+    "R1721:unnecessary-comprehension": {
+        "before": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
+        "after": r"set($2)",
+    },
+    "R1729:use-a-generator": {
+        "before": r"(any|all|max|min|sum)\(\[([\w\s,]+)\]\)",
+        "after": r"$1($2)",
+    },
+    "R1735:use-dict-literal": {
+        "before": r"dict(\((.*)\))|\{\*\*(.*)\}",
+        "after": r"{} if '$2' is '' else {$2} if '$3' is '' else {$3}",
+    },
+    "R1736:unnecessary-list-index-lookup": {
+        "before": r"([\w\s,]+)\[(\w+)\]",
+        "after": r"$1[$2]",
+    },
+    "W1401:anomalous-backslash-in-string": {
+        "before": r"""("[^"\]*(?:\.[^"\]*)*")|('[^'\]*(?:\.[^'\]*)*')""",
+        "after": r"r\1\2",
+    },
+    "W1406:redundant-u-string-prefix": {
+        "before": r"""u(['"])(.*?)\1""",
+        "after": r"$1$2$1",
+    },
+    "E1141:dict-iter-missing-items": {
+        "before": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
+        "after": r"for $1, $2 in $3.items():",
+    },
+    "E1310:bad-str-strip-call": {
+        "before": r"""str\.strip\(["'](.+)\1["']\)""",
+        "after": r"str.strip($1)",
     }
+    # "E1128:assignment-from-none": {
+    #     "before": "f = function()",
+    #     "after": "f = function() if function() else 1"
+    # },
+}
+
+
+def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.TextEdit:
     return lsp.TextEdit(
-        diagnostic.range,
+        lsp.Range(
+            start=lsp.Position(line=diagnostic.range.start.line, character=0),
+            end=lsp.Position(line=diagnostic.range.start.line + 1, character=0),
+        ),
         re.sub(
-            replacements[diagnostic.code]["before"],
-            replacements[diagnostic.code]["after"],
-            line
-        )
+            REPLACEMENTS[diagnostic.code]["before"],
+            REPLACEMENTS[diagnostic.code]["after"],
+            lines[diagnostic.range.start.line],
+        ),
     )
 
+
 @QUICK_FIXES.quick_fix(
-    codes=[
-        "I0011:locally-disabled",
-        "I0021:useless-suppression",
-        "I0021:use-symbolic-message",
-        "R1707:trailing-comma-tuple",
-        "R1711:useless-return",
-        "R1721:unnecessary-comprehension",
-        "R1736:unnecessary-list-index-lookup",
-        "R1735:use-dict-literal",
-        "W1401:anomalous-backslash-in-string",
-        "W1406:redundant-u-string-prefix",
-        "E1141:dict-iter-missing-items"
-        # "E1128:assignment-from-none",
-    ]
+    codes=list(REPLACEMENTS.keys()),
 )
-def fix_redundant_u_string(
-    _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+def fix_with_replacement(
+    document: workspace.Document, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve anomalous backslash in string."""
     return [
@@ -398,14 +388,14 @@ def fix_redundant_u_string(
             kind=lsp.CodeActionKind.QuickFix,
             diagnostics=diagnostics,
             edit=_create_workspace_edits(
-                _document,
+                document,
                 [
-                    _get_replacement(diagnostic, line)
-                    for line in _document.lines
-                ]
+                    _get_replacement_edit(diagnostic, document.lines)
+                    for diagnostic in diagnostics
+                    if diagnostic.code in REPLACEMENTS
+                ],
             ),
         )
-        for diagnostic in diagnostics
     ]
 
 
@@ -431,7 +421,7 @@ def _create_workspace_edits(
             lsp.TextDocumentEdit(
                 text_document=lsp.OptionalVersionedTextDocumentIdentifier(
                     uri=document.uri,
-                    version=document.version,
+                    version=0 if document.version is None else document.version,
                 ),
                 edits=results,
             )

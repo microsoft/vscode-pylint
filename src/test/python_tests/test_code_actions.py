@@ -245,6 +245,16 @@ fruit_name = "plum"
 def eat(fruit_name: str):
     ...""",
         ),
+        
+        (
+            "R0205:useless-object-inheritance",
+            """
+class Banana(object):
+    pass""",
+            """
+class Banana:
+    pass""",
+        ),
         (
             "R0205:useless-object-inheritance",
             "class Banana(object):",

@@ -388,7 +388,7 @@ def _create_workspace_edits(
             lsp.TextDocumentEdit(
                 text_document=lsp.OptionalVersionedTextDocumentIdentifier(
                     uri=document.uri,
-                    version=0 if document.version is None else document.version,
+                    version=document.version if document.version else 0,
                 ),
                 edits=results,
             )

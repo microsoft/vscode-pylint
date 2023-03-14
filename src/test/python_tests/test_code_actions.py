@@ -218,8 +218,12 @@ def test_edit_code_action(code, contents, new_text):
                     "context": {"diagnostics": diagnostics},
                 }
             )
-            text_document = actual_code_actions[0]['edit']['documentChanges'][0]['textDocument']
-            text_range = actual_code_actions[0]['edit']['documentChanges'][0]['edits'][0]['range']
+            text_document = actual_code_actions[0]["edit"]["documentChanges"][0][
+                "textDocument"
+            ]
+            text_range = actual_code_actions[0]["edit"]["documentChanges"][0]["edits"][
+                0
+            ]["range"]
             expected = [
                 {
                     "title": f"{LINTER}: Run autofix code action",

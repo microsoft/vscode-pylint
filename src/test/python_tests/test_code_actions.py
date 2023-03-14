@@ -245,7 +245,6 @@ fruit_name = "plum"
 def eat(fruit_name: str):
     ...""",
         ),
-        
         (
             "R0205:useless-object-inheritance",
             """

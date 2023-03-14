@@ -138,131 +138,16 @@ def test_command_code_action(code, contents, command):
 
         assert_that(actual_code_actions, is_(expected))
 
-# These have some issues
-#         (
-#             "W1406:redundant-u-string-prefix",
-#             """
-# def print_fruit():
-#     print(u"Apple")""",
-#             """
-# def print_fruit():
-#     print("Apple")"""    
-#         ),
-#         (
-#             "W1402:anomalous-unicode-escape-in-string",
-#             """
-# print(b"\u%b" % b"0394")""",
-#             """
-# print(b"\\u%b" % b"0394")""",
-#         ),
-#         (
-#             "E1128:assignment-from-none",
-#             """
-# def function():
-#     return None
-
-
-# f = function()""",
-#             """
-# def function():
-#     return None
-
-
-# f = function() if function() else 1""",
-#         ),
 
 @pytest.mark.parametrize(
     ("code", "contents", "new_text"),
     [
-        (
-            "W1401:anomalous-backslash-in-string",
-            "string = '\z'",
-            "string = r'\z'",
-        ),
-        (
-            "I0021:useless-suppression",
-            "# pylint: disable-next=redefined-outer-name",
-            "",
-        ),
-        (
-            "I0021:useless-suppression",
-            """
-fruit_counter = 0
-
-
-# pylint: disable-next=redefined-outer-name
-def eat(fruit_name: str):
-    print(fruit_name)""",
-            """""",
-        ),
-        (
-            "I0011:locally-disabled",
-            "# pylint: disable=maybe-no-member",
-            "",            
-        ),
-        (
-            "I0011:locally-disabled",
-            """
-def wizard_spells(spell_book):
-    # pylint: disable=maybe-no-member
-    for spell in spell_book:
-        print(f"Abracadabra! {spell}.")
-
-spell_list = ["Levitation", "Invisibility", "Fireball", "Teleportation"]
-wizard_spells(spell_list)""",
-            """
-def wizard_spells(spell_book):
-    for spell in spell_book:
-        print(f"Abracadabra! {spell}.")
-
-spell_list = ["Levitation", "Invisibility", "Fireball", "Teleportation"]
-wizard_spells(spell_list)""",            
-        ),
-        (
-            "I0023:use-symbolic-message-instead",
-            "# pylint: disable-next=W0621",
-            "",
-        ),
-        (
-            "I0023:use-symbolic-message-instead",
-            """
-fruit_name = "plum"
-
-
-# pylint: disable-next=W0621
-def eat(fruit_name: str):
-    ...""",
-            """
-fruit_name = "plum"
-
-
-# pylint: disable-next=redefined-outer-name
-def eat(fruit_name: str):
-    ...""",
-        ),
         (
             "R0205:useless-object-inheritance",
             """
 class Banana(object):
     pass""",
             """class Banana:
-""",
-        ),
-        (
-            "R1707:trailing-comma-tuple",
-            "COMPASS = 'north', 'south', 'east', 'west',",
-            "COMPASS = ('north', 'south', 'east', 'west')",
-        ),
-        (
-            "R1711:useless-return",
-            """
-import sys
-
-
-def print_python_version():
-    print(sys.version)
-    return None""",
-            """def print_python_version():
 """,
         ),
         (
@@ -276,67 +161,6 @@ UNIQUE_NUMBERS = {number for number in NUMBERS}
 """,
         ),
         (
-            "R1736:unnecessary-list-index-lookup",
-            """
-letters = ['a', 'b', 'c']
-
-for index, letter in enumerate(letters):
-    print(letters[index])
-""",
-            """    print(letter)
-""",
-        ),
-        (
-            "R1729:use-a-generator",
-            """
-from random import randint
-
-all([randint(-5, 5) > 0 for _ in range(10)])
-any([randint(-5, 5) > 0 for _ in range(10)])
-""",
-            """
-from random import randint
-
-all(randint(-5, 5) > 0 for _ in range(10))
-any(randint(-5, 5) > 0 for _ in range(10))
-""",
-        ),
-        (
-            "R1729:use-a-generator",
-                        """
-from random import randint
-
-all([randint(-5, 5) > 0 for _ in range(10)])
-""",
-            """all(randint(-5, 5) > 0 for _ in range(10))
-""",
-        ),
-        (
-            "R1729:use-a-generator",
-            """
-from random import randint
-
-any([randint(-5, 5) > 0 for _ in range(10)])
-""",
-            """any(randint(-5, 5) > 0 for _ in range(10))
-""",
-        ),
-        (
-            "R1735:use-dict-literal",
-            "empty_dict = dict()",
-            "empty_dict = {}",
-        ),
-        (
-            "R1735:use-dict-literal",
-            "new_dict = dict(foo='bar')",
-            "new_dict = {'foo': 'bar'}",
-        ),
-        (
-            "R1735:use-dict-literal",
-            "new_dict = dict(**another_dict)",
-            "new_dict = {**another_dict}",
-        ),
-        (
             "E1141:dict-iter-missing-items",
             """
 data = {'Paris': 2_165_423, 'New York City': 8_804_190, 'Tokyo': 13_988_129}
@@ -345,16 +169,6 @@ for city, population in data:
 """,
             """for city, population in data.items():
 """,
-        ),
-        (
-            "E1310:bad-str-strip-call",
-            "'Hello World'.strip('Hello')",
-            "'Hello World'.strip('Helo')",
-        ),
-        (
-            "E1310:bad-str-strip-call",
-            "'abcbc def bacabc'.strip('abcbc ')",
-            "'abcbc def bacabc'.strip('abc ')",
         ),
     ],
 )

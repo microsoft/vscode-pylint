@@ -317,47 +317,14 @@ REPLACEMENTS = {
         "before": r"class (\w+)\(object\):",
         "after": r"class \1:",
     },
-    "R1707:trailing-comma-tuple": {
-        "before": r"(\w+\s*=\s*\()(.+)(,\s*\)\s*)$",
-        "after": r"\1(\2)",
-    },
-    "R1711:useless-return": {"before": r"return None", "after": r""},
     "R1721:unnecessary-comprehension": {
         "before": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
         "after": r"set(\2)",
-    },
-    "R1729:use-a-generator": {
-        "before": r"(any|all|max|min|sum)\(\[([\w\s,]+)\]\)",
-        "after": r"\1(\2)",
-    },
-    "R1735:use-dict-literal": {
-        "before": r"dict(\((.*)\))|\{\*\*(.*)\}",
-        "after": r"{} if '\2' is '' else {\2} if '\3' is '' else {\3}",
-    },
-    "R1736:unnecessary-list-index-lookup": {
-        "before": r"([\w\s,]+)\[(\w+)\]",
-        "after": r"\1[\2]",
-    },
-    "W1401:anomalous-backslash-in-string": {
-        "before": r"""("[^"\]*(?:\.[^"\]*)*")|('[^'\]*(?:\.[^'\]*)*')""",
-        "after": r"r\1\2",
-    },
-    "W1406:redundant-u-string-prefix": {
-        "before": r"""u(['"])(.*?)\1""",
-        "after": r"\1\2\1",
     },
     "E1141:dict-iter-missing-items": {
         "before": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
         "after": r"for \1, \2 in \3.items():",
     },
-    "E1310:bad-str-strip-call": {
-        "before": r"""str\.strip\(["'](.+)\1["']\)""",
-        "after": r"str.strip(\1)",
-    }
-    # "E1128:assignment-from-none": {
-    #     "before": "f = function()",
-    #     "after": "f = function() if function() else 1"
-    # },
 }
 
 

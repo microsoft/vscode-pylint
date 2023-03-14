@@ -246,6 +246,11 @@ def eat(fruit_name: str):
     ...""",
         ),
         (
+            "R0205:useless-object-inheritance",
+            "class Banana(object):",
+            "class Banana:",
+        ),
+        (
             "R1707:trailing-comma-tuple",
             "COMPASS = 'north', 'south', 'east', 'west',",
             "COMPASS = ('north', 'south', 'east', 'west')",

@@ -354,7 +354,7 @@ def _get_replacement(diagnostic, line):
             "after": r"for $1, $2 in $3.items():"
         },
         "E1310:bad-str-strip-call": {
-            "before": r"str\.strip\(["'](.+)\1["']\)",
+            "before": r"""str\.strip\(["'](.+)\1["']\)""",
             "after": r"str.strip($1)"
         }
         # "E1128:assignment-from-none": {

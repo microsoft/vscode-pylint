@@ -218,7 +218,9 @@ def test_edit_code_action(code, contents, new_text):
                     "context": {"diagnostics": diagnostics},
                 }
             )
-
+        
+            text_document = actual_code_actions[0]['edit']['documentChanges'][0]['textDocument']
+            text_range = actual_code_actions[0]['edit']['documentChanges'][0]['edits'][0]['range']
             expected = [
                 {
                     "title": f"{LINTER}: Run string replacement",
@@ -227,10 +229,10 @@ def test_edit_code_action(code, contents, new_text):
                     "edit": {
                         "documentChanges": [
                             {
-                                "textDocument": actual_code_actions[0]['edit']['documentChanges'][0]['textDocument'],
+                                "textDocument": text_document,
                                 "edits": [
                                     {
-                                        "range": actual_code_actions[0]['edit']['documentChanges'][0]['edits'][0]['range'],
+                                        "range": text_range,
                                         "newText": new_text,
                                     }
                                 ]

@@ -351,7 +351,7 @@ def fix_with_replacement(
     """Provides quick fixes which basic string replacements."""
     return [
         lsp.CodeAction(
-            title=f"{TOOL_DISPLAY}: Run string replacement",
+            title=f"{TOOL_DISPLAY}: Run autofix code action",
             kind=lsp.CodeActionKind.QuickFix,
             diagnostics=diagnostics,
             edit=_create_workspace_edits(

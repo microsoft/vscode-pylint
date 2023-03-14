@@ -223,7 +223,7 @@ def test_edit_code_action(code, contents, new_text):
             text_range = actual_code_actions[0]['edit']['documentChanges'][0]['edits'][0]['range']
             expected = [
                 {
-                    "title": f"{LINTER}: Run string replacement",
+                    "title": f"{LINTER}: Run autofix code action",
                     "kind": "quickfix",
                     "diagnostics": [d],
                     "edit": {

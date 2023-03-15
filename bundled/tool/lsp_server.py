@@ -7,6 +7,7 @@ import copy
 import json
 import os
 import pathlib
+import re
 import sys
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
@@ -311,6 +312,60 @@ def organize_imports(
     ]
 
 
+REPLACEMENTS = {
+    "R0205:useless-object-inheritance": {
+        "pattern": r"class (\w+)\(object\):",
+        "repl": r"class \1:",
+    },
+    "R1721:unnecessary-comprehension": {
+        "pattern": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
+        "repl": r"set(\2)",
+    },
+    "E1141:dict-iter-missing-items": {
+        "pattern": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
+        "repl": r"for \1, \2 in \3.items():",
+    },
+}
+
+
+def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.TextEdit:
+    return lsp.TextEdit(
+        lsp.Range(
+            start=lsp.Position(line=diagnostic.range.start.line, character=0),
+            end=lsp.Position(line=diagnostic.range.start.line + 1, character=0),
+        ),
+        re.sub(
+            REPLACEMENTS[diagnostic.code]["pattern"],
+            REPLACEMENTS[diagnostic.code]["repl"],
+            lines[diagnostic.range.start.line],
+        ),
+    )
+
+
+@QUICK_FIXES.quick_fix(
+    codes=list(REPLACEMENTS.keys()),
+)
+def fix_with_replacement(
+    document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+) -> List[lsp.CodeAction]:
+    """Provides quick fixes which basic string replacements."""
+    return [
+        lsp.CodeAction(
+            title=f"{TOOL_DISPLAY}: Run autofix code action",
+            kind=lsp.CodeActionKind.QuickFix,
+            diagnostics=diagnostics,
+            edit=_create_workspace_edits(
+                document,
+                [
+                    _get_replacement_edit(diagnostic, document.lines)
+                    for diagnostic in diagnostics
+                    if diagnostic.code in REPLACEMENTS
+                ],
+            ),
+        )
+    ]
+
+
 def _command_quick_fix(
     diagnostics: List[lsp.Diagnostic],
     title: str,
@@ -333,7 +388,7 @@ def _create_workspace_edits(
             lsp.TextDocumentEdit(
                 text_document=lsp.OptionalVersionedTextDocumentIdentifier(
                     uri=document.uri,
-                    version=document.version,
+                    version=document.version if document.version else 0,
                 ),
                 edits=results,
             )

@@ -1,8 +1,8 @@
 [tool.black]
-line_length = 80
+line_length = 99
 
 [tool.flake8]
-max-line-length = 80
+max-line-length = 99
 select = "F,E,W,B,B901,B902,B903"
 exclude = [
     ".eggs",
@@ -26,11 +26,11 @@ ignore = [
 
 [tool.isort]
 multi_line_output = 3
-line_length = 80
+line_length = 99
 include_trailing_comma = true
 
 [tool.pylint.'FORMAT']
-max-line-length=80
+max-line-length=99
 
 [tool.pylint.'MESSAGES CONTROL']
 disable= [

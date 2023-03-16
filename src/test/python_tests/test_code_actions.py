@@ -215,6 +215,15 @@ if True != foo:
 """,
         ),
         (
+            "C0123:unidiomatic-typecheck",
+            """
+test_score = {"Biology": 95, "History": 80}
+if type(test_score) is dict:
+    pass""",
+            """if isinstance(test_score, dict):
+""",
+        ),
+        (
             "R0205:useless-object-inheritance",
             """
 class Banana(object):

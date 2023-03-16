@@ -323,6 +323,12 @@ REPLACEMENTS = {
             "repl": r"not \1\2",
         },
     ],
+    "C0123:unidiomatic-typecheck": [
+        {
+            "pattern": r"isinstance\((\w+),\s*(\w+)\)",
+            "repl": r"type(\1) is \2",
+        }
+    ],
     "R0205:useless-object-inheritance": [
         {
             "pattern": r"class (\w+)\(object\):",

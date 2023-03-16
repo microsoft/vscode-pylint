@@ -13,6 +13,7 @@
                 "bungcip.better-toml",
                 "cschleiden.vscode-github-actions",
                 "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
                 "editorconfig.editorconfig",
                 "GitHub.copilot",
                 "github.vscode-pull-request-github",
@@ -31,5 +32,5 @@
             }
         }
     },
-    "postCreateCommand": "nox --session install_bundled_libs"
+    "postCreateCommand": "nox --session setup"
 }

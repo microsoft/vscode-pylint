@@ -17,7 +17,7 @@
     "git.autofetch": true,
     "githubPullRequests.pullBranch": "always",
     "[jsonc]": {
-        "editor.defaultFormatter": "vscode.json-language-features"
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"

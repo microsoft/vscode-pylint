@@ -140,7 +140,7 @@ def test_command_code_action(code, contents, command):
 
 
 def sample_func(foo: bool):
-    if True == foo:
+    if False == foo:
         pass
 
 
@@ -181,6 +181,42 @@ foo = True
 if True == foo:
     pass""",
             """if foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if foo == False:
+    pass""",
+            """if not foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if foo != True:
+    pass""",
+            """if not foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if False == foo:
+    pass""",
+            """if not foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if True != foo:
+    pass""",
+            """if not foo:
 """,
         ),
         (

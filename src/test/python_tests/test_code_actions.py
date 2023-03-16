@@ -139,6 +139,11 @@ def test_command_code_action(code, contents, command):
         assert_that(actual_code_actions, is_(expected))
 
 
+def sample_func(foo: bool):
+    if not foo == True:
+        pass
+
+
 @pytest.mark.parametrize(
     ("code", "contents", "new_text"),
     [
@@ -158,6 +163,15 @@ foo = True
 if foo != False:
     pass""",
             """if foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if not foo == True:
+    pass""",
+            """if not foo:
 """,
         ),
         (

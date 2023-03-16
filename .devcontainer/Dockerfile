@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/python:3.7
 
 RUN python -m pip install --upgrade pip \
-    && python -m pip install nox
+    && python -m pip install wheel pip-tools nox
 
 COPY requirements.txt ./
 RUN python -m pip install -r requirements.txt \

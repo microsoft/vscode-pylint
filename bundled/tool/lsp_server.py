@@ -325,8 +325,8 @@ REPLACEMENTS = {
     ],
     "C0123:unidiomatic-typecheck": [
         {
-            "pattern": r"isinstance\((\w+),\s*(\w+)\)",
-            "repl": r"type(\1) is \2",
+            "pattern": r"type\((\w+)\s*\)\s+is\s+(\w+)",
+            "repl": r"isinstance(\1, \2)",
         }
     ],
     "R0205:useless-object-inheritance": [

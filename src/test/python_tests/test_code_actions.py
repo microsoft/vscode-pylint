@@ -143,6 +143,15 @@ def test_command_code_action(code, contents, command):
     ("code", "contents", "new_text"),
     [
         (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if foo == True:
+    pass""",
+            """if foo:
+""",
+        ),
+        (
             "R0205:useless-object-inheritance",
             """
 class Banana(object):

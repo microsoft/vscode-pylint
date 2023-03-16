@@ -139,27 +139,14 @@ def test_command_code_action(code, contents, command):
         assert_that(actual_code_actions, is_(expected))
 
 
+def test_func(foo):
+    if foo != False:
+        pass
+
+
 @pytest.mark.parametrize(
     ("code", "contents", "new_text"),
     [
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if foo != False:
-        #     pass""",
-        #             """if foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if foo is not False:
-        #     pass""",
-        #             """if foo:
-        # """,
-        #         ),
         (
             "C0121:singleton-comparison",
             """
@@ -173,101 +160,11 @@ if foo == True:
             "C0121:singleton-comparison",
             """
 foo = True
-if foo is True:
+if foo != False:
     pass""",
             """if foo:
 """,
         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if foo is False:
-        #     pass""",
-        #             """if not foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if not foo != True:
-        #     pass""",
-        #             """if foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if not foo is not True:
-        #     pass""",
-        #             """if foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if not foo == True:
-        #     pass""",
-        #             """if not foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if not foo is True:
-        #     pass""",
-        #             """if not foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if not foo == False:
-        #     pass""",
-        #             """if foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if not foo is False:
-        #     pass""",
-        #             """if foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if not foo != False:
-        #     pass""",
-        #             """if not foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if not foo is not False:
-        #     pass""",
-        #             """if not foo:
-        # """,
-        #         ),
-        #         (
-        #             "C0121:singleton-comparison",
-        #             """
-        # foo = True
-        # if False != foo:
-        #     pass""",
-        #             """if foo:
-        # """,
-        #         ),
         (
             "R0205:useless-object-inheritance",
             """

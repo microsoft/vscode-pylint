@@ -314,7 +314,7 @@ def organize_imports(
 
 REPLACEMENTS = {
     "C0121:singleton-comparison": {
-        "pattern": r"if\s+(\w+)\s+(?:==\s+True|is\s+True):",
+        "pattern": r"if\s+(\w+)\s+(?:==\s+True|!=\s+False):",
         "repl": r"if \1:",
     },
     "R0205:useless-object-inheritance": {

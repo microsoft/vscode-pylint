@@ -313,36 +313,51 @@ def organize_imports(
 
 
 REPLACEMENTS = {
-    "C0121:singleton-comparison": {
-        "pattern": r"(\w+)\s+(?:==\s+True|!=\s+False|!=\s+True|==\s+False)|(?:True\s+==|False\s+!=|False\s+==|True\s+!=)\s+(\w+)",
-        "repl": r"\1\2 if (\1\2) else not \1\2",
-    },
-    "R0205:useless-object-inheritance": {
-        "pattern": r"class (\w+)\(object\):",
-        "repl": r"class \1:",
-    },
-    "R1721:unnecessary-comprehension": {
-        "pattern": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
-        "repl": r"set(\2)",
-    },
-    "E1141:dict-iter-missing-items": {
-        "pattern": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
-        "repl": r"for \1, \2 in \3.items():",
-    },
+    "C0121:singleton-comparison": [
+        {
+            "pattern": r"(\w+)\s+(?:==\s+True|!=\s+False)|(?:True\s+==|False\s+!=)\s+(\w+)",
+            "repl": r"\1\2",
+        },
+        {
+            "pattern": r"(\w+)\s+(?:!=\s+True|==\s+False)|(?:True\s+!=|False\s+==)\s+(\w+)",
+            "repl": r"not \1\2",
+        },
+    ],
+    "R0205:useless-object-inheritance": [
+        {
+            "pattern": r"class (\w+)\(object\):",
+            "repl": r"class \1:",
+        }
+    ],
+    "R1721:unnecessary-comprehension": [
+        {
+            "pattern": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
+            "repl": r"set(\2)",
+        }
+    ],
+    "E1141:dict-iter-missing-items": [
+        {
+            "pattern": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
+            "repl": r"for \1, \2 in \3.items():",
+        }
+    ],
 }
 
 
 def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.TextEdit:
+    new_line = lines[diagnostic.range.start.line]
+    for replacement in REPLACEMENTS[diagnostic.code]:
+        new_line = re.sub(
+            replacement["pattern"],
+            replacement["repl"],
+            new_line,
+        )
     return lsp.TextEdit(
         lsp.Range(
             start=lsp.Position(line=diagnostic.range.start.line, character=0),
             end=lsp.Position(line=diagnostic.range.start.line + 1, character=0),
         ),
-        re.sub(
-            REPLACEMENTS[diagnostic.code]["pattern"],
-            REPLACEMENTS[diagnostic.code]["repl"],
-            lines[diagnostic.range.start.line],
-        ),
+        new_line,
     )
 
 

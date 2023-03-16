@@ -315,7 +315,7 @@ def organize_imports(
 REPLACEMENTS = {
     "C0121:singleton-comparison": [
         {
-            "pattern": r"(\w+)|(?:True|False)\s+(?:==|!=)\s+(?:True|False)|(\w+)",
+            "pattern": r"(\w+)\s+(?:==\s+True|!=\s+False)|(?:True\s+==|False\s+!=)\s+(\w+)",
             "repl": r"\1\2",
         },
         {

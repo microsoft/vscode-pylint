@@ -139,11 +139,6 @@ def test_command_code_action(code, contents, command):
         assert_that(actual_code_actions, is_(expected))
 
 
-def sample_func(foo: bool):
-    if False == foo:
-        pass
-
-
 @pytest.mark.parametrize(
     ("code", "contents", "new_text"),
     [

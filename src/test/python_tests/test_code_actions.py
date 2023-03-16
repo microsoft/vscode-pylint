@@ -169,6 +169,15 @@ if foo == True:
             """if foo:
 """,
         ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if foo is True:
+    pass""",
+            """if foo:
+""",
+        ),
         #         (
         #             "C0121:singleton-comparison",
         #             """

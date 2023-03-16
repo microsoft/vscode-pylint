@@ -32,5 +32,6 @@ include_trailing_comma = true
 [tool.pylint.'MESSAGES CONTROL']
 disable= [
     "duplicate-code",
-    "import-outside-toplevel"
+    "import-outside-toplevel",
+    "unspecified-encoding"
 ]

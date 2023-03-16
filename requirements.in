@@ -7,3 +7,5 @@
 pygls
 packaging
 pylint
+flake8
+flake8-pyproject

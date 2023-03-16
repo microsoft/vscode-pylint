@@ -235,9 +235,7 @@ def run_over_json_rpc(
     env: Optional[Dict[str, str]] = None,
 ) -> RpcRunResult:
     """Uses JSON-RPC to execute a command."""
-    rpc: Union[JsonRpc, None] = get_or_start_json_rpc(
-        workspace, interpreter, cwd, env
-    )
+    rpc: Union[JsonRpc, None] = get_or_start_json_rpc(workspace, interpreter, cwd, env)
     if not rpc:
         raise ConnectionError("Failed to run over JSON-RPC.")
 

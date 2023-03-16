@@ -55,9 +55,7 @@ LSP_SERVER = server.LanguageServer(
 # **********************************************************
 TOOL_MODULE = "pylint"
 TOOL_DISPLAY = "Pylint"
-DOCUMENTATION_HOME = (
-    "https://pylint.readthedocs.io/en/latest/user_guide/messages"
-)
+DOCUMENTATION_HOME = "https://pylint.readthedocs.io/en/latest/user_guide/messages"
 
 # Default arguments always passed to pylint.
 TOOL_ARGS = ["--reports=n", "--output-format=json"]
@@ -108,9 +106,7 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
             if major == 2 and minor >= 16:
                 extra_args += ["--clear-cache-post-run=y"]
 
-        result = _run_tool_on_document(
-            document, use_stdin=True, extra_args=extra_args
-        )
+        result = _run_tool_on_document(document, use_stdin=True, extra_args=extra_args)
         if result and result.stdout:
             log_to_output(f"{document.uri} :\r\n{result.stdout}")
 
@@ -185,10 +181,7 @@ def _parse_output(
             range=lsp.Range(start=start, end=end),
             message=data.get("message"),
             severity=_get_severity(
-                data.get("symbol"),
-                data.get("message-id"),
-                data.get("type"),
-                severity,
+                data.get("symbol"), data.get("message-id"), data.get("type"), severity
             ),
             code=f"{data.get('message-id')}:{data.get('symbol')}",
             code_description=lsp.CodeDescription(href=documentation_url),
@@ -214,9 +207,7 @@ class QuickFixSolutions:
     def __init__(self):
         self._solutions: Dict[
             str,
-            Callable[
-                [workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]
-            ],
+            Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]],
         ] = {}
 
     def quick_fix(
@@ -245,9 +236,7 @@ class QuickFixSolutions:
     def solutions(
         self, code: str
     ) -> Optional[
-        Callable[
-            [workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]
-        ]
+        Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]]
     ]:
         """Given a pylint error code returns a function, if available, that provides
         quick fix code actions."""
@@ -339,9 +328,7 @@ REPLACEMENTS = {
 }
 
 
-def _get_replacement_edit(
-    diagnostic: lsp.Diagnostic, lines: List[str]
-) -> lsp.TextEdit:
+def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.TextEdit:
     return lsp.TextEdit(
         lsp.Range(
             start=lsp.Position(line=diagnostic.range.start.line, character=0),
@@ -424,9 +411,7 @@ def initialize(params: lsp.InitializeParams) -> None:
     import_strategy = os.getenv("LS_IMPORT_STRATEGY", "useBundled")
     update_sys_path(os.getcwd(), import_strategy)
 
-    GLOBAL_SETTINGS.update(
-        **params.initialization_options.get("globalSettings", {})
-    )
+    GLOBAL_SETTINGS.update(**params.initialization_options.get("globalSettings", {}))
 
     settings = params.initialization_options["settings"]
     _update_workspace_settings(settings)
@@ -610,9 +595,7 @@ def _run_tool_on_document(
         extra_args = []
 
     if str(document.uri).startswith("vscode-notebook-cell"):
-        log_warning(
-            f"Skipping notebook cells [Not Supported]: {str(document.uri)}"
-        )
+        log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
     if utils.is_stdlib_file(document.path):
@@ -710,9 +693,7 @@ def _run_tool_on_document(
     return result
 
 
-def _run_tool(
-    extra_args: Sequence[str], settings: Dict[str, Any]
-) -> utils.RunResult:
+def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunResult:
     """Runs tool."""
     code_workspace = settings["workspaceFS"]
     cwd = settings["cwd"]
@@ -796,9 +777,7 @@ def _get_updated_env(settings: Dict[str, Any]) -> str:
     return None
 
 
-def _to_run_result_with_logging(
-    rpc_result: jsonrpc.RpcRunResult,
-) -> utils.RunResult:
+def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunResult:
     error = ""
     if rpc_result.exception:
         log_error(rpc_result.exception)
@@ -822,11 +801,7 @@ def log_to_output(
 def log_error(message: str) -> None:
     """Logs messages with notification on error."""
     LSP_SERVER.show_message_log(message, lsp.MessageType.Error)
-    if os.getenv("LS_SHOW_NOTIFICATION", "off") in [
-        "onError",
-        "onWarning",
-        "always",
-    ]:
+    if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["onError", "onWarning", "always"]:
         LSP_SERVER.show_message(message, lsp.MessageType.Error)
 
 

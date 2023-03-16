@@ -315,7 +315,7 @@ def organize_imports(
 REPLACEMENTS = {
     "C0113:unneeded-not": [
         {
-            "pattern": r"not\s+not",
+            "pattern": r"\snot\s+not",
             "repl": r"",
         }
     ],

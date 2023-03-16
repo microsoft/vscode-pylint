@@ -144,75 +144,43 @@ def test_command_code_action(code, contents, command):
     [
         (
             "C0121:singleton-comparison",
-            """
-foo = True
-if foo == True:
-    pass""",
-            """if foo:
-""",
+            "if foo == True: pass",
+            "if foo: pass\n",
         ),
         (
             "C0121:singleton-comparison",
-            """
-foo = True
-if foo != False:
-    pass""",
-            """if foo:
-""",
+            "if foo != False: pass",
+            "if foo: pass\n",
         ),
         (
             "C0121:singleton-comparison",
-            """
-foo = True
-if not foo == True:
-    pass""",
-            """if not foo:
-""",
+            "if not foo == True: pass",
+            "if not foo: pass\n",
         ),
         (
             "C0121:singleton-comparison",
-            """
-foo = True
-if True == foo:
-    pass""",
-            """if foo:
-""",
+            "if True == foo: pass",
+            "if foo: pass\n",
         ),
         (
             "C0121:singleton-comparison",
-            """
-foo = True
-if foo == False:
-    pass""",
-            """if not foo:
-""",
+            "if foo == False: pass",
+            "if not foo: pass\n",
         ),
         (
             "C0121:singleton-comparison",
-            """
-foo = True
-if foo != True:
-    pass""",
-            """if not foo:
-""",
+            "if foo != True: pass",
+            "if not foo: pass\n",
         ),
         (
             "C0121:singleton-comparison",
-            """
-foo = True
-if False == foo:
-    pass""",
-            """if not foo:
-""",
+            "if False == foo: pass",
+            "if not foo: pass\n",
         ),
         (
             "C0121:singleton-comparison",
-            """
-foo = True
-if True != foo:
-    pass""",
-            """if not foo:
-""",
+            "if True != foo: pass",
+            "if not foo: pass\n",
         ),
         (
             "R0205:useless-object-inheritance",

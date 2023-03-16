@@ -42,5 +42,6 @@
                 ]
             }
         }
-    }
+    },
+    "postCreateCommand": "nox --session install_bundled_libs"
 }

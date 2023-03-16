@@ -50,7 +50,9 @@ class JsonWriter:
         with self._lock:
             content = json.dumps(data)
             length = len(content.encode("utf-8"))
-            self._writer.write(f"{CONTENT_LENGTH}{length}\r\n\r\n{content}".encode("utf-8"))
+            self._writer.write(
+                f"{CONTENT_LENGTH}{length}\r\n\r\n{content}".encode("utf-8")
+            )
             self._writer.flush()
 
 
@@ -254,7 +256,9 @@ def run_over_json_rpc(
     data = rpc.receive_data()
 
     if data["id"] != msg_id:
-        return RpcRunResult("", f"Invalid result for request: {json.dumps(msg, indent=4)}")
+        return RpcRunResult(
+            "", f"Invalid result for request: {json.dumps(msg, indent=4)}"
+        )
 
     if "error" in data:
         result = data["result"] if "result" in data else ""

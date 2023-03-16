@@ -1,5 +1,5 @@
 [tool.black]
-line_length = 99
+line_length = 80
 
 [tool.flake8]
 max-line-length = 99

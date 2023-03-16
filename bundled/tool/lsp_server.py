@@ -312,12 +312,6 @@ def organize_imports(
     ]
 
 
-pattern_1 = r"(\w+)\s+(?:==\s+True|!=\s+False)|(?:True\s+==|False\s+!=)\s+(\w+)"
-repl_1 = r"\1\2"
-
-pattern_2 = r"(\w+)\s+(?:!=\s+True|==\s+False)|(?:True\s+!=|False\s+==)\s+(\w+)"
-repl_2 = r"not \1\2"
-
 REPLACEMENTS = {
     "C0121:singleton-comparison": {
         "pattern": r"(\w+)\s+(?:==\s+True|!=\s+False|!=\s+True|==\s+False)|(?:True\s+==|False\s+!=|False\s+==|True\s+!=)\s+(\w+)",

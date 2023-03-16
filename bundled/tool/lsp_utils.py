@@ -27,7 +27,9 @@ CATEGORIES = {
 }
 
 
-def as_list(content: Union[Any, List[Any], Tuple[Any]]) -> Union[List[Any], Tuple[Any]]:
+def as_list(
+    content: Union[Any, List[Any], Tuple[Any]]
+) -> Union[List[Any], Tuple[Any]]:
     """Ensures we always get a list"""
     if isinstance(content, (list, tuple)):
         return content
@@ -43,7 +45,10 @@ def get_message_category(code: str) -> Optional[str]:
 _site_paths = tuple(
     [
         os.path.normcase(os.path.normpath(p))
-        for p in (as_list(site.getsitepackages()) + as_list(site.getusersitepackages()))
+        for p in (
+            as_list(site.getsitepackages())
+            + as_list(site.getusersitepackages())
+        )
     ]
 )
 
@@ -147,7 +152,9 @@ def _run_module(
             with redirect_io("stdout", str_output):
                 with redirect_io("stderr", str_error):
                     if use_stdin and source is not None:
-                        str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
+                        str_input = CustomIO(
+                            "<stdin>", encoding="utf-8", newline="\n"
+                        )
                         with redirect_io("stdin", str_input):
                             str_input.write(source)
                             str_input.seek(0)
@@ -161,7 +168,11 @@ def _run_module(
 
 
 def run_module(
-    module: str, argv: Sequence[str], use_stdin: bool, cwd: str, source: str = None
+    module: str,
+    argv: Sequence[str],
+    use_stdin: bool,
+    cwd: str,
+    source: str = None,
 ) -> RunResult:
     """Runs as a module."""
     with CWD_LOCK:
@@ -208,7 +219,9 @@ def run_path(
 
 
 def run_api(
-    callback: Callable[[Sequence[str], CustomIO, CustomIO, CustomIO | None], None],
+    callback: Callable[
+        [Sequence[str], CustomIO, CustomIO, CustomIO | None], None
+    ],
     argv: Sequence[str],
     use_stdin: bool,
     cwd: str,
@@ -223,7 +236,9 @@ def run_api(
 
 
 def _run_api(
-    callback: Callable[[Sequence[str], CustomIO, CustomIO, CustomIO | None], None],
+    callback: Callable[
+        [Sequence[str], CustomIO, CustomIO, CustomIO | None], None
+    ],
     argv: Sequence[str],
     use_stdin: bool,
     source: str = None,
@@ -236,7 +251,9 @@ def _run_api(
             with redirect_io("stdout", str_output):
                 with redirect_io("stderr", str_error):
                     if use_stdin and source is not None:
-                        str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
+                        str_input = CustomIO(
+                            "<stdin>", encoding="utf-8", newline="\n"
+                        )
                         with redirect_io("stdin", str_input):
                             str_input.write(source)
                             str_input.seek(0)

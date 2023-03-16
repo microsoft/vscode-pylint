@@ -314,8 +314,8 @@ def organize_imports(
 
 REPLACEMENTS = {
     "C0121:singleton-comparison": {
-        "pattern": r"(\w+)\s+(?:==\s+True|!=\s+False)",
-        "repl": r"\1",
+        "pattern": r"(\w+)\s+(?:==\s+True|!=\s+False)|(?:True\s+==|False\s+!=)\s+(\w+)",
+        "repl": r"\1\2",
     },
     "R0205:useless-object-inheritance": {
         "pattern": r"class (\w+)\(object\):",

@@ -164,16 +164,16 @@ if foo != False:
             "C0121:singleton-comparison",
             """
 foo = True
-if not foo == True:
+if True == foo:
     pass""",
-            """if not foo:
+            """if foo:
 """,
         ),
         (
             "C0121:singleton-comparison",
             """
 foo = True
-if True == foo:
+if False != foo:
     pass""",
             """if foo:
 """,

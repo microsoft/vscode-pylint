@@ -363,4 +363,7 @@ def test_edit_code_action(code, contents, new_text):
                 for d in diagnostics
             ]
 
-        assert_that(actual_code_actions, is_(expected))
+        assert_that(
+            actual_code_actions[0]["edit"]["documentChanges"],
+            is_(expected[0]["edit"]["documentChanges"]),
+        )

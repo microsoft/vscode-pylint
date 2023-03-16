@@ -143,6 +143,14 @@ def test_command_code_action(code, contents, command):
     ("code", "contents", "new_text"),
     [
         (
+            "C0113:unneeded-not",
+            """
+if not not True:
+    pass""",
+            """if True:
+""",
+        ),
+        (
             "C0121:singleton-comparison",
             """
 foo = True

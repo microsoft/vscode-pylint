@@ -313,6 +313,12 @@ def organize_imports(
 
 
 REPLACEMENTS = {
+    "C0113:unneeded-not": [
+        {
+            "pattern": r"not\s+not",
+            "repl": r"",
+        }
+    ],
     "C0121:singleton-comparison": [
         {
             "pattern": r"(\w+)\s+(?:==\s+True|!=\s+False)|(?:True\s+==|False\s+!=)\s+(\w+)",
@@ -325,7 +331,7 @@ REPLACEMENTS = {
     ],
     "C0123:unidiomatic-typecheck": [
         {
-            "pattern": r"type\((\w+)\s*\)\s+is\s+(\w+)",
+            "pattern": r"type\((\w+)\)\s+is\s+(\w+)",
             "repl": r"isinstance(\1, \2)",
         }
     ],

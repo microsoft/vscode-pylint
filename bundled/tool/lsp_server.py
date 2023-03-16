@@ -45,9 +45,7 @@ GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
 MAX_WORKERS = 5
-LSP_SERVER = server.LanguageServer(
-    name="pylint-server", version="v0.1.0", max_workers=MAX_WORKERS
-)
+LSP_SERVER = server.LanguageServer(name="pylint-server", version="v0.1.0", max_workers=MAX_WORKERS)
 
 
 # **********************************************************
@@ -126,9 +124,7 @@ def _get_severity(
 ) -> lsp.DiagnosticSeverity:
     """Converts severity provided by linter to LSP specific value."""
     value = (
-        severity.get(symbol, None)
-        or severity.get(code, None)
-        or severity.get(code_type, "Error")
+        severity.get(symbol, None) or severity.get(code, None) or severity.get(code_type, "Error")
     )
     try:
         return lsp.DiagnosticSeverity[value]
@@ -217,9 +213,7 @@ class QuickFixSolutions:
         """Decorator used for registering quick fixes."""
 
         def decorator(
-            func: Callable[
-                [workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]
-            ]
+            func: Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]]
         ):
             if isinstance(codes, str):
                 if codes in self._solutions:
@@ -235,9 +229,7 @@ class QuickFixSolutions:
 
     def solutions(
         self, code: str
-    ) -> Optional[
-        Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]]
-    ]:
+    ) -> Optional[Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]]]:
         """Given a pylint error code returns a function, if available, that provides
         quick fix code actions."""
 
@@ -256,9 +248,7 @@ QUICK_FIXES = QuickFixSolutions()
 )
 def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     """LSP handler for textDocument/codeAction request."""
-    diagnostics = list(
-        d for d in params.context.diagnostics if d.source == TOOL_DISPLAY
-    )
+    diagnostics = list(d for d in params.context.diagnostics if d.source == TOOL_DISPLAY)
 
     document = LSP_SERVER.workspace.get_document(params.text_document.uri)
 
@@ -405,9 +395,7 @@ def _command_quick_fix(
     )
 
 
-def _create_workspace_edits(
-    document: workspace.Document, results: Optional[List[lsp.TextEdit]]
-):
+def _create_workspace_edits(document: workspace.Document, results: Optional[List[lsp.TextEdit]]):
     return lsp.WorkspaceEdit(
         document_changes=[
             lsp.TextDocumentEdit(
@@ -508,9 +496,7 @@ def _log_version_info() -> None:
                     f"FOUND {TOOL_MODULE}=={actual_version}\r\n"
                 )
         except:  # pylint: disable=bare-except
-            log_to_output(
-                f"Error while detecting pylint version:\r\n{traceback.format_exc()}"
-            )
+            log_to_output(f"Error while detecting pylint version:\r\n{traceback.format_exc()}")
 
 
 # *****************************************************
@@ -639,9 +625,7 @@ def _run_tool_on_document(
         # 'path' setting takes priority over everything.
         use_path = True
         argv = settings["path"]
-    elif settings["interpreter"] and not utils.is_current_interpreter(
-        settings["interpreter"][0]
-    ):
+    elif settings["interpreter"] and not utils.is_current_interpreter(settings["interpreter"][0]):
         # If there is a different interpreter set use JSON-RPC to the subprocess
         # running under that interpreter.
         argv = [TOOL_MODULE]
@@ -779,9 +763,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         # sys.path and that might not work for this scenario next time around.
         with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
             try:
-                result = utils.run_module(
-                    module=TOOL_MODULE, argv=argv, use_stdin=True, cwd=cwd
-                )
+                result = utils.run_module(module=TOOL_MODULE, argv=argv, use_stdin=True, cwd=cwd)
             except Exception:
                 log_error(traceback.format_exc(chain=True))
                 raise
@@ -816,9 +798,7 @@ def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunRe
 # *****************************************************
 # Logging and notification.
 # *****************************************************
-def log_to_output(
-    message: str, msg_type: lsp.MessageType = lsp.MessageType.Log
-) -> None:
+def log_to_output(message: str, msg_type: lsp.MessageType = lsp.MessageType.Log) -> None:
     """Logs messages to Output > Pylint channel only."""
     LSP_SERVER.show_message_log(message, msg_type)
 

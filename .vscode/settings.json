@@ -24,5 +24,17 @@
     "githubPullRequests.pullBranch": "always",
     "[jsonc]": {
         "editor.defaultFormatter": "vscode.json-language-features"
-    }
+    },
+    "pylint.args": [
+        "--rcfile=pyproject.toml"
+    ],
+    "black-formatter.args": [
+        "--config=pyproject.toml"
+    ],
+    "flake8.args": [
+        "--toml-config=pyproject.toml"
+    ],
+    "isort.args": [
+        "--settings-path=pyproject.toml"
+    ]
 }

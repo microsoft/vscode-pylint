@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/devcontainers/python:3.7
 RUN python -m pip install --upgrade pip
 
 COPY requirements.txt ./
-RUN python -m pip install nox \
+RUN python -m pip install nox flake8-pyproject \
     && python -m pip install -r requirements.txt \
     && rm requirements.txt
 

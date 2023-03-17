@@ -6,6 +6,9 @@
         "dockerfile": "Dockerfile",
         "context": ".."
     },
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": "none"
+    },
     "customizations": {
         "vscode": {
             "extensions": [
@@ -23,7 +26,7 @@
                 "ms-python.pylint",
                 "ms-python.isort",
                 "ms-python.flake8",
-                "ms-python.black-formatter@prerelease",
+                "ms-python.black-formatter",
                 "ms-vsliveshare.vsliveshare",
                 "ms-vscode-remote.remote-containers"
             ],

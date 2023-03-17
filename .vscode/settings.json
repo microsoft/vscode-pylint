@@ -22,22 +22,16 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "python.testing.pytestArgs": [
-        "src/test/python_tests"
-    ],
+    "python.testing.pytestArgs": ["src/test/python_tests"],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.testing.cwd": "${workspaceFolder}",
-    "pylint.args": [
-        "--rcfile=pyproject.toml"
-    ],
-    "black-formatter.args": [
-        "--config=pyproject.toml"
-    ],
-    "flake8.args": [
-        "--toml-config=pyproject.toml"
-    ],
-    "isort.args": [
-        "--settings-path=pyproject.toml"
-    ]
+    "pylint.importStrategy": "fromEnvironment",
+    "pylint.args": ["--rcfile=pyproject.toml"],
+    "black-formatter.importStrategy": "fromEnvironment",
+    "black-formatter.args": ["--config=pyproject.toml"],
+    "flake8.importStrategy": "fromEnvironment",
+    "flake8.args": ["--toml-config=pyproject.toml"],
+    "isort.importStrategy": "fromEnvironment",
+    "isort.args": ["--settings-path=pyproject.toml"]
 }

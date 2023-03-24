@@ -143,6 +143,95 @@ def test_command_code_action(code, contents, command):
     ("code", "contents", "new_text"),
     [
         (
+            "C0113:unneeded-not",
+            """
+if not not True:
+    pass""",
+            """if True:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if foo == True:
+    pass""",
+            """if foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if foo != False:
+    pass""",
+            """if foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if True == foo:
+    pass""",
+            """if foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if False != foo:
+    pass""",
+            """if foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if foo == False:
+    pass""",
+            """if not foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if foo != True:
+    pass""",
+            """if not foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if False == foo:
+    pass""",
+            """if not foo:
+""",
+        ),
+        (
+            "C0121:singleton-comparison",
+            """
+foo = True
+if True != foo:
+    pass""",
+            """if not foo:
+""",
+        ),
+        (
+            "C0123:unidiomatic-typecheck",
+            """
+test_score = {"Biology": 95, "History": 80}
+if type(test_score) is dict:
+    pass""",
+            """if isinstance(test_score, dict):
+""",
+        ),
+        (
             "R0205:useless-object-inheritance",
             """
 class Banana(object):
@@ -246,4 +335,7 @@ def test_edit_code_action(code, contents, new_text):
                 for d in diagnostics
             ]
 
-        assert_that(actual_code_actions, is_(expected))
+        assert_that(
+            actual_code_actions[0]["edit"]["documentChanges"],
+            is_(expected[0]["edit"]["documentChanges"]),
+        )

@@ -16,9 +16,9 @@ exceptiongroup==1.1.1 \
     --hash=sha256:232c37c63e4f682982c8b6459f33a8981039e5fb8756b2074364e5055c498c9e \
     --hash=sha256:d484c3090ba2889ae2928419117447a14daf3c1231d5e30d0aae34f354f01785
     # via pytest
-importlib-metadata==6.0.0 \
-    --hash=sha256:7efb448ec9a5e313a57655d35aa54cd3e01b7e1fbcf72dce1bf06119420f5bad \
-    --hash=sha256:e354bedeb60efa6affdcc8ae121b73544a7aa74156d047311948f6d711cd378d
+importlib-metadata==6.1.0 \
+    --hash=sha256:43ce9281e097583d758c2c708c4376371261a02c34682491a8e98352365aad20 \
+    --hash=sha256:ff80f3b5394912eb1b108fcfd444dc78b7f1f3e16b16188054bd01cb9cb86f09
     # via
     #   pluggy
     #   pytest

@@ -353,6 +353,12 @@ REPLACEMENTS = {
             "repl": r"for \1, \2 in \3.items():",
         }
     ],
+    "W1510:subprocess-run-check": [
+        {
+            "pattern": r"(?<=subprocess\.run\()([^,]*)(?=\))",
+            "repl": r"\1, check=False",
+        }
+    ],
 }
 
 

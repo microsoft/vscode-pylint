@@ -259,6 +259,16 @@ for city, population in data:
             """for city, population in data.items():
 """,
         ),
+        (
+            "W1510:subprocess-run-check",
+            """
+import subprocess
+
+proc = subprocess.run(["ls"])
+""",
+            """proc = subprocess.run(["ls"], check=False)
+""",
+        ),
     ],
 )
 def test_edit_code_action(code, contents, new_text):

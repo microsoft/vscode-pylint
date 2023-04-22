@@ -264,6 +264,27 @@ for city, population in data:
             """
 import subprocess
 
+proc = subprocess.run(
+    ["ls"],
+    cwd=".",
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
+""",
+            """proc = subprocess.run(
+    ["ls"],
+    cwd=".",
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    check=False
+)
+""",
+        ),
+        (
+            "W1510:subprocess-run-check",
+            """
+import subprocess
+
 proc = subprocess.run(["ls"])
 """,
             """proc = subprocess.run(["ls"], check=False)

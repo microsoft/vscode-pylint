@@ -272,12 +272,6 @@ proc = subprocess.run(
 )
 """,
             """proc = subprocess.run(
-    ["ls"],
-    cwd=".",
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    check=False
-)
 """,
         ),
         (

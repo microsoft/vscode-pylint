@@ -63,8 +63,8 @@ flake8==5.0.4 \
     # via
     #   -r dev-requirements.in
     #   flake8-pyproject
-flake8-pyproject==1.2.2 \
-    --hash=sha256:52d412219e7db6227faa654675b1435947b11d49b453f3eced760f19bdd6f06a
+flake8-pyproject==1.2.3 \
+    --hash=sha256:6249fe53545205af5e76837644dc80b4c10037e73a0e5db87ff562d75fb5bd4a
     # via -r dev-requirements.in
 importlib-metadata==4.2.0 \
     --hash=sha256:057e92c15bc8d9e8109738a48db0ccb31b4d9d5cfbee5a8670879a30be66304b \
@@ -132,6 +132,7 @@ tomli==2.0.1 \
     #   black
     #   build
     #   flake8-pyproject
+    #   pyproject-hooks
 typed-ast==1.5.4 \
     --hash=sha256:0261195c2062caf107831e92a76764c81227dae162c4f75192c0d489faf751a2 \
     --hash=sha256:0fdbcf2fef0ca421a3f5912555804296f0b0960f0418c440f5d6d3abb549f3e1 \

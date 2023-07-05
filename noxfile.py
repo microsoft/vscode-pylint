@@ -35,10 +35,17 @@ def _check_files(names: List[str]) -> None:
 
 
 def _update_pip_packages(session: nox.Session) -> None:
-    session.run("pip-compile", "--generate-hashes", "--upgrade", "./requirements.in")
     session.run(
         "pip-compile",
         "--generate-hashes",
+        "--resolver=backtracking",
+        "--upgrade",
+        "./requirements.in",
+    )
+    session.run(
+        "pip-compile",
+        "--generate-hashes",
+        "--resolver=backtracking",
         "--upgrade",
         "./src/test/python_tests/requirements.in",
     )
@@ -86,7 +93,7 @@ def _update_npm_packages(session: nox.Session) -> None:
         new_package_json += "\n"
     package_json_path.write_text(new_package_json, encoding="utf-8")
 
-    session.run("npm", "audit", "fix", external=True)
+    session.run("npm", "audit", "fix", external=True, success_codes=[0, 1])
     session.run("npm", "install", external=True)
 
 

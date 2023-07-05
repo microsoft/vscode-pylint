@@ -49,6 +49,13 @@ def _update_pip_packages(session: nox.Session) -> None:
         "--upgrade",
         "./src/test/python_tests/requirements.in",
     )
+    session.run(
+        "pip-compile",
+        "--generate-hashes",
+        "--resolver=backtracking",
+        "--upgrade",
+        "./dev-requirements.in",
+    )
 
 
 def _get_package_data(package):

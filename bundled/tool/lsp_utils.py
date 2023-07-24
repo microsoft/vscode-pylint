@@ -29,6 +29,11 @@ CATEGORIES = {
 }
 
 
+def get_message_category(code: str) -> Optional[str]:
+    """Get the full name of the message category."""
+    return CATEGORIES.get(code[0].upper())
+
+
 def as_list(content: Union[Any, List[Any], Tuple[Any]]) -> List[Any]:
     """Ensures we always get a list"""
     if isinstance(content, (list, tuple)):
@@ -36,17 +41,36 @@ def as_list(content: Union[Any, List[Any], Tuple[Any]]) -> List[Any]:
     return [content]
 
 
-def get_message_category(code: str) -> Optional[str]:
-    """Get the full name of the message category."""
-    return CATEGORIES.get(code[0].upper())
+def _get_sys_config_paths() -> List[str]:
+    """Returns paths from sysconfig.get_paths()."""
+    return [
+        path
+        for group, path in sysconfig.get_paths().items()
+        if group not in ["data", "platdata", "scripts"]
+    ]
 
 
-_site_paths = set(
+def _get_extensions_dir() -> List[str]:
+    """This is the extensions folder under ~/.vscode or ~/.vscode-server."""
+
+    # The path here is calculated relative to the tool
+    # this is because users can launch VS Code with custom
+    # extensions folder using the --extensions-dir argument
+    path = pathlib.Path(__file__).parent.parent.parent.parent
+    #                              ^     bundled  ^  extensions
+    #                            tool        <extension>
+    if path.name == "extensions":
+        return [os.fspath(path)]
+    return []
+
+
+_stdlib_paths = set(
     str(pathlib.Path(p).resolve())
     for p in (
         as_list(site.getsitepackages())
         + as_list(site.getusersitepackages())
-        + list(sysconfig.get_paths().values())
+        + _get_sys_config_paths()
+        + _get_extensions_dir()
     )
 )
 
@@ -69,7 +93,7 @@ def is_current_interpreter(executable) -> bool:
 def is_stdlib_file(file_path: str) -> bool:
     """Return True if the file belongs to the standard library."""
     normalized_path = str(pathlib.Path(file_path).resolve())
-    return any(normalized_path.startswith(path) for path in _site_paths)
+    return any(normalized_path.startswith(path) for path in _stdlib_paths)
 
 
 # pylint: disable-next=too-few-public-methods

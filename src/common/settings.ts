@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { ConfigurationChangeEvent, ConfigurationScope, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
-import { traceLog } from './log/logging';
+import { traceLog } from './logging';
 import { getInterpreterDetails } from './python';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
 
@@ -139,7 +139,7 @@ export async function getWorkspaceSettings(
         severity: config.get<Record<string, string>>('severity', DEFAULT_SEVERITY),
         path: resolveVariables(path, workspace),
         interpreter: resolveVariables(interpreter, workspace),
-        importStrategy: config.get<string>('importStrategy', 'fromEnvironment'),
+        importStrategy: config.get<string>('importStrategy', 'useBundled'),
         showNotifications: config.get<string>('showNotifications', 'off'),
         extraPaths: resolveVariables(extraPaths, workspace),
     };

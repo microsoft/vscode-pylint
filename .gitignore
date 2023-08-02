@@ -6,6 +6,7 @@ node_modules
 .venv/
 .nox/
 bundled/libs/
+**/.mypy_cache
 **/__pycache__
 **/.pytest_cache
 **/.vs

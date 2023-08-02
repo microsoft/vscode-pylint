@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
-import { registerLogger, traceError, traceLog, traceVerbose } from './common/log/logging';
+import { registerLogger, traceError, traceLog, traceVerbose } from './common/logging';
 import {
     checkVersion,
     getInterpreterDetails,

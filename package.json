@@ -58,10 +58,10 @@
         "package": "webpack --mode production --devtool source-map --config ./webpack.config.js",
         "compile-tests": "tsc -p . --outDir out",
         "watch-tests": "tsc -p . -w --outDir out",
-        "pretest": "npm run compile-tests && npm run compile && npm run lint",
+        "pretest": "npm run compile-tests && npm run compile",
         "lint": "eslint src --ext ts",
         "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.yml' '.github/**/*.yml'",
-        "test": "node ./out/test/runTest.js",
+        "tests": "node ./out/test/ts_tests/runTest.js",
         "vsce-package": "vsce package -o pylint.vsix"
     },
     "contributes": {

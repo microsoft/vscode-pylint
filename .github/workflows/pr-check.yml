@@ -54,10 +54,10 @@ jobs:
           path: ${{ env.special-working-directory-relative }}
 
       # Install bundled libs using 3.7 even though you test it on other versions.
-      - name: Use Python 3.x
+      - name: Use Python 3.7
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.7'
 
       - name: Update pip, install wheel and nox
         run: python -m pip install -U pip wheel nox

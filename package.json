@@ -107,6 +107,15 @@
                     },
                     "type": "array"
                 },
+                "pylint.lintOnChange": {
+                    "default": false,
+                    "description": "%settings.onChange.description%",
+                    "scope": "machine",
+                    "type": "boolean",
+                    "tags": [
+                        "experimental"
+                    ]
+                },
                 "pylint.path": {
                     "default": [],
                     "description": "%settings.path.description%",

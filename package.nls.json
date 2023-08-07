@@ -3,6 +3,7 @@
     "command.restartServer": "Restart Server",
     "settings.args.description": "Arguments passed in. Each argument is a separate string in the array.",
     "settings.severity.description": "Mapping from severity of `pylint` message type to severity shown in problem window.",
+    "settings.lintOnChange.description": "Lint files on change.",
     "settings.path.description": "When set to a path to `pylint` binary, extension will use that for linting. NOTE: Using this option may slowdown linting.",
     "settings.importStrategy.description": "Defines where `pylint` is imported from. This setting may be ignored if `pylint.path` is set.",
     "settings.importStrategy.useBundled.description": "Always use the bundled version of `pylint`.",

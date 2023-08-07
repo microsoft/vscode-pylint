@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../common/constants';
 import * as python from '../../../../common/python';
-import { ISettings, getWorkspaceSettings } from '../../../../common/settings';
+import { ISettings, getWorkspaceSettings, isLintOnChangeEnabled } from '../../../../common/settings';
 import * as vscodeapi from '../../../../common/vscodeapi';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -262,6 +262,16 @@ suite('Settings Tests', () => {
 
             configMock.verifyAll();
             pythonConfigMock.verifyAll();
+        });
+
+        [true, false].forEach((value) => {
+            test(`Lint on change settings: ${value}`, async () => {
+                configMock
+                    .setup((c) => c.get<boolean>('lintOnChange', false))
+                    .returns(() => value)
+                    .verifiable(TypeMoq.Times.atLeastOnce());
+                assert.deepStrictEqual(isLintOnChangeEnabled('pylint'), value);
+            });
         });
     });
 });

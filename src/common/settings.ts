@@ -176,6 +176,11 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
     return setting;
 }
 
+export function isLintOnChangeEnabled(namespace: string): boolean {
+    const config = getConfiguration(namespace);
+    return config.get<boolean>('lintOnChange', false);
+}
+
 export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
     const settings = [
         `${namespace}.args`,

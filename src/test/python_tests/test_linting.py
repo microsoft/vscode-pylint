@@ -335,7 +335,10 @@ def test_publish_diagnostics_on_change():
                 {
                     "range": {
                         "start": {"line": 1, "character": 6},
-                        "end": {"line": 1, "character": 6},
+                        "end": {
+                            "line": 1,
+                            "character": 7 if sys.version_info >= (3, 8) else 6,
+                        },
                     },
                     "message": "Undefined variable 'x'",
                     "severity": 1,

@@ -18,7 +18,7 @@ TEST_FILE2_PATH = constants.TEST_DATA / "sample2" / "sample.py"
 TEST_FILE_URI = utils.as_uri(str(TEST_FILE_PATH))
 TEST_FILE2_URI = utils.as_uri(str(TEST_FILE2_PATH))
 LINTER = utils.get_server_info_defaults()
-TIMEOUT = 1000  # 10 seconds
+TIMEOUT = 10  # 10 seconds
 DOCUMENTATION_HOME = "https://pylint.readthedocs.io/en/latest/user_guide/messages"
 
 
@@ -295,6 +295,7 @@ def test_publish_diagnostics_on_change():
         # reset waiting
         done.clear()
 
+        # make code change with linting errors
         ls_session.notify_did_change(
             {
                 "textDocument": {
@@ -351,6 +352,42 @@ def test_publish_diagnostics_on_change():
             ],
         }
         assert_that(actual, is_(expected))
+
+        # reset waiting
+        done.clear()
+
+        # make code change fixing linting errors
+        ls_session.notify_did_change(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE2_URI,
+                    "version": 1,
+                },
+                "contentChanges": [
+                    {
+                        "range": {
+                            "start": {"line": 1, "character": 0},
+                            "end": {"line": 2, "character": 0},
+                        },
+                        "text": "print('hello')\n",
+                    }
+                ],
+            }
+        )
+
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+
+        # We should receive empty diagnostics
+        assert_that(
+            actual,
+            is_(
+                {
+                    "uri": TEST_FILE2_URI,
+                    "diagnostics": [],
+                }
+            ),
+        )
 
 
 @pytest.mark.parametrize("lint_code", ["W0611", "unused-import", "warning"])

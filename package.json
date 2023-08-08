@@ -109,7 +109,7 @@
                 },
                 "pylint.lintOnChange": {
                     "default": false,
-                    "description": "%settings.onChange.description%",
+                    "description": "%settings.lintOnChange.description%",
                     "scope": "machine",
                     "type": "boolean",
                     "tags": [

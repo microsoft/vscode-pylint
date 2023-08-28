@@ -78,3 +78,10 @@ export function checkVersion(resolved: ResolvedEnvironment | undefined): boolean
     traceError('Supported versions are 3.7 and above.');
     return false;
 }
+
+export async function getPythonEnvVariables(resource?: Uri): Promise<NodeJS.ProcessEnv> {
+    const api = await getPythonExtensionAPI();
+    const newEnv = { ...process.env };
+    const pythonEnv = api?.environments.getEnvironmentVariables(resource);
+    return { ...newEnv, ...pythonEnv };
+}

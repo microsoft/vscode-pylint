@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
-import { Disposable, env, LogOutputChannel } from 'vscode';
+import { Disposable, env, LogOutputChannel, Uri } from 'vscode';
 import { State } from 'vscode-languageclient';
 import {
     LanguageClient,
@@ -12,7 +12,7 @@ import {
 } from 'vscode-languageclient/node';
 import { DEBUG_SERVER_SCRIPT_PATH, SERVER_SCRIPT_PATH } from './constants';
 import { traceError, traceInfo, traceVerbose } from './logging';
-import { getDebuggerPath } from './python';
+import { getDebuggerPath, getPythonEnvVariables } from './python';
 import {
     getExtensionSettings,
     getGlobalSettings,
@@ -35,7 +35,7 @@ async function createServer(
     const cwd = settings.cwd;
 
     // Set debugger path needed for debugging python code.
-    const newEnv = { ...process.env };
+    const newEnv = await getPythonEnvVariables(Uri.parse(settings.workspace));
     const debuggerPath = await getDebuggerPath();
     const isDebugScript = await fsapi.pathExists(DEBUG_SERVER_SCRIPT_PATH);
     if (newEnv.USE_DEBUGPY && debuggerPath) {

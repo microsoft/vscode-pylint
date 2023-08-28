@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationChangeEvent, ConfigurationScope, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationScope, Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { traceLog } from './logging';
 import { getInterpreterDetails } from './python';
 import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
@@ -164,7 +164,7 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
 
     const setting = {
         cwd: process.cwd(),
-        workspace: process.cwd(),
+        workspace: Uri.file(process.cwd()).toString(),
         args: getGlobalValue<string[]>(config, 'args', []),
         severity: getGlobalValue<Record<string, string>>(config, 'severity', DEFAULT_SEVERITY),
         path: getGlobalValue<string[]>(config, 'path', []),

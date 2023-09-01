@@ -186,7 +186,7 @@
         ]
     },
     "dependencies": {
-        "@vscode/python-extension": "^1.0.2",
+        "@vscode/python-extension": "^1.0.4",
         "fs-extra": "^11.1.1",
         "vscode-languageclient": "^8.1.0"
     },

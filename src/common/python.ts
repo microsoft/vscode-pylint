@@ -34,11 +34,11 @@ export async function initializePython(disposables: Disposable[]): Promise<void>
                 }),
             );
 
-            traceLog('Waiting for interpreter from python extension.');
+            traceLog('Waiting for interpreter from Python extension.');
             onDidChangePythonInterpreterEvent.fire(await getInterpreterDetails());
         }
     } catch (error) {
-        traceError('Error initializing python: ', error);
+        traceError('Error initializing Python: ', error);
     }
 }
 
@@ -74,7 +74,7 @@ export function checkVersion(resolved: ResolvedEnvironment | undefined): boolean
         return true;
     }
     traceError(`Python version ${version?.major}.${version?.minor} is not supported.`);
-    traceError(`Selected python path: ${resolved?.executable.uri?.fsPath}`);
+    traceError(`Selected Python path: ${resolved?.executable.uri?.fsPath}`);
     traceError('Supported versions are 3.7 and above.');
     return false;
 }

@@ -92,7 +92,7 @@ def test_path():
 
 
 def test_interpreter():
-    """Test linting using specific python path."""
+    """Test linting using specific Python path."""
     init_params = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
     init_params["initializationOptions"]["settings"][0]["interpreter"] = ["python"]
 

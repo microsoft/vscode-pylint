@@ -199,7 +199,7 @@
         "@types/sinon": "^10.0.16",
         "@types/vscode": "^1.74.0",
         "@typescript-eslint/eslint-plugin": "^6.2.1",
-        "@typescript-eslint/parser": "^6.2.1",
+        "@typescript-eslint/parser": "^6.7.3",
         "@vscode/test-electron": "^2.3.4",
         "@vscode/vsce": "^2.20.0",
         "chai": "^4.3.7",

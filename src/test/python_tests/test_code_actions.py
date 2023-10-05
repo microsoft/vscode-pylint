@@ -143,7 +143,7 @@ def test_command_code_action(code, contents, command):
     ("code", "contents", "new_text"),
     [
         (
-            "C0113:unneeded-not",
+            "C0117:unnecessary-negation",
             """
 if not not True:
     pass""",

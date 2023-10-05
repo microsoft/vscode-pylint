@@ -58,9 +58,9 @@ pygls==1.1.0 \
     --hash=sha256:70acb6fe0df1c8a17b7ce08daa0afdb4aedc6913a6a6696003e1434fda80a06e \
     --hash=sha256:eb19b818039d3d705ec8adbcdf5809a93af925f30cd7a3f3b7573479079ba00e
     # via -r ./requirements.in
-pylint==3.0.0 \
-    --hash=sha256:21da8ed1294f88d66c82eb3e624a0993291613548bb17fbccaa220c31c41293b \
-    --hash=sha256:d22816c963816d7810b87afe0bdf5c80009e1078ecbb9c8f2e2a24d4430039b1
+pylint==3.0.1 \
+    --hash=sha256:81c6125637be216b4652ae50cc42b9f8208dfb725cdc7e04c48f6902f4dbdf40 \
+    --hash=sha256:9c90b89e2af7809a1697f6f5f93f1d0e518ac566e2ac4d2af881a69c13ad01ea
     # via -r ./requirements.in
 tomli==2.0.1 \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \

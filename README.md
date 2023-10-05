@@ -1,6 +1,6 @@
 # Pylint extension for Visual Studio Code
 
-A Visual Studio Code extension with support for the `pylint` linter. The extension ships with `pylint=3.0.0`.
+A Visual Studio Code extension with support for the `pylint` linter. The extension ships with `pylint=3.0.1`.
 
 Note:
 

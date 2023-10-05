@@ -326,7 +326,7 @@ def organize_imports(
 
 
 REPLACEMENTS = {
-    "C0113:unneeded-not": [
+    "C0117:unnecessary-negation": [
         {
             "pattern": r"\snot\s+not",
             "repl": r"",

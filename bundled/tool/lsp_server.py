@@ -551,9 +551,11 @@ def _get_global_defaults():
                 "info": "Information",
             },
         ),
+        "ignorePatterns": [],
         "importStrategy": GLOBAL_SETTINGS.get("importStrategy", "useBundled"),
         "showNotifications": GLOBAL_SETTINGS.get("showNotifications", "off"),
         "extraPaths": GLOBAL_SETTINGS.get("extraPaths", []),
+        "stdlibFiltering": True,
     }
 
 
@@ -639,16 +641,27 @@ def _run_tool_on_document(
     if extra_args is None:
         extra_args = []
 
+    # deep copy here to prevent accidentally updating global settings.
+    settings = copy.deepcopy(_get_settings_by_document(document))
+
     if str(document.uri).startswith("vscode-notebook-cell"):
         log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
-    if utils.is_stdlib_file(document.path):
-        log_warning(f"Skipping standard library file: {document.path}")
+    if settings["stdlibFiltering"] and utils.is_stdlib_file(document.path):
+        log_warning(
+            f"Skipping standard library file (stdlib filtering ON): {document.path}"
+        )
+        log_warning(
+            "You can disable this in settings by setting `pylint.stdlibFiltering` to false."
+        )
         return None
 
-    # deep copy here to prevent accidentally updating global settings.
-    settings = copy.deepcopy(_get_settings_by_document(document))
+    if utils.is_match(settings["ignorePatterns"], document.path):
+        log_warning(
+            f"Skipping file due to `pylint.ignorePatterns` match: {document.path}"
+        )
+        return None
 
     code_workspace = settings["workspaceFS"]
     cwd = settings["cwd"]

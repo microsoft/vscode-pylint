@@ -84,6 +84,22 @@
                     "scope": "resource",
                     "type": "array"
                 },
+                "pylint.ignorePatterns": {
+                    "default": [],
+                    "description": "%settings.ignorePatterns.description%",
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource",
+                    "type": "array",
+                    "uniqueItems": true,
+                    "examples": [
+                        [
+                            "**/site-packages/**/*.py",
+                            ".vscode/*.py"
+                        ]
+                    ]
+                },
                 "pylint.importStrategy": {
                     "default": "useBundled",
                     "description": "%settings.importStrategy.description%",
@@ -95,7 +111,7 @@
                         "%settings.importStrategy.useBundled.description%",
                         "%settings.importStrategy.fromEnvironment.description%"
                     ],
-                    "scope": "window",
+                    "scope": "resource",
                     "type": "string"
                 },
                 "pylint.interpreter": {
@@ -174,6 +190,12 @@
                     ],
                     "scope": "machine",
                     "type": "string"
+                },
+                "pylint.stdlibFiltering": {
+                    "default": true,
+                    "description": "%settings.stdlibFiltering.description%",
+                    "scope": "resource",
+                    "type": "boolean"
                 }
             }
         },

@@ -15,7 +15,7 @@ from pyls_jsonrpc.endpoint import Endpoint
 from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 
 from .constants import PROJECT_ROOT
-from .defaults import VSCODE_DEFAULT_INITIALIZE
+from . import defaults
 
 LSP_EXIT_TIMEOUT = 5000
 
@@ -86,7 +86,7 @@ class LspSession(MethodDispatcher):
     ):
         """Sends the initialize request to LSP server."""
         if initialize_params is None:
-            initialize_params = VSCODE_DEFAULT_INITIALIZE
+            initialize_params = defaults.vscode_initialize_defaults()
         server_initialized = Event()
 
         def _after_initialize(fut):
@@ -100,7 +100,7 @@ class LspSession(MethodDispatcher):
             params=(
                 initialize_params
                 if initialize_params is not None
-                else VSCODE_DEFAULT_INITIALIZE
+                else defaults.vscode_initialize_defaults()
             ),
             handle_response=_after_initialize,
         )

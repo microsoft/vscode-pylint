@@ -116,7 +116,7 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
         code_workspace = _get_settings_by_document(document)["workspaceFS"]
         if VERSION_TABLE.get(code_workspace, None):
             major, minor, _ = VERSION_TABLE[code_workspace]
-            if major == 2 and minor >= 16:
+            if (major, minor) >= (2, 16):
                 extra_args += ["--clear-cache-post-run=y"]
 
         result = _run_tool_on_document(document, use_stdin=True, extra_args=extra_args)

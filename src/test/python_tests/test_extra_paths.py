@@ -1,7 +1,6 @@
 """
 Test for extra paths settings.
 """
-import copy
 from threading import Event
 from typing import Dict
 

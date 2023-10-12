@@ -6,7 +6,6 @@ Test for linting over LSP.
 
 import pathlib
 import os
-import sys
 from threading import Event
 from typing import List
 

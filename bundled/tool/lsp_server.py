@@ -627,7 +627,7 @@ def _get_settings_by_document(document: workspace.Document | None):
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
-# pylint: disable=too-many-branches
+# pylint: disable=too-many-branches,too-many-statements
 def _run_tool_on_document(
     document: workspace.Document,
     use_stdin: bool = False,

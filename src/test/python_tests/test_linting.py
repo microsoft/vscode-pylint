@@ -4,8 +4,8 @@
 Test for linting over LSP.
 """
 
-import pathlib
 import os
+import pathlib
 from threading import Event
 from typing import List
 

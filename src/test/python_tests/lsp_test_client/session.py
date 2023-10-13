@@ -14,8 +14,8 @@ from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
 from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 
-from .constants import PROJECT_ROOT
 from . import defaults
+from .constants import PROJECT_ROOT
 
 LSP_EXIT_TIMEOUT = 5000
 

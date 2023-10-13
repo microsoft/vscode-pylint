@@ -3,7 +3,6 @@
     "displayName": "Pylint",
     "description": "%extension.description%",
     "version": "2023.9.0-dev",
-    "preview": true,
     "serverInfo": {
         "name": "Pylint",
         "module": "pylint"

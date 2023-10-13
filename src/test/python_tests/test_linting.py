@@ -480,7 +480,7 @@ def test_severity_setting(lint_code):
     assert_that(actual, is_(expected))
 
 
-@pytest.mark.parametrize("value", [True, False], ids=["filtering-on", "filtering-off"])
+@pytest.mark.parametrize("value", [True, False], ids=["include-stdlib", "skip-stdlib"])
 def test_stdlib_filtering(value: bool):
     """Test to ensure stdlib filtering setting works."""
     contents = TEST_FILE_PATH.read_text(encoding="utf-8")
@@ -489,7 +489,7 @@ def test_stdlib_filtering(value: bool):
     with session.LspSession() as ls_session:
         default_init = defaults.vscode_initialize_defaults()
         init_options = default_init["initializationOptions"]
-        init_options["settings"][0]["stdlibFiltering"] = value
+        init_options["settings"][0]["includeStdLib"] = value
         ls_session.initialize(default_init)
 
         # trick pylint into thinking the file is stdlib file
@@ -572,9 +572,9 @@ def test_stdlib_filtering(value: bool):
     }
 
     if value:
-        assert_that(actual, is_({"uri": FAKE_TEST_URI, "diagnostics": []}))
-    else:
         assert_that(actual, is_(expected))
+    else:
+        assert_that(actual, is_({"uri": FAKE_TEST_URI, "diagnostics": []}))
 
 
 @pytest.mark.parametrize(

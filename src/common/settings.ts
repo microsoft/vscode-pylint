@@ -24,7 +24,7 @@ export interface ISettings {
     interpreter: string[];
     importStrategy: string;
     showNotifications: string;
-    stdlibFiltering: boolean;
+    includeStdLib: boolean;
     extraPaths: string[];
 }
 
@@ -145,7 +145,7 @@ export async function getWorkspaceSettings(
         importStrategy: config.get<string>('importStrategy', 'useBundled'),
         showNotifications: config.get<string>('showNotifications', 'off'),
         extraPaths: resolveVariables(extraPaths, workspace),
-        stdlibFiltering: config.get<boolean>('stdlibFiltering', true),
+        includeStdLib: config.get<boolean>('includeStdLib', false),
     };
     return workspaceSetting;
 }
@@ -177,7 +177,7 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
         importStrategy: getGlobalValue<string>(config, 'importStrategy', 'fromEnvironment'),
         showNotifications: getGlobalValue<string>(config, 'showNotifications', 'off'),
         extraPaths: getGlobalValue<string[]>(config, 'extraPaths', []),
-        stdlibFiltering: config.get<boolean>('stdlibFiltering', true),
+        includeStdLib: config.get<boolean>('includeStdLib', false),
     };
     return setting;
 }

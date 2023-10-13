@@ -15,5 +15,5 @@
     "settings.showNotifications.onError.description": "Notifications are shown only in the case of an error.",
     "settings.showNotifications.onWarning.description": "Notifications are shown for errors and warnings.",
     "settings.showNotifications.always.description": "Notifications are show for anything that the server chooses to show.",
-    "settings.stdlibFiltering.description": "Controls whether to filter out files from standard library from being linted."
+    "settings.includeStdLib.description": "Controls whether to filter out files from standard library from being linted."
 }

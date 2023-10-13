@@ -191,9 +191,9 @@
                     "scope": "machine",
                     "type": "string"
                 },
-                "pylint.stdlibFiltering": {
-                    "default": true,
-                    "description": "%settings.stdlibFiltering.description%",
+                "pylint.includeStdLib": {
+                    "default": false,
+                    "description": "%settings.includeStdLib.description%",
                     "scope": "resource",
                     "type": "boolean"
                 }

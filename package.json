@@ -2,7 +2,7 @@
     "name": "pylint",
     "displayName": "Pylint",
     "description": "%extension.description%",
-    "version": "2023.8.0",
+    "version": "2023.8.1",
     "preview": true,
     "serverInfo": {
         "name": "Pylint",

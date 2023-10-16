@@ -5,7 +5,7 @@ A Visual Studio Code extension with support for the `pylint` linter. The extensi
 Note:
 
 -   This extension is supported for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the `python` language (i.e., python >= 3.8).
--   Shipped `pylint` version is used by default. You can use `pylint` from your environment by setting `pylint.importStrategy` to `fromEnvironment`. You can use a custom `pylint` executable by setting `pylint.path`.
+-   By default, this extension uses the shipped `pylint` version. However, you can use `pylint` from your environment by setting `pylint.importStrategy` to `fromEnvironment`. Alternatively, you can use a custom `pylint` executable by setting `pylint.path`.
 -   Minimum supported version of `pylint` is `2.12.2`.
 
 ## Usage

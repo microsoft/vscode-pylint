@@ -5,6 +5,7 @@
     "settings.severity.description": "Mapping from severity of `pylint` message type to severity shown in problem window.",
     "settings.lintOnChange.description": "Lint files on change.",
     "settings.path.description": "When set to a path to `pylint` binary, extension will use that for linting. NOTE: Using this option may slowdown linting.",
+    "settings.ignorePatterns.description": "Patterns used to exclude files or folders from being linted.",
     "settings.importStrategy.description": "Defines where `pylint` is imported from. This setting may be ignored if `pylint.path` is set.",
     "settings.importStrategy.useBundled.description": "Always use the bundled version of `pylint`.",
     "settings.importStrategy.fromEnvironment.description": "Use `pylint` from environment, fallback to bundled version only if `pylint` not available in the environment.",
@@ -13,5 +14,6 @@
     "settings.showNotifications.off.description": "All notifications are turned off, any errors or warning are still available in the logs.",
     "settings.showNotifications.onError.description": "Notifications are shown only in the case of an error.",
     "settings.showNotifications.onWarning.description": "Notifications are shown for errors and warnings.",
-    "settings.showNotifications.always.description": "Notifications are show for anything that the server chooses to show."
+    "settings.showNotifications.always.description": "Notifications are shown for anything that the server chooses to show.",
+    "settings.includeStdLib.description": "Controls whether to filter out files from standard library from being linted."
 }

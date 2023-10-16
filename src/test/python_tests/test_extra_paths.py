@@ -1,7 +1,6 @@
 """
 Test for extra paths settings.
 """
-import copy
 from threading import Event
 from typing import Dict
 
@@ -38,8 +37,8 @@ class CallbackObject:
 def test_extra_paths():
     """Test linting using pylint with extraPaths set."""
 
-    init_params = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
-    init_params["initializationOptions"]["settings"][0]["extraPaths"] = [
+    default_init = defaults.vscode_initialize_defaults()
+    default_init["initializationOptions"]["settings"][0]["extraPaths"] = [
         "this/is/an/extra/path",
         "this/is/another/extra/path",
     ]
@@ -61,7 +60,7 @@ def test_extra_paths():
 
         ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
 
-        ls_session.initialize(init_params)
+        ls_session.initialize(default_init)
         ls_session.notify_did_open(
             {
                 "textDocument": {

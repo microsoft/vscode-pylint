@@ -5,8 +5,9 @@ Test for linting over LSP.
 """
 
 import os
-import sys
+import pathlib
 from threading import Event
+from typing import List
 
 import pytest
 from hamcrest import assert_that, greater_than, is_
@@ -74,7 +75,7 @@ def test_publish_diagnostics_on_open():
                     "start": {"line": 2, "character": 6},
                     "end": {
                         "line": 2,
-                        "character": 7 if sys.version_info >= (3, 8) else 6,
+                        "character": 7,
                     },
                 },
                 "message": "Undefined variable 'x'",
@@ -90,7 +91,7 @@ def test_publish_diagnostics_on_open():
                     "start": {"line": 0, "character": 0},
                     "end": {
                         "line": 0,
-                        "character": 10 if sys.version_info >= (3, 8) else 0,
+                        "character": 10,
                     },
                 },
                 "message": "Unused import sys",
@@ -159,7 +160,7 @@ def test_publish_diagnostics_on_save():
                     "start": {"line": 2, "character": 6},
                     "end": {
                         "line": 2,
-                        "character": 7 if sys.version_info >= (3, 8) else 6,
+                        "character": 7,
                     },
                 },
                 "message": "Undefined variable 'x'",
@@ -175,7 +176,7 @@ def test_publish_diagnostics_on_save():
                     "start": {"line": 0, "character": 0},
                     "end": {
                         "line": 0,
-                        "character": 10 if sys.version_info >= (3, 8) else 0,
+                        "character": 10,
                     },
                 },
                 "message": "Unused import sys",
@@ -242,7 +243,7 @@ def test_publish_diagnostics_on_close():
         # wait for some time to receive all notifications
         done.wait(TIMEOUT)
 
-    # On close should clearout everything
+    # On close should clear out everything
     expected = {
         "uri": TEST_FILE_URI,
         "diagnostics": [],
@@ -338,7 +339,7 @@ def test_publish_diagnostics_on_change():
                         "start": {"line": 1, "character": 6},
                         "end": {
                             "line": 1,
-                            "character": 7 if sys.version_info >= (3, 8) else 6,
+                            "character": 7,
                         },
                     },
                     "message": "Undefined variable 'x'",
@@ -397,9 +398,10 @@ def test_severity_setting(lint_code):
 
     actual = []
     with session.LspSession() as ls_session:
-        init_options = defaults.VSCODE_DEFAULT_INITIALIZE["initializationOptions"]
+        default_init = defaults.vscode_initialize_defaults()
+        init_options = default_init["initializationOptions"]
         init_options["settings"][0]["severity"][lint_code] = "Error"
-        ls_session.initialize(defaults.VSCODE_DEFAULT_INITIALIZE)
+        ls_session.initialize(default_init)
 
         done = Event()
 
@@ -445,7 +447,7 @@ def test_severity_setting(lint_code):
                     "start": {"line": 2, "character": 6},
                     "end": {
                         "line": 2,
-                        "character": 7 if sys.version_info >= (3, 8) else 6,
+                        "character": 7,
                     },
                 },
                 "message": "Undefined variable 'x'",
@@ -461,11 +463,254 @@ def test_severity_setting(lint_code):
                     "start": {"line": 0, "character": 0},
                     "end": {
                         "line": 0,
-                        "character": 10 if sys.version_info >= (3, 8) else 0,
+                        "character": 10,
                     },
                 },
                 "message": "Unused import sys",
                 "severity": 1,
+                "code": "W0611:unused-import",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/warning/unused-import.html"
+                },
+                "source": LINTER["name"],
+            },
+        ],
+    }
+
+    assert_that(actual, is_(expected))
+
+
+@pytest.mark.parametrize("value", [True, False], ids=["include-stdlib", "skip-stdlib"])
+def test_stdlib_filtering(value: bool):
+    """Test to ensure stdlib filtering setting works."""
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
+
+    actual = []
+    with session.LspSession() as ls_session:
+        default_init = defaults.vscode_initialize_defaults()
+        init_options = default_init["initializationOptions"]
+        init_options["settings"][0]["includeStdLib"] = value
+        ls_session.initialize(default_init)
+
+        # trick pylint into thinking the file is stdlib file
+        FAKE_TEST_URI = utils.as_uri(
+            str(pathlib.Path(pytest.__file__).parent / "sample.py")
+        )
+
+        done = Event()
+
+        def _handler(params):
+            nonlocal actual
+            actual = params
+            done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": FAKE_TEST_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
+                }
+            }
+        )
+
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+
+    expected = {
+        "uri": FAKE_TEST_URI,
+        "diagnostics": [
+            {
+                "range": {
+                    "start": {"line": 0, "character": 0},
+                    "end": {"line": 0, "character": 0},
+                },
+                "message": "Missing module docstring",
+                "severity": 3,
+                "code": "C0114:missing-module-docstring",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/convention/missing-module-docstring.html"
+                },
+                "source": LINTER["name"],
+            },
+            {
+                "range": {
+                    "start": {"line": 2, "character": 6},
+                    "end": {
+                        "line": 2,
+                        "character": 7,
+                    },
+                },
+                "message": "Undefined variable 'x'",
+                "severity": 1,
+                "code": "E0602:undefined-variable",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/error/undefined-variable.html"
+                },
+                "source": LINTER["name"],
+            },
+            {
+                "range": {
+                    "start": {"line": 0, "character": 0},
+                    "end": {
+                        "line": 0,
+                        "character": 10,
+                    },
+                },
+                "message": "Unused import sys",
+                "severity": 2,
+                "code": "W0611:unused-import",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/warning/unused-import.html"
+                },
+                "source": LINTER["name"],
+            },
+        ],
+    }
+
+    if value:
+        assert_that(actual, is_(expected))
+    else:
+        assert_that(actual, is_({"uri": FAKE_TEST_URI, "diagnostics": []}))
+
+
+@pytest.mark.parametrize(
+    "patterns",
+    [
+        ["**/sample*.py"],
+        ["**/test_data/**/*.py"],
+        ["**/sample*.py", "**/something*.py"],
+    ],
+)
+def test_ignore_patterns_match(patterns: List[str]):
+    """Test to ensure linter uses the ignore pattern."""
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
+
+    actual = []
+    with session.LspSession() as ls_session:
+        default_init = defaults.vscode_initialize_defaults()
+        init_options = default_init["initializationOptions"]
+        init_options["settings"][0]["ignorePatterns"] = patterns
+        ls_session.initialize(default_init)
+
+        done = Event()
+
+        def _handler(params):
+            nonlocal actual
+            actual = params
+            done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
+                }
+            }
+        )
+
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+
+    expected = {
+        "uri": TEST_FILE_URI,
+        "diagnostics": [],
+    }
+
+    assert_that(actual, is_(expected))
+
+
+@pytest.mark.parametrize(
+    "patterns",
+    [
+        ["**/something*.py"],
+        ["**/something/**/*.py"],
+        [],
+    ],
+)
+def test_ignore_patterns_no_match(patterns: List[str]):
+    """Test to ensure linter uses the ignore pattern."""
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
+
+    actual = []
+    with session.LspSession() as ls_session:
+        default_init = defaults.vscode_initialize_defaults()
+        init_options = default_init["initializationOptions"]
+        init_options["settings"][0]["ignorePatterns"] = patterns
+        ls_session.initialize(default_init)
+
+        done = Event()
+
+        def _handler(params):
+            nonlocal actual
+            actual = params
+            done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
+                }
+            }
+        )
+
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+
+    expected = {
+        "uri": TEST_FILE_URI,
+        "diagnostics": [
+            {
+                "range": {
+                    "start": {"line": 0, "character": 0},
+                    "end": {"line": 0, "character": 0},
+                },
+                "message": "Missing module docstring",
+                "severity": 3,
+                "code": "C0114:missing-module-docstring",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/convention/missing-module-docstring.html"
+                },
+                "source": LINTER["name"],
+            },
+            {
+                "range": {
+                    "start": {"line": 2, "character": 6},
+                    "end": {
+                        "line": 2,
+                        "character": 7,
+                    },
+                },
+                "message": "Undefined variable 'x'",
+                "severity": 1,
+                "code": "E0602:undefined-variable",
+                "codeDescription": {
+                    "href": f"{DOCUMENTATION_HOME}/error/undefined-variable.html"
+                },
+                "source": LINTER["name"],
+            },
+            {
+                "range": {
+                    "start": {"line": 0, "character": 0},
+                    "end": {
+                        "line": 0,
+                        "character": 10,
+                    },
+                },
+                "message": "Unused import sys",
+                "severity": 2,
                 "code": "W0611:unused-import",
                 "codeDescription": {
                     "href": f"{DOCUMENTATION_HOME}/warning/unused-import.html"

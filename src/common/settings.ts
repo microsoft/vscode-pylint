@@ -20,9 +20,11 @@ export interface ISettings {
     args: string[];
     severity: Record<string, string>;
     path: string[];
+    ignorePatterns: string[];
     interpreter: string[];
     importStrategy: string;
     showNotifications: string;
+    includeStdLib: boolean;
     extraPaths: string[];
 }
 
@@ -138,10 +140,12 @@ export async function getWorkspaceSettings(
         args: resolveVariables(args, workspace),
         severity: config.get<Record<string, string>>('severity', DEFAULT_SEVERITY),
         path: resolveVariables(path, workspace),
+        ignorePatterns: resolveVariables(config.get<string[]>('ignorePatterns', []), workspace),
         interpreter: resolveVariables(interpreter, workspace),
         importStrategy: config.get<string>('importStrategy', 'useBundled'),
         showNotifications: config.get<string>('showNotifications', 'off'),
         extraPaths: resolveVariables(extraPaths, workspace),
+        includeStdLib: config.get<boolean>('includeStdLib', false),
     };
     return workspaceSetting;
 }
@@ -168,10 +172,12 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
         args: getGlobalValue<string[]>(config, 'args', []),
         severity: getGlobalValue<Record<string, string>>(config, 'severity', DEFAULT_SEVERITY),
         path: getGlobalValue<string[]>(config, 'path', []),
+        ignorePatterns: getGlobalValue<string[]>(config, 'ignorePatterns', []),
         interpreter: interpreter ?? [],
         importStrategy: getGlobalValue<string>(config, 'importStrategy', 'fromEnvironment'),
         showNotifications: getGlobalValue<string>(config, 'showNotifications', 'off'),
         extraPaths: getGlobalValue<string[]>(config, 'extraPaths', []),
+        includeStdLib: config.get<boolean>('includeStdLib', false),
     };
     return setting;
 }

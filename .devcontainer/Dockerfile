@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/python:3.7
+FROM mcr.microsoft.com/devcontainers/python:3.8
 
 RUN python -m pip install --upgrade pip
 

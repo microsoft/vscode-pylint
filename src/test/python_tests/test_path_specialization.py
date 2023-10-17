@@ -1,7 +1,6 @@
 """
 Test for path and interpreter settings.
 """
-import copy
 from threading import Event
 from typing import Dict
 
@@ -35,8 +34,8 @@ class CallbackObject:
 def test_path():
     """Test linting using pylint bin path set."""
 
-    init_params = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
-    init_params["initializationOptions"]["settings"][0]["path"] = ["pylint"]
+    default_init = defaults.vscode_initialize_defaults()
+    default_init["initializationOptions"]["settings"][0]["path"] = ["pylint"]
 
     argv_callback_object = CallbackObject()
     contents = TEST_FILE_PATH.read_text(encoding="utf-8")
@@ -55,7 +54,7 @@ def test_path():
 
         ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
 
-        ls_session.initialize(init_params)
+        ls_session.initialize(default_init)
         ls_session.notify_did_open(
             {
                 "textDocument": {
@@ -92,9 +91,8 @@ def test_path():
 
 
 def test_interpreter():
-    """Test linting using specific Python path."""
-    init_params = copy.deepcopy(defaults.VSCODE_DEFAULT_INITIALIZE)
-    init_params["initializationOptions"]["settings"][0]["interpreter"] = ["python"]
+    default_init = defaults.vscode_initialize_defaults()
+    default_init["initializationOptions"]["settings"][0]["interpreter"] = ["python"]
 
     argv_callback_object = CallbackObject()
     contents = TEST_FILE_PATH.read_text(encoding="utf-8")
@@ -113,7 +111,7 @@ def test_interpreter():
 
         ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
 
-        ls_session.initialize(init_params)
+        ls_session.initialize(default_init)
         ls_session.notify_did_open(
             {
                 "textDocument": {

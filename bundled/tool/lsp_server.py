@@ -116,7 +116,7 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
         code_workspace = _get_settings_by_document(document)["workspaceFS"]
         if VERSION_TABLE.get(code_workspace, None):
             major, minor, _ = VERSION_TABLE[code_workspace]
-            if major == 2 and minor >= 16:
+            if (major, minor) >= (2, 16):
                 extra_args += ["--clear-cache-post-run=y"]
 
         result = _run_tool_on_document(document, use_stdin=True, extra_args=extra_args)
@@ -326,7 +326,7 @@ def organize_imports(
 
 
 REPLACEMENTS = {
-    "C0113:unneeded-not": [
+    "C0117:unnecessary-negation": [
         {
             "pattern": r"\snot\s+not",
             "repl": r"",
@@ -551,9 +551,11 @@ def _get_global_defaults():
                 "info": "Information",
             },
         ),
+        "ignorePatterns": [],
         "importStrategy": GLOBAL_SETTINGS.get("importStrategy", "useBundled"),
         "showNotifications": GLOBAL_SETTINGS.get("showNotifications", "off"),
         "extraPaths": GLOBAL_SETTINGS.get("extraPaths", []),
+        "includeStdLib": False,
     }
 
 
@@ -625,7 +627,7 @@ def _get_settings_by_document(document: workspace.Document | None):
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
-# pylint: disable=too-many-branches
+# pylint: disable=too-many-branches,too-many-statements
 def _run_tool_on_document(
     document: workspace.Document,
     use_stdin: bool = False,
@@ -639,16 +641,27 @@ def _run_tool_on_document(
     if extra_args is None:
         extra_args = []
 
+    # deep copy here to prevent accidentally updating global settings.
+    settings = copy.deepcopy(_get_settings_by_document(document))
+
     if str(document.uri).startswith("vscode-notebook-cell"):
         log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
-    if utils.is_stdlib_file(document.path):
-        log_warning(f"Skipping standard library file: {document.path}")
+    if not settings["includeStdLib"] and utils.is_stdlib_file(document.path):
+        log_warning(
+            f"Skipping standard library file (stdlib excluded): {document.path}"
+        )
+        log_warning(
+            "You can include stdlib files by setting `pylint.includeStdLib` to true."
+        )
         return None
 
-    # deep copy here to prevent accidentally updating global settings.
-    settings = copy.deepcopy(_get_settings_by_document(document))
+    if utils.is_match(settings["ignorePatterns"], document.path):
+        log_warning(
+            f"Skipping file due to `pylint.ignorePatterns` match: {document.path}"
+        )
+        return None
 
     code_workspace = settings["workspaceFS"]
     cwd = settings["cwd"]

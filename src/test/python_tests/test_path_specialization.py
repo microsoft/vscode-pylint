@@ -91,6 +91,7 @@ def test_path():
 
 
 def test_interpreter():
+    """Test linting using specific python path."""
     default_init = defaults.vscode_initialize_defaults()
     default_init["initializationOptions"]["settings"][0]["interpreter"] = ["python"]
 

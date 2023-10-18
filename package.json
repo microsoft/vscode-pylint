@@ -84,6 +84,16 @@
                     "scope": "resource",
                     "type": "array"
                 },
+                "pylint.cwd": {
+                    "default": "${workspaceFolder}",
+                    "description": "%settings.cwd.description%",
+                    "scope": "resource",
+                    "type": "string",
+                    "examples": [
+                        "${workspaceFolder}/src",
+                        "${fileDirname}"
+                    ]
+                },
                 "pylint.ignorePatterns": {
                     "default": [],
                     "description": "%settings.ignorePatterns.description%",

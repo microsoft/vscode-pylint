@@ -9,6 +9,7 @@ import os
 import pathlib
 import re
 import sys
+import sysconfig
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
@@ -25,6 +26,26 @@ def update_sys_path(path_to_add: str, strategy: str) -> None:
             sys.path.append(path_to_add)
 
 
+# **********************************************************
+# Update PATH before running anything.
+# **********************************************************
+def update_environ_path() -> None:
+    """Update PATH environment variable with the 'scripts' directory.
+    Windows: .venv/Scripts
+    Linux/MacOS: .venv/bin
+    """
+    scripts = sysconfig.get_path("scripts")
+    paths_variants = ["Path", "PATH"]
+
+    for var_name in paths_variants:
+        if var_name in os.environ:
+            paths = os.environ[var_name].split(os.pathsep)
+            if scripts not in paths:
+                paths.insert(0, scripts)
+                os.environ[var_name] = os.pathsep.join(paths)
+                break
+
+
 # Ensure that we can import LSP libraries, and other bundled libraries.
 BUNDLE_DIR = pathlib.Path(__file__).parent.parent
 # Always use bundled server files.
@@ -33,6 +54,7 @@ update_sys_path(
     os.fspath(BUNDLE_DIR / "libs"),
     os.getenv("LS_IMPORT_STRATEGY", "useBundled"),
 )
+update_environ_path()
 
 # **********************************************************
 # Imports needed for the language server goes below this.
@@ -627,6 +649,19 @@ def _get_settings_by_document(document: workspace.Document | None):
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
+def get_cwd(settings: Dict[str, Any], document: Optional[workspace.Document]) -> str:
+    """Returns cwd for the given settings and document."""
+    if settings["cwd"] == "${workspaceFolder}":
+        return settings["workspaceFS"]
+
+    if settings["cwd"] == "${fileDirname}":
+        if document is not None:
+            return os.fspath(pathlib.Path(document.path).parent)
+        return settings["workspaceFS"]
+
+    return settings["cwd"]
+
+
 # pylint: disable=too-many-branches,too-many-statements
 def _run_tool_on_document(
     document: workspace.Document,
@@ -664,7 +699,7 @@ def _run_tool_on_document(
         return None
 
     code_workspace = settings["workspaceFS"]
-    cwd = settings["cwd"]
+    cwd = get_cwd(settings, document)
 
     use_path = False
     use_rpc = False
@@ -754,7 +789,7 @@ def _run_tool_on_document(
 def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunResult:
     """Runs tool."""
     code_workspace = settings["workspaceFS"]
-    cwd = settings["cwd"]
+    cwd = get_cwd(settings, None)
 
     use_path = False
     use_rpc = False

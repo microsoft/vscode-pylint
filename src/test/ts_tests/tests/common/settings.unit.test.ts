@@ -60,6 +60,10 @@ suite('Settings Tests', () => {
                 .returns(() => [])
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
+                .setup((c) => c.get('cwd', TypeMoq.It.isAnyString()))
+                .returns(() => '${workspaceFolder}')
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
                 .setup((c) => c.get('path', []))
                 .returns(() => [])
                 .verifiable(TypeMoq.Times.atLeastOnce());
@@ -87,11 +91,11 @@ suite('Settings Tests', () => {
             pythonConfigMock
                 .setup((c) => c.get('linting.pylintArgs', []))
                 .returns(() => [])
-                .verifiable(TypeMoq.Times.atLeastOnce());
+                .verifiable(TypeMoq.Times.never());
             pythonConfigMock
                 .setup((c) => c.get('linting.pylintPath', ''))
                 .returns(() => 'pylint')
-                .verifiable(TypeMoq.Times.atLeastOnce());
+                .verifiable(TypeMoq.Times.never());
             pythonConfigMock
                 .setup((c) => c.get('analysis.extraPaths', []))
                 .returns(() => [])
@@ -121,12 +125,17 @@ suite('Settings Tests', () => {
                 .returns(() => ['${userHome}', '${workspaceFolder}', '${workspaceFolder:workspace1}', '${cwd}'])
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
+                .setup((c) => c.get('cwd', TypeMoq.It.isAnyString()))
+                .returns(() => '${fileDirname}')
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
                 .setup((c) => c.get<string[]>('path', []))
                 .returns(() => [
                     '${userHome}/bin/pylint',
                     '${workspaceFolder}/bin/pylint',
                     '${workspaceFolder:workspace1}/bin/pylint',
                     '${cwd}/bin/pylint',
+                    '${interpreter}',
                 ])
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
@@ -179,9 +188,11 @@ suite('Settings Tests', () => {
             pythonConfigMock
                 .setup((c) => c.get('linting.cwd'))
                 .returns(() => '${userHome}/bin')
-                .verifiable(TypeMoq.Times.atLeastOnce());
+                .verifiable(TypeMoq.Times.never());
 
             const settings: ISettings = await getWorkspaceSettings('pylint', workspace1, true);
+
+            assert.deepStrictEqual(settings.cwd, '${fileDirname}');
             assert.deepStrictEqual(settings.args, [
                 process.env.HOME || process.env.USERPROFILE,
                 workspace1.uri.fsPath,
@@ -193,6 +204,10 @@ suite('Settings Tests', () => {
                 `${workspace1.uri.fsPath}/bin/pylint`,
                 `${workspace1.uri.fsPath}/bin/pylint`,
                 `${process.cwd()}/bin/pylint`,
+                `${process.env.HOME || process.env.USERPROFILE}/bin/python`,
+                `${workspace1.uri.fsPath}/bin/python`,
+                `${workspace1.uri.fsPath}/bin/python`,
+                `${process.cwd()}/bin/python`,
             ]);
             assert.deepStrictEqual(settings.interpreter, [
                 `${process.env.HOME || process.env.USERPROFILE}/bin/python`,
@@ -206,7 +221,6 @@ suite('Settings Tests', () => {
                 `${workspace1.uri.fsPath}/lib/python`,
                 `${process.cwd()}/lib/python`,
             ]);
-            assert.deepStrictEqual(settings.cwd, `${process.env.HOME || process.env.USERPROFILE}/bin`);
 
             configMock.verifyAll();
             pythonConfigMock.verifyAll();
@@ -216,6 +230,10 @@ suite('Settings Tests', () => {
             configMock
                 .setup((c) => c.get('args', []))
                 .returns(() => [])
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
+                .setup((c) => c.get('cwd', TypeMoq.It.isAnyString()))
+                .returns(() => '${userHome}/bin')
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
                 .setup((c) => c.get('path', []))
@@ -245,11 +263,11 @@ suite('Settings Tests', () => {
             pythonConfigMock
                 .setup((c) => c.get<string[]>('linting.pylintArgs', []))
                 .returns(() => ['${userHome}', '${workspaceFolder}', '${workspaceFolder:workspace1}', '${cwd}'])
-                .verifiable(TypeMoq.Times.atLeastOnce());
+                .verifiable(TypeMoq.Times.never());
             pythonConfigMock
                 .setup((c) => c.get('linting.pylintPath', ''))
                 .returns(() => '${userHome}/bin/pylint')
-                .verifiable(TypeMoq.Times.atLeastOnce());
+                .verifiable(TypeMoq.Times.never());
             pythonConfigMock
                 .setup((c) => c.get<string[]>('analysis.extraPaths', []))
                 .returns(() => [
@@ -261,21 +279,18 @@ suite('Settings Tests', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             pythonConfigMock
                 .setup((c) => c.get('linting.cwd'))
-                .returns(() => '${userHome}/bin')
-                .verifiable(TypeMoq.Times.atLeastOnce());
+                .returns(() => '${userHome}/bin2')
+                .verifiable(TypeMoq.Times.never());
 
             const settings: ISettings = await getWorkspaceSettings('pylint', workspace1);
 
             assert.deepStrictEqual(settings.cwd, `${process.env.HOME || process.env.USERPROFILE}/bin`);
-            assert.deepStrictEqual(settings.args, [
-                process.env.HOME || process.env.USERPROFILE,
-                workspace1.uri.fsPath,
-                workspace1.uri.fsPath,
-                process.cwd(),
-            ]);
+            // Legacy args should not be read anymore. They are deprecated.
+            assert.deepStrictEqual(settings.args, []);
             assert.deepStrictEqual(settings.importStrategy, 'useBundled');
             assert.deepStrictEqual(settings.interpreter, []);
-            assert.deepStrictEqual(settings.path, [`${process.env.HOME || process.env.USERPROFILE}/bin/pylint`]);
+            // Legacy args should not be read anymore. They are deprecated.
+            assert.deepStrictEqual(settings.path, []);
             assert.deepStrictEqual(settings.severity, DEFAULT_SEVERITY);
             assert.deepStrictEqual(settings.showNotifications, 'off');
             assert.deepStrictEqual(settings.workspace, workspace1.uri.toString());

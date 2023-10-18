@@ -2,7 +2,7 @@
     "extension.description": "Linting support for python files using `pylint`.",
     "command.restartServer": "Restart Server",
     "settings.args.description": "Arguments passed in. Each argument is a separate string in the array.",
-    "settings.cwd.description": "Current working directory used to run `pylint`. You can use `${fileDirname}` to use the directory containing file being linted.",
+    "settings.cwd.description": "The current working directory used to run `pylint`. To use the directory of the file currently being linted, you can use `${fileDirname}` .",
     "settings.severity.description": "Mapping from severity of `pylint` message type to severity shown in problem window.",
     "settings.lintOnChange.description": "Lint files on change.",
     "settings.path.description": "When set to a path to `pylint` binary, extension will use that for linting. NOTE: Using this option may slowdown linting.",

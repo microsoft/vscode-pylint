@@ -210,7 +210,7 @@ export function logLegacySettings(): void {
             if (legacyPylintEnabled) {
                 traceWarn(`"python.linting.pylintEnabled" is deprecated. You can remove that setting.`);
                 traceWarn(
-                    'Pylint extension is always enabled. You can disable it per works space using the extensions view.',
+                    'The pylint extension is always enabled. However, you can disable it per workspace using the extensions view.',
                 );
                 traceWarn('You can exclude files and folders using the `python.linting.ignorePatterns` setting.');
                 traceWarn(

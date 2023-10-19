@@ -490,6 +490,7 @@ def test_stdlib_filtering(value: bool):
         default_init = defaults.vscode_initialize_defaults()
         init_options = default_init["initializationOptions"]
         init_options["settings"][0]["includeStdLib"] = value
+        init_options["globalSettings"]["includeStdLib"] = value
         ls_session.initialize(default_init)
 
         # trick pylint into thinking the file is stdlib file

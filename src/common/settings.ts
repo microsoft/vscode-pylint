@@ -77,23 +77,6 @@ function resolveVariables(
     });
 }
 
-function getPath(namespace: string, workspace: WorkspaceFolder): string[] {
-    const config = getConfiguration(namespace, workspace.uri);
-    const path = config.get<string[]>('path', []);
-
-    if (path.length > 0) {
-        return path;
-    }
-
-    const legacyConfig = getConfiguration('python', workspace.uri);
-    const legacyPath = legacyConfig.get<string>('linting.pylintPath', '');
-    if (legacyPath.length > 0 && legacyPath !== 'pylint') {
-        traceLog('Using legacy Pylint path from `python.linting.pylintPath`');
-        return [legacyPath];
-    }
-    return [];
-}
-
 function getCwd(config: WorkspaceConfiguration, workspace: WorkspaceFolder): string {
     const cwd = config.get<string>('cwd', workspace.uri.fsPath);
     return resolveVariables([cwd], workspace)[0];
@@ -125,7 +108,21 @@ export async function getWorkspaceSettings(
     if (includeInterpreter) {
         interpreter = getInterpreterFromSetting(namespace, workspace) ?? [];
         if (interpreter.length === 0) {
+            traceLog(`No interpreter found from setting ${namespace}.interpreter`);
+            traceLog(`Getting interpreter from ms-python.python extension for workspace ${workspace.uri.fsPath}`);
             interpreter = (await getInterpreterDetails(workspace.uri)).path ?? [];
+            if (interpreter.length > 0) {
+                traceLog(
+                    `Interpreter from ms-python.python extension for ${workspace.uri.fsPath}:`,
+                    `${interpreter.join(' ')}`,
+                );
+            }
+        } else {
+            traceLog(`Interpreter from setting ${namespace}.interpreter: ${interpreter.join(' ')}`);
+        }
+
+        if (interpreter.length === 0) {
+            traceLog(`No interpreter found for ${workspace.uri.fsPath} in settings or from ms-python.python extension`);
         }
     }
 
@@ -154,11 +151,11 @@ function getGlobalValue<T>(config: WorkspaceConfiguration, key: string, defaultV
 export async function getGlobalSettings(namespace: string, includeInterpreter?: boolean): Promise<ISettings> {
     const config = getConfiguration(namespace);
 
-    let interpreter: string[] | undefined = [];
+    let interpreter: string[] = [];
     if (includeInterpreter) {
         interpreter = getGlobalValue<string[]>(config, 'interpreter', []);
         if (interpreter === undefined || interpreter.length === 0) {
-            interpreter = (await getInterpreterDetails()).path;
+            interpreter = (await getInterpreterDetails()).path ?? [];
         }
     }
 

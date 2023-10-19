@@ -15,7 +15,7 @@ PACKAGE_JSON_PATH = EXT_ROOT / "package.json"
 def build_arg_parse() -> argparse.ArgumentParser:
     """Builds the arguments parser."""
     parser = argparse.ArgumentParser(
-        description="This script updates the python extension micro version based on the release or pre-release channel."
+        description="This script updates the Python extension micro version based on the release or pre-release channel."
     )
     parser.add_argument(
         "--release",

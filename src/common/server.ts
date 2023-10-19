@@ -29,7 +29,7 @@ async function createServer(
     const command = settings.interpreter[0];
     const cwd = settings.cwd;
 
-    // Set debugger path needed for debugging python code.
+    // Set debugger path needed for debugging Python code.
     const newEnv = { ...process.env };
     const debuggerPath = await getDebuggerPath();
     const isDebugScript = await fsapi.pathExists(DEBUG_SERVER_SCRIPT_PATH);
@@ -65,7 +65,7 @@ async function createServer(
 
     // Options to control the language client
     const clientOptions: LanguageClientOptions = {
-        // Register the server for python documents
+        // Register the server for Python documents
         documentSelector: getDocumentSelector(),
         outputChannel: outputChannel,
         traceOutputChannel: outputChannel,

@@ -109,7 +109,7 @@ class LspSession(MethodDispatcher):
 
     def initialized(self, initialized_params=None):
         """Sends the initialized notification to LSP server."""
-        self._endpoint.notify("initialized", initialized_params)
+        self._endpoint.notify("initialized", initialized_params or {})
 
     def shutdown(self, should_exit, exit_timeout=LSP_EXIT_TIMEOUT):
         """Sends the shutdown request to LSP server."""
@@ -118,7 +118,8 @@ class LspSession(MethodDispatcher):
             if should_exit:
                 self.exit_lsp(exit_timeout)
 
-        self._send_request("shutdown", handle_response=_after_shutdown)
+        fut = self._send_request("shutdown", handle_response=_after_shutdown)
+        return fut.result()
 
     def exit_lsp(self, exit_timeout=LSP_EXIT_TIMEOUT):
         """Handles LSP server process exit."""

@@ -15,7 +15,7 @@ import {
 import { loadServerDefaults } from './common/setup';
 import { getLSClientTraceLevel, getProjectRoot } from './common/utilities';
 import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';
-import { updateStatus } from './common/status';
+import { registerLanguageStatusItem, updateStatus } from './common/status';
 import { PYTHON_VERSION } from './common/constants';
 
 let lsClient: LanguageClient | undefined;
@@ -68,14 +68,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         onDidChangePythonInterpreter(async () => {
             await runServer();
         }),
+        registerCommand(`${serverId}.showLogs`, async () => {
+            outputChannel.show();
+        }),
+        registerCommand(`${serverId}.restart`, async () => {
+            await runServer();
+        }),
         onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
             if (checkIfConfigurationChanged(e, serverId)) {
                 await runServer();
             }
         }),
-        registerCommand(`${serverId}.restart`, async () => {
-            await runServer();
-        }),
+        registerLanguageStatusItem(serverId, serverName, `${serverId}.showLogs`),
     );
 
     // This is needed to inform users that they might have some legacy settings that

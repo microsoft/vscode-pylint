@@ -120,10 +120,11 @@ export async function restartServer(
     );
     try {
         await newLSClient.start();
+        await newLSClient.setTrace(getLSClientTraceLevel(outputChannel.logLevel, env.logLevel));
     } catch (ex) {
         updateStatus(l10n.t('Server failed to start.'), LanguageStatusSeverity.Error);
         traceError(`Server: Start failed: ${ex}`);
     }
-    await newLSClient.setTrace(getLSClientTraceLevel(outputChannel.logLevel, env.logLevel));
+
     return newLSClient;
 }

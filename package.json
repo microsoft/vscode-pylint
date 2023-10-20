@@ -200,12 +200,6 @@
                     ],
                     "scope": "machine",
                     "type": "string"
-                },
-                "pylint.includeStdLib": {
-                    "default": false,
-                    "description": "%settings.includeStdLib.description%",
-                    "scope": "resource",
-                    "type": "boolean"
                 }
             }
         },

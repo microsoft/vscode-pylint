@@ -24,7 +24,6 @@ export interface ISettings {
     interpreter: string[];
     importStrategy: string;
     showNotifications: string;
-    includeStdLib: boolean;
     extraPaths: string[];
 }
 
@@ -138,7 +137,6 @@ export async function getWorkspaceSettings(
         importStrategy: config.get<string>('importStrategy', 'useBundled'),
         showNotifications: config.get<string>('showNotifications', 'off'),
         extraPaths: resolveVariables(extraPaths, workspace),
-        includeStdLib: config.get<boolean>('includeStdLib', false),
     };
     return workspaceSetting;
 }
@@ -170,7 +168,6 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
         importStrategy: getGlobalValue<string>(config, 'importStrategy', 'fromEnvironment'),
         showNotifications: getGlobalValue<string>(config, 'showNotifications', 'off'),
         extraPaths: getGlobalValue<string[]>(config, 'extraPaths', []),
-        includeStdLib: config.get<boolean>('includeStdLib', false),
     };
     return setting;
 }
@@ -190,7 +187,6 @@ export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespa
         `${namespace}.importStrategy`,
         `${namespace}.showNotifications`,
         `${namespace}.ignorePatterns`,
-        `${namespace}.includeStdLib`,
         `${namespace}.lintOnChange`,
         'python.analysis.extraPaths',
     ];

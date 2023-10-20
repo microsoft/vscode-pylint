@@ -577,7 +577,6 @@ def _get_global_defaults():
         "importStrategy": GLOBAL_SETTINGS.get("importStrategy", "useBundled"),
         "showNotifications": GLOBAL_SETTINGS.get("showNotifications", "off"),
         "extraPaths": GLOBAL_SETTINGS.get("extraPaths", []),
-        "includeStdLib": False,
     }
 
 
@@ -683,13 +682,11 @@ def _run_tool_on_document(
         log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
-    if not settings["includeStdLib"] and utils.is_stdlib_file(document.path):
+    if utils.is_stdlib_file(document.path):
         log_warning(
             f"Skipping standard library file (stdlib excluded): {document.path}"
         )
-        log_warning(
-            "You can include stdlib files by setting `pylint.includeStdLib` to true."
-        )
+
         return None
 
     if utils.is_match(settings["ignorePatterns"], document.path):

@@ -27,7 +27,7 @@ black==23.10.0 \
     --hash=sha256:f20ff03f3fdd2fd4460b4f631663813e57dc277e37fb216463f3b907aa5a9bdd \
     --hash=sha256:f74892b4b836e5162aa0452393112a574dac85e13902c57dfbaaf388e4eda37c \
     --hash=sha256:f8dc7d50d94063cdfd13c82368afd8588bac4ce360e4224ac399e769d6704e98
-    # via -r ./dev-requirements.in
+    # via -r dev-requirements.in
 build==1.0.3 \
     --hash=sha256:538aab1b64f9828977f84bc63ae570b060a8ed1be419e7870b8b4fc5e6ea553b \
     --hash=sha256:589bf99a67df7c9cf07ec0ac0e5e2ea5d4b37ac63301c4986d1acb126aa83f8f
@@ -38,13 +38,6 @@ click==8.1.7 \
     # via
     #   black
     #   pip-tools
-colorama==0.4.6 \
-    --hash=sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44 \
-    --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
-    # via
-    #   build
-    #   click
-    #   colorlog
 colorlog==6.7.0 \
     --hash=sha256:0d33ca236784a1ba3ff9c532d4964126d8a2c44f1f0cb1d2b0728196f512f662 \
     --hash=sha256:bd94bd21c1e13fac7bd3153f4bc3a7dc0eb0974b8bc2fdf1a989e474f6e582e5
@@ -61,11 +54,11 @@ flake8==6.1.0 \
     --hash=sha256:d5b3857f07c030bdb5bf41c7f53799571d75c4491748a3adcd47de929e34cd23 \
     --hash=sha256:ffdfce58ea94c6580c77888a86506937f9a1a227dfcd15f245d694ae20a6b6e5
     # via
-    #   -r ./dev-requirements.in
+    #   -r dev-requirements.in
     #   flake8-pyproject
 flake8-pyproject==1.2.3 \
     --hash=sha256:6249fe53545205af5e76837644dc80b4c10037e73a0e5db87ff562d75fb5bd4a
-    # via -r ./dev-requirements.in
+    # via -r dev-requirements.in
 importlib-metadata==6.8.0 \
     --hash=sha256:3ebb78df84a805d7698245025b975d9d67053cd94c79245ba4b3eb694abe68bb \
     --hash=sha256:dbace7892d8c0c4ac1ad096662232f831d4e64f4c4545bd53016a3e9d4654743
@@ -73,7 +66,7 @@ importlib-metadata==6.8.0 \
 isort==5.12.0 \
     --hash=sha256:8bef7dde241278824a6d83f44a544709b065191b95b6e50894bdc722fcba0504 \
     --hash=sha256:f84c2818376e66cf843d497486ea8fed8700b340f308f076c6fb1229dff318b6
-    # via -r ./dev-requirements.in
+    # via -r dev-requirements.in
 mccabe==0.7.0 \
     --hash=sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325 \
     --hash=sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e
@@ -85,7 +78,7 @@ mypy-extensions==1.0.0 \
 nox==2023.4.22 \
     --hash=sha256:0b1adc619c58ab4fa57d6ab2e7823fe47a32e70202f287d78474adcc7bda1891 \
     --hash=sha256:46c0560b0dc609d7d967dc99e22cb463d3c4caf54a5fda735d6c11b5177e3a9f
-    # via -r ./dev-requirements.in
+    # via -r dev-requirements.in
 packaging==23.2 \
     --hash=sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5 \
     --hash=sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7
@@ -100,7 +93,7 @@ pathspec==0.11.2 \
 pip-tools==7.3.0 \
     --hash=sha256:8717693288720a8c6ebd07149c93ab0be1fced0b5191df9e9decd3263e20d85e \
     --hash=sha256:8e9c99127fe024c025b46a0b2d15c7bd47f18f33226cf7330d35493663fc1d1d
-    # via -r ./dev-requirements.in
+    # via -r dev-requirements.in
 platformdirs==3.11.0 \
     --hash=sha256:cf8ee52a3afdb965072dcc652433e0c7e3e40cf5ea1477cd4b3b1d2eb75495b3 \
     --hash=sha256:e9d171d00af68be50e9202731309c4e658fd8bc76f55c11c7dd760d023bda68e
@@ -136,11 +129,11 @@ virtualenv==20.24.5 \
     --hash=sha256:b80039f280f4919c77b30f1c23294ae357c4c8701042086e3fc005963e4e537b \
     --hash=sha256:e8361967f6da6fbdf1426483bfe9fca8287c242ac0bc30429905721cefbff752
     # via nox
-wheel==0.41.2 \
-    --hash=sha256:0c5ac5ff2afb79ac23ab82bab027a0be7b5dbcf2e54dc50efe4bf507de1f7985 \
-    --hash=sha256:75909db2664838d015e3d9139004ee16711748a52c8f336b52882266540215d8
+wheel==0.41.3 \
+    --hash=sha256:488609bc63a29322326e05560731bf7bfea8e48ad646e1f5e40d366607de0942 \
+    --hash=sha256:4d4987ce51a49370ea65c0bfd2234e8ce80a12780820d9dc462597a6e60d0841
     # via
-    #   -r ./dev-requirements.in
+    #   -r dev-requirements.in
     #   pip-tools
 zipp==3.17.0 \
     --hash=sha256:0e923e726174922dce09c53c59ad483ff7bbb8e572e00c7f7c46b88556409f31 \

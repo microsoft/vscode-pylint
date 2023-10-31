@@ -54,13 +54,13 @@ platformdirs==3.11.0 \
     --hash=sha256:cf8ee52a3afdb965072dcc652433e0c7e3e40cf5ea1477cd4b3b1d2eb75495b3 \
     --hash=sha256:e9d171d00af68be50e9202731309c4e658fd8bc76f55c11c7dd760d023bda68e
     # via pylint
-pygls==1.1.1 \
-    --hash=sha256:330704551a335b443bf1cdfb0507f121608591095898d451f0007eeb1510067c \
-    --hash=sha256:b1b4ddd6f800a5573f61f0ec2cd3bc7a859d171f48142b46e1de35a1357c00fe
+pygls==1.1.2 \
+    --hash=sha256:783d29c93679bb6756772f2de9b9f53b1a6fdf3fba66aeca23e87aa8aab20ecf \
+    --hash=sha256:93fe17c01fd03307774290e685e7fa25bc1411cd72f243ff33eef21927fd0ad5
     # via -r ./requirements.in
-pylint==3.0.1 \
-    --hash=sha256:81c6125637be216b4652ae50cc42b9f8208dfb725cdc7e04c48f6902f4dbdf40 \
-    --hash=sha256:9c90b89e2af7809a1697f6f5f93f1d0e518ac566e2ac4d2af881a69c13ad01ea
+pylint==3.0.2 \
+    --hash=sha256:0d4c286ef6d2f66c8bfb527a7f8a629009e42c99707dec821a03e1b51a4c1496 \
+    --hash=sha256:60ed5f3a9ff8b61839ff0348b3624ceeb9e6c2a92c514d81c9cc273da3b6bcda
     # via -r ./requirements.in
 tomli==2.0.1 \
     --hash=sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc \
@@ -70,9 +70,9 @@ tomlkit==0.12.1 \
     --hash=sha256:38e1ff8edb991273ec9f6181244a6a391ac30e9f5098e7535640ea6be97a7c86 \
     --hash=sha256:712cbd236609acc6a3e2e97253dfc52d4c2082982a88f61b640ecf0817eab899
     # via pylint
-typeguard==3.0.2 \
-    --hash=sha256:bbe993854385284ab42fd5bd3bee6f6556577ce8b50696d6cb956d704f286c8e \
-    --hash=sha256:fee5297fdb28f8e9efcb8142b5ee219e02375509cd77ea9d270b5af826358d5a
+typeguard==4.1.5 \
+    --hash=sha256:8923e55f8873caec136c892c3bed1f676eae7be57cdb94819281b3d3bc9c0953 \
+    --hash=sha256:ea0a113bbc111bcffc90789ebb215625c963411f7096a7e9062d4e4630c155fd
     # via pygls
 typing-extensions==4.8.0 \
     --hash=sha256:8f92fc8806f9a6b641eaa5318da32b44d401efaac0f6678c9bc448ba3605faa0 \

@@ -77,7 +77,7 @@
             "properties": {
                 "pylint.args": {
                     "default": [],
-                    "description": "%settings.args.description%",
+                    "markdownDescription": "%settings.args.description%",
                     "items": {
                         "type": "string"
                     },
@@ -86,7 +86,7 @@
                 },
                 "pylint.cwd": {
                     "default": "${workspaceFolder}",
-                    "description": "%settings.cwd.description%",
+                    "markdownDescription": "%settings.cwd.description%",
                     "scope": "resource",
                     "type": "string",
                     "examples": [
@@ -96,7 +96,7 @@
                 },
                 "pylint.ignorePatterns": {
                     "default": [],
-                    "description": "%settings.ignorePatterns.description%",
+                    "markdownDescription": "%settings.ignorePatterns.description%",
                     "items": {
                         "type": "string"
                     },
@@ -112,7 +112,7 @@
                 },
                 "pylint.importStrategy": {
                     "default": "useBundled",
-                    "description": "%settings.importStrategy.description%",
+                    "markdownDescription": "%settings.importStrategy.description%",
                     "enum": [
                         "useBundled",
                         "fromEnvironment"
@@ -126,7 +126,7 @@
                 },
                 "pylint.interpreter": {
                     "default": [],
-                    "description": "%settings.interpreter.description%",
+                    "markdownDescription": "%settings.interpreter.description%",
                     "scope": "resource",
                     "items": {
                         "type": "string"
@@ -135,7 +135,7 @@
                 },
                 "pylint.lintOnChange": {
                     "default": false,
-                    "description": "%settings.lintOnChange.description%",
+                    "markdownDescription": "%settings.lintOnChange.description%",
                     "scope": "machine",
                     "type": "boolean",
                     "tags": [
@@ -144,7 +144,7 @@
                 },
                 "pylint.path": {
                     "default": [],
-                    "description": "%settings.path.description%",
+                    "markdownDescription": "%settings.path.description%",
                     "scope": "resource",
                     "items": {
                         "type": "string"
@@ -179,13 +179,13 @@
                             "Warning"
                         ]
                     },
-                    "description": "%settings.severity.description%",
+                    "markdownDescription": "%settings.severity.description%",
                     "scope": "resource",
                     "type": "object"
                 },
                 "pylint.showNotifications": {
                     "default": "off",
-                    "description": "%settings.showNotifications.description%",
+                    "markdownDescription": "%settings.showNotifications.description%",
                     "enum": [
                         "off",
                         "onError",

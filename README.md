@@ -21,7 +21,7 @@ The Pylint extension provides a series of features to help your productivity whi
 
 You can skip linting with Pylint for specific files or directories by setting the `pylint.ignorePatterns` setting.
 
-But if you wish to disable linting with Pylint for your entire workspace or globally, you can you can [disable this extension](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) in Visual Studio Code.
+But if you wish to disable linting with Pylint for your entire workspace or globally, you can [disable this extension](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) in Visual Studio Code.
 
 ## Settings
 

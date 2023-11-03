@@ -9,7 +9,7 @@ on:
       - 'release-*'
 
 env:
-  NODE_VERSION: 16.17.0
+  NODE_VERSION: 18.17.1
   TEST_RESULTS_DIRECTORY: .
   # Force a path with spaces and unicode chars to test extension works in these scenarios
   special-working-directory: './🐍 🐛'
@@ -50,7 +50,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ['3.8', '3.8', '3.9', '3.10', '3.11', '3.12-dev']
+        python: ['3.8', '3.9', '3.10', '3.11', '3.12']
 
     steps:
       - name: Checkout

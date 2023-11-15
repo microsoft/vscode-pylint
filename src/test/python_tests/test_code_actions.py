@@ -307,12 +307,15 @@ def test_edit_code_action(code, contents, new_text):
                     "context": {"diagnostics": diagnostics},
                 }
             )
-            text_document = actual_code_actions[0]["edit"]["documentChanges"][0][
-                "textDocument"
-            ]
-            text_range = actual_code_actions[0]["edit"]["documentChanges"][0]["edits"][
-                0
-            ]["range"]
+
+            assert_that(
+                all("edit" not in action for action in actual_code_actions),
+                is_(True),
+            )
+
+            actual_code_action = ls_session.code_action_resolve(actual_code_actions[0])
+
+            changes = actual_code_action["edit"]["documentChanges"]
             expected = [
                 {
                     "title": f"{LINTER}: Run autofix code action",
@@ -321,10 +324,10 @@ def test_edit_code_action(code, contents, new_text):
                     "edit": {
                         "documentChanges": [
                             {
-                                "textDocument": text_document,
+                                "textDocument": changes[0]["textDocument"],
                                 "edits": [
                                     {
-                                        "range": text_range,
+                                        "range": changes[0]["edits"][0]["range"],
                                         "newText": new_text,
                                     }
                                 ],
@@ -336,6 +339,6 @@ def test_edit_code_action(code, contents, new_text):
             ]
 
         assert_that(
-            actual_code_actions[0]["edit"]["documentChanges"],
+            actual_code_action["edit"]["documentChanges"],
             is_(expected[0]["edit"]["documentChanges"]),
         )

@@ -245,10 +245,7 @@ class QuickFixSolutions:
             Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]],
         ] = {}
 
-    def quick_fix(
-        self,
-        codes: Union[str, List[str]],
-    ):
+    def quick_fix(self, codes: Union[str, List[str]]):
         """Decorator used for registering quick fixes."""
 
         def decorator(
@@ -275,11 +272,7 @@ class QuickFixSolutions:
     ]:
         """Given a pylint error code returns a function, if available, that provides
         quick fix code actions."""
-
-        try:
-            return self._solutions[code]
-        except KeyError:
-            return None
+        return self._solutions.get(code, None)
 
 
 QUICK_FIXES = QuickFixSolutions()
@@ -287,7 +280,9 @@ QUICK_FIXES = QuickFixSolutions()
 
 @LSP_SERVER.feature(
     lsp.TEXT_DOCUMENT_CODE_ACTION,
-    lsp.CodeActionOptions(code_action_kinds=[lsp.CodeActionKind.QuickFix]),
+    lsp.CodeActionOptions(
+        code_action_kinds=[lsp.CodeActionKind.QuickFix], resolve_provider=True
+    ),
 )
 def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     """LSP handler for textDocument/codeAction request."""
@@ -347,44 +342,48 @@ def organize_imports(
     ]
 
 
-REPLACEMENTS = {
+REPLACEMENTS: Dict[str, re.Pattern] = {
     "C0117:unnecessary-negation": [
         {
-            "pattern": r"\snot\s+not",
+            "pattern": re.compile(r"\snot\s+not"),
             "repl": r"",
         }
     ],
     "C0121:singleton-comparison": [
         {
-            "pattern": r"(\w+)\s+(?:==\s+True|!=\s+False)|(?:True\s+==|False\s+!=)\s+(\w+)",
+            "pattern": re.compile(
+                r"(\w+)\s+(?:==\s+True|!=\s+False)|(?:True\s+==|False\s+!=)\s+(\w+)"
+            ),
             "repl": r"\1\2",
         },
         {
-            "pattern": r"(\w+)\s+(?:!=\s+True|==\s+False)|(?:True\s+!=|False\s+==)\s+(\w+)",
+            "pattern": re.compile(
+                r"(\w+)\s+(?:!=\s+True|==\s+False)|(?:True\s+!=|False\s+==)\s+(\w+)"
+            ),
             "repl": r"not \1\2",
         },
     ],
     "C0123:unidiomatic-typecheck": [
         {
-            "pattern": r"type\((\w+)\)\s+is\s+(\w+)",
+            "pattern": re.compile(r"type\((\w+)\)\s+is\s+(\w+)"),
             "repl": r"isinstance(\1, \2)",
         }
     ],
     "R0205:useless-object-inheritance": [
         {
-            "pattern": r"class (\w+)\(object\):",
+            "pattern": re.compile(r"class (\w+)\(object\):"),
             "repl": r"class \1:",
         }
     ],
     "R1721:unnecessary-comprehension": [
         {
-            "pattern": r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}",
+            "pattern": re.compile(r"\{([\w\s,]+) for [\w\s,]+ in ([\w\s,]+)\}"),
             "repl": r"set(\2)",
         }
     ],
     "E1141:dict-iter-missing-items": [
         {
-            "pattern": r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:",
+            "pattern": re.compile(r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:"),
             "repl": r"for \1, \2 in \3.items():",
         }
     ],
@@ -420,16 +419,26 @@ def fix_with_replacement(
             title=f"{TOOL_DISPLAY}: Run autofix code action",
             kind=lsp.CodeActionKind.QuickFix,
             diagnostics=diagnostics,
-            edit=_create_workspace_edits(
-                document,
-                [
-                    _get_replacement_edit(diagnostic, document.lines)
-                    for diagnostic in diagnostics
-                    if diagnostic.code in REPLACEMENTS
-                ],
-            ),
+            edit=None,
+            data=document.uri,
         )
     ]
+
+
+@LSP_SERVER.feature(lsp.CODE_ACTION_RESOLVE)
+def code_action_resolve(params: lsp.CodeAction) -> lsp.CodeAction:
+    """LSP handler for codeAction/resolve request."""
+    if params.data:
+        document = LSP_SERVER.workspace.get_document(params.data)
+        params.edit = _create_workspace_edits(
+            document,
+            [
+                _get_replacement_edit(diagnostic, document.lines)
+                for diagnostic in params.diagnostics
+                if diagnostic.source == TOOL_DISPLAY and diagnostic.code in REPLACEMENTS
+            ],
+        )
+    return params
 
 
 def _command_quick_fix(

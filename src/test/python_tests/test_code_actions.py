@@ -316,8 +316,6 @@ def test_edit_code_action(code, contents, new_text):
             actual_code_action = ls_session.code_action_resolve(actual_code_actions[0])
 
             changes = actual_code_action["edit"]["documentChanges"]
-            text_document = changes[0]["textDocument"]
-            text_range = changes[0]["edits"][0]["range"]
             expected = [
                 {
                     "title": f"{LINTER}: Run autofix code action",
@@ -326,10 +324,10 @@ def test_edit_code_action(code, contents, new_text):
                     "edit": {
                         "documentChanges": [
                             {
-                                "textDocument": text_document,
+                                "textDocument": changes[0]["textDocument"],
                                 "edits": [
                                     {
-                                        "range": text_range,
+                                        "range": changes[0]["edits"][0]["range"],
                                         "newText": new_text,
                                     }
                                 ],

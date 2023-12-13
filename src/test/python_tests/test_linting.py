@@ -623,3 +623,98 @@ def test_ignore_patterns_no_match(patterns: List[str]):
     }
 
     assert_that(actual, is_(expected))
+
+
+@pytest.mark.parametrize("enabled", (True, False))
+def test_enabled_setting(enabled):
+    """Test to ensure enabled setting is honored."""
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
+
+    actual = []
+    with session.LspSession() as ls_session:
+        default_init = defaults.vscode_initialize_defaults()
+        init_options = default_init["initializationOptions"]
+        init_options["settings"][0]["enabled"] = enabled
+        ls_session.initialize(default_init)
+
+        done = Event()
+
+        def _handler(params):
+            nonlocal actual
+            actual = params
+            done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
+                }
+            }
+        )
+
+        # wait for some time to receive all notifications
+        done.wait(TIMEOUT)
+
+    if enabled:
+        expected = {
+            "uri": TEST_FILE_URI,
+            "diagnostics": [
+                {
+                    "range": {
+                        "start": {"line": 0, "character": 0},
+                        "end": {"line": 0, "character": 0},
+                    },
+                    "message": "Missing module docstring",
+                    "severity": 3,
+                    "code": "C0114:missing-module-docstring",
+                    "codeDescription": {
+                        "href": f"{DOCUMENTATION_HOME}/convention/missing-module-docstring.html"
+                    },
+                    "source": LINTER["name"],
+                },
+                {
+                    "range": {
+                        "start": {"line": 2, "character": 6},
+                        "end": {
+                            "line": 2,
+                            "character": 7,
+                        },
+                    },
+                    "message": "Undefined variable 'x'",
+                    "severity": 1,
+                    "code": "E0602:undefined-variable",
+                    "codeDescription": {
+                        "href": f"{DOCUMENTATION_HOME}/error/undefined-variable.html"
+                    },
+                    "source": LINTER["name"],
+                },
+                {
+                    "range": {
+                        "start": {"line": 0, "character": 0},
+                        "end": {
+                            "line": 0,
+                            "character": 10,
+                        },
+                    },
+                    "message": "Unused import sys",
+                    "severity": 2,
+                    "code": "W0611:unused-import",
+                    "codeDescription": {
+                        "href": f"{DOCUMENTATION_HOME}/warning/unused-import.html"
+                    },
+                    "source": LINTER["name"],
+                },
+            ],
+        }
+    else:
+        expected = {
+            "uri": TEST_FILE_URI,
+            "diagnostics": [],
+        }
+
+    assert_that(actual, is_(expected))

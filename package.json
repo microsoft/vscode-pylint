@@ -94,6 +94,12 @@
                         "${fileDirname}"
                     ]
                 },
+                "pylint.enabled": {
+                    "default": true,
+                    "markdownDescription": "%settings.enabled.description%",
+                    "scope": "resource",
+                    "type": "boolean"
+                },
                 "pylint.ignorePatterns": {
                     "default": [],
                     "markdownDescription": "%settings.ignorePatterns.description%",

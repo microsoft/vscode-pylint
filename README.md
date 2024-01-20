@@ -2,7 +2,7 @@
 
 A Visual Studio Code extension with support for the Pylint linter. This extension ships with `pylint=3.0.3`.
 
-> **Note**: The minimum version of Pylint this extension supports is `2.12.2`. If you have any issues with linting with Pylint, please report it to [this issue tracker](https://github.com/pylint-dev/pylint/issues) as this extension is just a wrapper around Pylint.
+> **Note**: The minimum version of Pylint this extension supports is `2.12.2`. If you are having issues with Pylint, please report it to [this issue tracker](https://github.com/pylint-dev/pylint/issues) as this extension is just a wrapper around Pylint.
 
 This extension supports all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the `Python` language (i.e., Python >= 3.8).
 

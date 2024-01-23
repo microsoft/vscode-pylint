@@ -17,7 +17,7 @@ runs:
 
     # Minimum supported version is Python 3.8
     - name: Use Python 3.8
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.8'
 
@@ -62,7 +62,7 @@ runs:
       shell: bash
 
     - name: Upload VSIX
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linter-package
         path: |

@@ -1,6 +1,7 @@
 """
 Test for path and interpreter settings.
 """
+
 from threading import Event
 from typing import Dict
 

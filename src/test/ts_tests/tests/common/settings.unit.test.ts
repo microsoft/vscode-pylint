@@ -262,6 +262,7 @@ suite('Settings Tests', () => {
                     '${workspaceFolder}/lib/python',
                     '${workspaceFolder:workspace1}/lib/python',
                     '${cwd}/lib/python',
+                    '~/lib/python',
                 ])
                 .verifiable(TypeMoq.Times.atLeastOnce());
             pythonConfigMock
@@ -286,6 +287,7 @@ suite('Settings Tests', () => {
                 `${workspace1.uri.fsPath}/lib/python`,
                 `${workspace1.uri.fsPath}/lib/python`,
                 `${process.cwd()}/lib/python`,
+                `${process.env.HOME || process.env.USERPROFILE}/lib/python`,
             ]);
 
             configMock.verifyAll();

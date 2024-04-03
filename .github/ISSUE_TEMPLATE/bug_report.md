@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Create an issue for a bug
+about: Create an issue for a bug in the Pylint tools extension for VS Code.
 title: ''
 labels: 'bug'
 assignees: ''
@@ -18,7 +18,7 @@ Steps to set log level to trace and view:
 1. Open the Command Palette via Press Ctrl+Shift+P (Windows/Linux) or Cmd+Shift+P (macOS).
 2. Find the Command to Set Log Level: Type 'Developer: Set Log Level', select `trace`.
 3. Open the Output panel by going to View > Output, or by using the shortcut Ctrl+Shift+U on Windows/Linux or Cmd+Shift+U on macOS.
-4. Select `Python` from the dropdown.
+4. Select `Pylint` from the dropdown.
 5. Your logs should now be shown! Try rerunning the failing command again now that logs are set to `trace` to look at all information.
  -->
 
@@ -47,7 +47,7 @@ Steps to set log level to trace and view:
 ## Outcome When Attempting Debugging Steps:
 <!-- Please attempt running the tool from the command line and see the result, as our extension ultimately calls the tool and reports back this information.
 Steps:
-1. Use the steps at the top of this page `Steps to set log level to trace and view` to get to the Python logs.
+1. Use the steps at the top of this page `Steps to set log level to trace and view` to get to the `Pylint` logs.
 2. Search in your logs for keywords like "command", "running", and you will find a line that shows the exact command we run.
 3. Run this command in your command line, and see if it works from there!
 If it works from your command line and not the extension, this is likely an extension bug; if it doesn't work in your command line, debug there. -->

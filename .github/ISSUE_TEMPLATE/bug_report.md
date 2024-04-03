@@ -10,17 +10,8 @@ assignees: ''
 Before you submit an issue:
 1. Please search for the bug in existing issues on the repo. Search using keywords or error messages and check both `open` and `closed` issues.
 2. Try setting your log level to trace and look at the logs in more detail, as there may be more information there. If not, then these trace logs are part
-of the bug report below! (see directions on how to set and access these logs)
-
-Thank you!
-
-Steps to set log level to trace and view:
-1. Open the Command Palette via Press Ctrl+Shift+P (Windows/Linux) or Cmd+Shift+P (macOS).
-2. Find the Command to Set Log Level: Type 'Developer: Set Log Level', select `trace`.
-3. Open the Output panel by going to View > Output, or by using the shortcut Ctrl+Shift+U on Windows/Linux or Cmd+Shift+U on macOS.
-4. Select `Pylint` from the dropdown.
-5. Your logs should now be shown! Try rerunning the failing command again now that logs are set to `trace` to look at all information.
- -->
+of the bug report below! (see directions on how to set and access these logs in the `Logs` section below.)
+Thank you!-->
 
 ## Diagnostic Data
 - Python version (& distribution if applicable, e.g., Anaconda): <!-- ADD YOUR ANSWER HERE -->
@@ -39,6 +30,13 @@ Steps to set log level to trace and view:
 <!-- How can we reproduce the bug? Please be as detailed as possible so we can help with your bug faster! -->
 
 ## Logs:
+<!--
+Steps to set log level to trace and view:
+1. Open the Command Palette via Press Ctrl+Shift+P (Windows/Linux) or Cmd+Shift+P (macOS).
+2. Find the Command to Set Log Level: Type 'Developer: Set Log Level', select `trace`.
+3. Open the Output panel by going to View > Output, or by using the shortcut Ctrl+Shift+U on Windows/Linux or Cmd+Shift+U on macOS.
+4. Select `Pylint` from the dropdown.
+5. Your logs should now be shown! Try rerunning the failing command again now that logs are set to `trace` to look at all information. -->
 <details>
   <summary>Click here for detailed logs</summary>
   <!-- Paste your logs here -->
@@ -57,4 +55,7 @@ Did running it from the command line work? <!-- ADD YOUR ANSWER HERE -->
 <!-- Optional: Anything else which might be useful?
 This may include:
 - What other Python-related extensions are you using?
-- What does your project structure look like? -->
+- What does your project structure look like?
+- Are you working in a multiroot workspace?
+- Where is the config file for the current tool?
+- Any extra settings from your workspace or user settings.json files? -->

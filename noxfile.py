@@ -237,5 +237,5 @@ def update_packages(session: nox.Session) -> None:
     """Update pip and npm packages."""
     session.install("wheel", "pip-tools")
     _update_pip_packages(session)
-    _update_npm_packages(session)
     _update_readme()
+    _update_npm_packages(session)

@@ -238,4 +238,5 @@ def update_packages(session: nox.Session) -> None:
     session.install("wheel", "pip-tools")
     _update_pip_packages(session)
     _update_readme()
-    _update_npm_packages(session)
+    if "--all" in session.posargs:
+        _update_npm_packages(session)

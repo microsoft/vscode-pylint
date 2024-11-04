@@ -43,7 +43,8 @@ function resolveVariables(
     const home = process.env.HOME || process.env.USERPROFILE;
     if (home) {
         substitutions.set('${userHome}', home);
-        substitutions.set(`~${path.sep}`, `${home}${path.sep}`);
+        substitutions.set(`~/`, `${home}/`);
+        substitutions.set(`~\\`, `${home}\\`); // Adding both path seps '/' and '\\' explicitly handle and preserve the path separators.
     }
     if (workspace) {
         substitutions.set('${workspaceFolder}', workspace.uri.fsPath);

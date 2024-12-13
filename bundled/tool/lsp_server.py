@@ -737,7 +737,7 @@ def _run_tool_on_document(
 
     # pygls normalizes the path to lowercase on windows, but we need to resolve the
     # correct capitalization to avoid https://github.com/pylint-dev/pylint/issues/10137
-    resolved_path = pathlib.Path(document.path).resolve()
+    resolved_path = str(pathlib.Path(document.path).resolve())
 
     if use_stdin:
         argv += ["--from-stdin", resolved_path]

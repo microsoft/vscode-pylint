@@ -735,10 +735,14 @@ def _run_tool_on_document(
 
     argv += TOOL_ARGS + settings["args"] + extra_args
 
+    # pygls normalizes the path to lowercase on windows, but we need to resolve the
+    # correct capitalization to avoid https://github.com/pylint-dev/pylint/issues/10137
+    resolved_path = str(pathlib.Path(document.path).resolve())
+
     if use_stdin:
-        argv += ["--from-stdin", document.path]
+        argv += ["--from-stdin", resolved_path]
     else:
-        argv += [document.path]
+        argv += [resolved_path]
 
     env = None
     if use_path or use_rpc:

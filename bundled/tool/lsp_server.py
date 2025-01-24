@@ -120,17 +120,6 @@ def did_close(params: lsp.DidCloseTextDocumentParams) -> None:
     # Publishing empty diagnostics to clear the entries for this file.
     LSP_SERVER.publish_diagnostics(document.uri, [])
 
-
-if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
-
-    @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_CHANGE)
-    def did_change(params: lsp.DidChangeTextDocumentParams) -> None:
-        """LSP handler for textDocument/didChange request."""
-        document = LSP_SERVER.workspace.get_document(params.text_document.uri)
-        diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
-        LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
-
-
 def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
     try:
         extra_args = []

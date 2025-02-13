@@ -13,7 +13,7 @@ import {
 import { DEBUG_SERVER_SCRIPT_PATH, SERVER_SCRIPT_PATH } from './constants';
 import { traceError, traceInfo, traceVerbose } from './logging';
 import { getDebuggerPath } from './python';
-import { getExtensionSettings, getGlobalSettings, ISettings, isLintOnChangeEnabled } from './settings';
+import { getExtensionSettings, getGlobalSettings, ISettings } from './settings';
 import { getLSClientTraceLevel, getDocumentSelector } from './utilities';
 import { updateStatus } from './status';
 
@@ -46,10 +46,6 @@ async function createServer(
     newEnv.LS_SHOW_NOTIFICATION = settings.showNotifications;
 
     newEnv.PYTHONUTF8 = '1';
-
-    if (isLintOnChangeEnabled(serverId)) {
-        newEnv.VSCODE_PYLINT_LINT_ON_CHANGE = '1';
-    }
 
     const args =
         newEnv.USE_DEBUGPY === 'False' || !isDebugScript

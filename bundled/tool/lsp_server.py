@@ -120,6 +120,7 @@ def did_close(params: lsp.DidCloseTextDocumentParams) -> None:
     # Publishing empty diagnostics to clear the entries for this file.
     LSP_SERVER.publish_diagnostics(document.uri, [])
 
+
 def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
     try:
         extra_args = []
@@ -240,7 +241,7 @@ class QuickFixSolutions:
         def decorator(
             func: Callable[
                 [workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]
-            ]
+            ],
         ):
             if isinstance(codes, str):
                 if codes in self._solutions:

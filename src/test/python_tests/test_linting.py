@@ -4,7 +4,6 @@
 Test for linting over LSP.
 """
 
-import os
 from threading import Event
 from typing import List
 

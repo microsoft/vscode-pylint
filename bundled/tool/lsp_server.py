@@ -251,7 +251,7 @@ class QuickFixSolutions:
         def decorator(
             func: Callable[
                 [workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]
-            ]
+            ],
         ):
             if isinstance(codes, str):
                 if codes in self._solutions:

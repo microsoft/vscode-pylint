@@ -389,6 +389,18 @@ REPLACEMENTS: Dict[str, re.Pattern] = {
             "repl": r"for \1, \2 in \3.items():",
         }
     ],
+    "W1514:unspecified-encoding": [
+        {
+            "pattern": re.compile(
+                r"open\(\s*([^,)\s]+)\s*(?:,\s*['\"]([^'\"]+)['\"])?\s*\)"
+            ),
+            "repl": lambda m: (
+                f"open({m.group(1)}, '{m.group(2)}', encoding='utf-8')"
+                if m.group(2)
+                else f"open({m.group(1)}, encoding='utf-8')"
+            ),
+        }
+    ],
 }
 
 

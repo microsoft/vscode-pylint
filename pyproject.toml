@@ -47,7 +47,6 @@ disable= [
     "too-many-positional-arguments",
     "too-many-branches",
     "too-many-instance-attributes",
-    "unspecified-encoding",
     "wrong-import-position",
 ]
 

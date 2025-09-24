@@ -127,6 +127,17 @@ export async function getWorkspaceSettings(
     }
 
     const extraPaths = getExtraPaths(namespace, workspace);
+
+    function getWorkspaceScopedValue<T>(key: string, defaultValue: T): T {
+        const inspected = config.inspect<T>(key);
+        return (
+            inspected?.workspaceFolderValue ??
+            inspected?.workspaceValue ??
+            inspected?.globalValue ??
+            inspected?.defaultValue ??
+            defaultValue
+        );
+    }
     const workspaceSetting = {
         enabled: config.get<boolean>('enabled', true),
         cwd: getCwd(config, workspace),
@@ -136,7 +147,8 @@ export async function getWorkspaceSettings(
         path: resolveVariables(config.get<string[]>('path', []), workspace, interpreter),
         ignorePatterns: resolveVariables(config.get<string[]>('ignorePatterns', []), workspace),
         interpreter: resolveVariables(interpreter, workspace),
-        importStrategy: config.get<string>('importStrategy', 'useBundled'),
+        // Respect user-level (global) setting when workspace value is not set
+        importStrategy: getWorkspaceScopedValue<string>('importStrategy', 'useBundled'),
         showNotifications: config.get<string>('showNotifications', 'off'),
         extraPaths: resolveVariables(extraPaths, workspace),
     };

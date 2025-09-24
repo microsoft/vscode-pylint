@@ -72,8 +72,9 @@ suite('Settings Tests', () => {
                 .returns(() => DEFAULT_SEVERITY)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
-                .setup((c) => c.get('importStrategy', 'useBundled'))
-                .returns(() => 'useBundled')
+                // importStrategy now uses inspect() with fallback, so mock inspect
+                .setup((c) => c.inspect<string>('importStrategy'))
+                .returns(() => ({ key: 'pylint.importStrategy', defaultValue: 'useBundled' } as any))
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
                 .setup((c) => c.get('showNotifications', 'off'))
@@ -147,8 +148,8 @@ suite('Settings Tests', () => {
                 .returns(() => DEFAULT_SEVERITY)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
-                .setup((c) => c.get('importStrategy', 'useBundled'))
-                .returns(() => 'useBundled')
+                .setup((c) => c.inspect<string>('importStrategy'))
+                .returns(() => ({ key: 'pylint.importStrategy', defaultValue: 'useBundled' } as any))
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
                 .setup((c) => c.get('showNotifications', 'off'))
@@ -235,8 +236,8 @@ suite('Settings Tests', () => {
                 .returns(() => DEFAULT_SEVERITY)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
-                .setup((c) => c.get('importStrategy', 'useBundled'))
-                .returns(() => 'useBundled')
+                .setup((c) => c.inspect<string>('importStrategy'))
+                .returns(() => ({ key: 'pylint.importStrategy', defaultValue: 'useBundled' } as any))
                 .verifiable(TypeMoq.Times.atLeastOnce());
             configMock
                 .setup((c) => c.get('showNotifications', 'off'))

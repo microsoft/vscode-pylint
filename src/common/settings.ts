@@ -175,11 +175,6 @@ export async function getGlobalSettings(namespace: string, includeInterpreter?: 
     return setting;
 }
 
-export function isLintOnChangeEnabled(namespace: string): boolean {
-    const config = getConfiguration(namespace);
-    return config.get<boolean>('lintOnChange', false);
-}
-
 export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
     const settings = [
         `${namespace}.args`,
@@ -191,7 +186,6 @@ export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespa
         `${namespace}.importStrategy`,
         `${namespace}.showNotifications`,
         `${namespace}.ignorePatterns`,
-        `${namespace}.lintOnChange`,
         'python.analysis.extraPaths',
     ];
     const changed = settings.map((s) => e.affectsConfiguration(s));

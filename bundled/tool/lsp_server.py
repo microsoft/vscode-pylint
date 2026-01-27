@@ -63,7 +63,15 @@ update_environ_path()
 import lsp_jsonrpc as jsonrpc
 import lsp_utils as utils
 from lsprotocol import types as lsp
-from pygls import server, uris, workspace
+
+# Support both pygls 1.x and 2.x
+# In pygls 2.0.0+, LanguageServer moved to pygls.lsp.server
+try:
+    from pygls.lsp import server
+except ImportError:
+    from pygls import server
+
+from pygls import uris, workspace
 
 WORKSPACE_SETTINGS = {}
 GLOBAL_SETTINGS = {}

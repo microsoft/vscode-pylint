@@ -63,14 +63,16 @@ update_environ_path()
 import lsp_jsonrpc as jsonrpc
 import lsp_utils as utils
 from lsprotocol import types as lsp
-from pygls import server, uris, workspace
+from pygls import uris
+from pygls.lsp.server import LanguageServer
+from pygls.workspace import TextDocument
 
 WORKSPACE_SETTINGS = {}
 GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
 MAX_WORKERS = 5
-LSP_SERVER = server.LanguageServer(
+LSP_SERVER = LanguageServer(
     name="pylint-server", version="v0.1.0", max_workers=MAX_WORKERS
 )
 
@@ -100,25 +102,31 @@ VERSION_TABLE: Dict[str, (int, int, int)] = {}
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_OPEN)
 def did_open(params: lsp.DidOpenTextDocumentParams) -> None:
     """LSP handler for textDocument/didOpen request."""
-    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+    document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
     diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
-    LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
+    LSP_SERVER.text_document_publish_diagnostics(
+        lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=diagnostics)
+    )
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_SAVE)
 def did_save(params: lsp.DidSaveTextDocumentParams) -> None:
     """LSP handler for textDocument/didSave request."""
-    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+    document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
     diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
-    LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
+    LSP_SERVER.text_document_publish_diagnostics(
+        lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=diagnostics)
+    )
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_CLOSE)
 def did_close(params: lsp.DidCloseTextDocumentParams) -> None:
     """LSP handler for textDocument/didClose request."""
-    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+    document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
     # Publishing empty diagnostics to clear the entries for this file.
-    LSP_SERVER.publish_diagnostics(document.uri, [])
+    LSP_SERVER.text_document_publish_diagnostics(
+        lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=[])
+    )
 
 
 if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
@@ -126,12 +134,14 @@ if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
     @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_CHANGE)
     def did_change(params: lsp.DidChangeTextDocumentParams) -> None:
         """LSP handler for textDocument/didChange request."""
-        document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+        document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
         diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
-        LSP_SERVER.publish_diagnostics(document.uri, diagnostics)
+        LSP_SERVER.text_document_publish_diagnostics(
+            lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=diagnostics)
+        )
 
 
-def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
+def _linting_helper(document: TextDocument) -> list[lsp.Diagnostic]:
     try:
         extra_args = []
 
@@ -149,9 +159,11 @@ def _linting_helper(document: workspace.Document) -> list[lsp.Diagnostic]:
             settings = copy.deepcopy(_get_settings_by_document(document))
             return _parse_output(result.stdout, severity=settings["severity"])
     except Exception:  # pylint: disable=broad-except
-        LSP_SERVER.show_message_log(
-            f"Linting failed with error:\r\n{traceback.format_exc()}",
-            lsp.MessageType.Error,
+        LSP_SERVER.window_log_message(
+            lsp.LogMessageParams(
+                type=lsp.MessageType.Error,
+                message=f"Linting failed with error:\r\n{traceback.format_exc()}",
+            )
         )
     return []
 
@@ -242,16 +254,14 @@ class QuickFixSolutions:
     def __init__(self):
         self._solutions: Dict[
             str,
-            Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]],
+            Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]],
         ] = {}
 
     def quick_fix(self, codes: Union[str, List[str]]):
         """Decorator used for registering quick fixes."""
 
         def decorator(
-            func: Callable[
-                [workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]
-            ],
+            func: Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]],
         ):
             if isinstance(codes, str):
                 if codes in self._solutions:
@@ -267,9 +277,7 @@ class QuickFixSolutions:
 
     def solutions(
         self, code: str
-    ) -> Optional[
-        Callable[[workspace.Document, List[lsp.Diagnostic]], List[lsp.CodeAction]]
-    ]:
+    ) -> Optional[Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]]]:
         """Given a pylint error code returns a function, if available, that provides
         quick fix code actions."""
         return self._solutions.get(code, None)
@@ -287,7 +295,7 @@ QUICK_FIXES = QuickFixSolutions()
 def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     """LSP handler for textDocument/codeAction request."""
 
-    document = LSP_SERVER.workspace.get_document(params.text_document.uri)
+    document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
     settings = copy.deepcopy(_get_settings_by_document(document))
     code_actions = []
     if not settings["enabled"]:
@@ -312,7 +320,7 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     ]
 )
 def fix_format(
-    _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+    _document: TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve formatting document."""
     return [
@@ -332,7 +340,7 @@ def fix_format(
     ]
 )
 def organize_imports(
-    _document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+    _document: TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve organizing imports."""
     return [
@@ -413,7 +421,7 @@ def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.T
     codes=list(REPLACEMENTS.keys()),
 )
 def fix_with_replacement(
-    document: workspace.Document, diagnostics: List[lsp.Diagnostic]
+    document: TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which basic string replacements."""
     return [
@@ -431,7 +439,7 @@ def fix_with_replacement(
 def code_action_resolve(params: lsp.CodeAction) -> lsp.CodeAction:
     """LSP handler for codeAction/resolve request."""
     if params.data:
-        document = LSP_SERVER.workspace.get_document(params.data)
+        document = LSP_SERVER.workspace.get_text_document(params.data)
         params.edit = _create_workspace_edits(
             document,
             [
@@ -458,7 +466,7 @@ def _command_quick_fix(
 
 
 def _create_workspace_edits(
-    document: workspace.Document, results: Optional[List[lsp.TextEdit]]
+    document: TextDocument, results: Optional[List[lsp.TextEdit]]
 ):
     return lsp.WorkspaceEdit(
         document_changes=[
@@ -624,7 +632,7 @@ def _get_settings_by_path(file_path: pathlib.Path):
     return setting_values[0]
 
 
-def _get_document_key(document: workspace.Document):
+def _get_document_key(document: TextDocument):
     if WORKSPACE_SETTINGS:
         document_workspace = pathlib.Path(document.path)
         workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
@@ -639,7 +647,7 @@ def _get_document_key(document: workspace.Document):
     return None
 
 
-def _get_settings_by_document(document: workspace.Document | None):
+def _get_settings_by_document(document: TextDocument | None):
     if document is None or document.path is None:
         return list(WORKSPACE_SETTINGS.values())[0]
 
@@ -660,7 +668,7 @@ def _get_settings_by_document(document: workspace.Document | None):
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
-def get_cwd(settings: Dict[str, Any], document: Optional[workspace.Document]) -> str:
+def get_cwd(settings: Dict[str, Any], document: Optional[TextDocument]) -> str:
     """Returns cwd for the given settings and document."""
     if settings["cwd"] == "${workspaceFolder}":
         return settings["workspaceFS"]
@@ -675,7 +683,7 @@ def get_cwd(settings: Dict[str, Any], document: Optional[workspace.Document]) ->
 
 # pylint: disable=too-many-branches,too-many-statements
 def _run_tool_on_document(
-    document: workspace.Document,
+    document: TextDocument,
     use_stdin: bool = False,
     extra_args: Optional[Sequence[str]] = None,
 ) -> utils.RunResult | None:
@@ -911,28 +919,40 @@ def log_to_output(
     message: str, msg_type: lsp.MessageType = lsp.MessageType.Log
 ) -> None:
     """Logs messages to Output > Pylint channel only."""
-    LSP_SERVER.show_message_log(message, msg_type)
+    LSP_SERVER.window_log_message(lsp.LogMessageParams(type=msg_type, message=message))
 
 
 def log_error(message: str) -> None:
     """Logs messages with notification on error."""
-    LSP_SERVER.show_message_log(message, lsp.MessageType.Error)
+    LSP_SERVER.window_log_message(
+        lsp.LogMessageParams(type=lsp.MessageType.Error, message=message)
+    )
     if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["onError", "onWarning", "always"]:
-        LSP_SERVER.show_message(message, lsp.MessageType.Error)
+        LSP_SERVER.window_show_message(
+            lsp.ShowMessageParams(type=lsp.MessageType.Error, message=message)
+        )
 
 
 def log_warning(message: str) -> None:
     """Logs messages with notification on warning."""
-    LSP_SERVER.show_message_log(message, lsp.MessageType.Warning)
+    LSP_SERVER.window_log_message(
+        lsp.LogMessageParams(type=lsp.MessageType.Warning, message=message)
+    )
     if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["onWarning", "always"]:
-        LSP_SERVER.show_message(message, lsp.MessageType.Warning)
+        LSP_SERVER.window_show_message(
+            lsp.ShowMessageParams(type=lsp.MessageType.Warning, message=message)
+        )
 
 
 def log_always(message: str) -> None:
     """Logs messages with notification."""
-    LSP_SERVER.show_message_log(message, lsp.MessageType.Info)
+    LSP_SERVER.window_log_message(
+        lsp.LogMessageParams(type=lsp.MessageType.Info, message=message)
+    )
     if os.getenv("LS_SHOW_NOTIFICATION", "off") in ["always"]:
-        LSP_SERVER.show_message(message, lsp.MessageType.Info)
+        LSP_SERVER.window_show_message(
+            lsp.ShowMessageParams(type=lsp.MessageType.Info, message=message)
+        )
 
 
 # *****************************************************

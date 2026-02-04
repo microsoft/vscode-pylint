@@ -209,16 +209,17 @@ def _parse_output(
             # points to.
             end = start
 
-        code = f"{data.get('messageId')}:{data.get('symbol')}"
+        msg_id = data.get("message-id")
+        code = f"{msg_id}:{data.get('symbol')}"
         documentation_url = _build_message_doc_url(code)
 
         diagnostic = lsp.Diagnostic(
             range=lsp.Range(start=start, end=end),
             message=data.get("message"),
             severity=_get_severity(
-                data.get("symbol"), data.get("messageId"), data.get("type"), severity
+                data.get("symbol"), msg_id, data.get("type"), severity
             ),
-            code=f"{data.get('messageId')}:{data.get('symbol')}",
+            code=f"{msg_id}:{data.get('symbol')}",
             code_description=lsp.CodeDescription(href=documentation_url),
             source=TOOL_DISPLAY,
         )

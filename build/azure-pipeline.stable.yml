@@ -14,6 +14,10 @@ resources:
       ref: main
       endpoint: Monaco
 
+variables:
+  - name: PythonVersion
+    value: '3.10'
+
 parameters:
   - name: publishExtension
     displayName: 🚀 Publish Extension
@@ -33,7 +37,7 @@ extends:
 
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: '3.10'
+          versionSpec: $(PythonVersion)
           addToPath: true
           architecture: 'x64'
         displayName: Select Python version

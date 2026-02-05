@@ -2,7 +2,12 @@
 // Licensed under the MIT License.
 
 import { LanguageStatusItem, Disposable, l10n, LanguageStatusSeverity, StatusBarItem, window } from 'vscode';
-import { createLanguageStatusItem, createStatusBarItem, getConfiguration, onDidChangeActiveTextEditor } from './vscodeapi';
+import {
+    createLanguageStatusItem,
+    createStatusBarItem,
+    getConfiguration,
+    onDidChangeActiveTextEditor,
+} from './vscodeapi';
 import { Command } from 'vscode-languageclient';
 import { getDocumentSelector } from './utilities';
 

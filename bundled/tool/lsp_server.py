@@ -88,7 +88,7 @@ DOCUMENTATION_HOME = "https://pylint.readthedocs.io/en/latest/user_guide/message
 TOOL_ARGS = ["--reports=n", "--output-format=json2"]
 
 # Minimum version of pylint supported.
-MIN_VERSION = "2.12.2"
+MIN_VERSION = "2.14.0"
 
 # **********************************************************
 # Linting features start here

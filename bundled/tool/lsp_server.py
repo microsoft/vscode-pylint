@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 """Implementation of tool support over LSP."""
+
 from __future__ import annotations
 
 import copy
@@ -63,9 +64,8 @@ update_environ_path()
 import lsp_jsonrpc as jsonrpc
 import lsp_utils as utils
 from lsprotocol import types as lsp
-from pygls import uris
+from pygls import uris, workspace
 from pygls.lsp.server import LanguageServer
-from pygls.workspace import TextDocument
 
 WORKSPACE_SETTINGS = {}
 GLOBAL_SETTINGS = {}
@@ -141,7 +141,7 @@ if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
         )
 
 
-def _linting_helper(document: TextDocument) -> list[lsp.Diagnostic]:
+def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
     try:
         extra_args = []
 
@@ -157,14 +157,9 @@ def _linting_helper(document: TextDocument) -> list[lsp.Diagnostic]:
 
             # deep copy here to prevent accidentally updating global settings.
             settings = copy.deepcopy(_get_settings_by_document(document))
-            return _parse_output(result.stdout, severity=settings["severity"])
+            return list(_parse_output(result.stdout, severity=settings["severity"]))
     except Exception:  # pylint: disable=broad-except
-        LSP_SERVER.window_log_message(
-            lsp.LogMessageParams(
-                type=lsp.MessageType.Error,
-                message=f"Linting failed with error:\r\n{traceback.format_exc()}",
-            )
-        )
+        log_error(f"Linting failed with error:\r\n{traceback.format_exc()}")
     return []
 
 
@@ -201,7 +196,8 @@ def _parse_output(
     diagnostics = []
     line_offset = 1
 
-    messages: List[Dict[str, Any]] = json.loads(content)
+    json_content = json.loads(content)
+    messages: List[Dict[str, Any]] = json_content
     for data in messages:
         start = lsp.Position(
             line=int(data.get("line")) - line_offset,
@@ -221,16 +217,17 @@ def _parse_output(
             # points to.
             end = start
 
-        code = f"{data.get('message-id')}:{data.get('symbol')}"
+        msg_id = data.get("message-id")
+        code = f"{msg_id}:{data.get('symbol')}"
         documentation_url = _build_message_doc_url(code)
 
         diagnostic = lsp.Diagnostic(
             range=lsp.Range(start=start, end=end),
             message=data.get("message"),
             severity=_get_severity(
-                data.get("symbol"), data.get("message-id"), data.get("type"), severity
+                data.get("symbol"), msg_id, data.get("type"), severity
             ),
-            code=f"{data.get('message-id')}:{data.get('symbol')}",
+            code=f"{msg_id}:{data.get('symbol')}",
             code_description=lsp.CodeDescription(href=documentation_url),
             source=TOOL_DISPLAY,
         )
@@ -254,14 +251,18 @@ class QuickFixSolutions:
     def __init__(self):
         self._solutions: Dict[
             str,
-            Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]],
+            Callable[
+                [workspace.TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]
+            ],
         ] = {}
 
     def quick_fix(self, codes: Union[str, List[str]]):
         """Decorator used for registering quick fixes."""
 
         def decorator(
-            func: Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]],
+            func: Callable[
+                [workspace.TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]
+            ],
         ):
             if isinstance(codes, str):
                 if codes in self._solutions:
@@ -277,7 +278,9 @@ class QuickFixSolutions:
 
     def solutions(
         self, code: str
-    ) -> Optional[Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]]]:
+    ) -> Optional[
+        Callable[[workspace.TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]]
+    ]:
         """Given a pylint error code returns a function, if available, that provides
         quick fix code actions."""
         return self._solutions.get(code, None)
@@ -320,7 +323,7 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     ]
 )
 def fix_format(
-    _document: TextDocument, diagnostics: List[lsp.Diagnostic]
+    _document: workspace.TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve formatting document."""
     return [
@@ -340,7 +343,7 @@ def fix_format(
     ]
 )
 def organize_imports(
-    _document: TextDocument, diagnostics: List[lsp.Diagnostic]
+    _document: workspace.TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve organizing imports."""
     return [
@@ -421,7 +424,7 @@ def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.T
     codes=list(REPLACEMENTS.keys()),
 )
 def fix_with_replacement(
-    document: TextDocument, diagnostics: List[lsp.Diagnostic]
+    document: workspace.TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which basic string replacements."""
     return [
@@ -466,7 +469,7 @@ def _command_quick_fix(
 
 
 def _create_workspace_edits(
-    document: TextDocument, results: Optional[List[lsp.TextEdit]]
+    document: workspace.TextDocument, results: Optional[List[lsp.TextEdit]]
 ):
     return lsp.WorkspaceEdit(
         document_changes=[
@@ -632,7 +635,7 @@ def _get_settings_by_path(file_path: pathlib.Path):
     return setting_values[0]
 
 
-def _get_document_key(document: TextDocument):
+def _get_document_key(document: workspace.TextDocument):
     if WORKSPACE_SETTINGS:
         document_workspace = pathlib.Path(document.path)
         workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
@@ -647,7 +650,7 @@ def _get_document_key(document: TextDocument):
     return None
 
 
-def _get_settings_by_document(document: TextDocument | None):
+def _get_settings_by_document(document: workspace.TextDocument | None):
     if document is None or document.path is None:
         return list(WORKSPACE_SETTINGS.values())[0]
 
@@ -668,7 +671,9 @@ def _get_settings_by_document(document: TextDocument | None):
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
-def get_cwd(settings: Dict[str, Any], document: Optional[TextDocument]) -> str:
+def get_cwd(
+    settings: Dict[str, Any], document: Optional[workspace.TextDocument]
+) -> str:
     """Returns cwd for the given settings and document."""
     if settings["cwd"] == "${workspaceFolder}":
         return settings["workspaceFS"]
@@ -683,7 +688,7 @@ def get_cwd(settings: Dict[str, Any], document: Optional[TextDocument]) -> str:
 
 # pylint: disable=too-many-branches,too-many-statements
 def _run_tool_on_document(
-    document: TextDocument,
+    document: workspace.TextDocument,
     use_stdin: bool = False,
     extra_args: Optional[Sequence[str]] = None,
 ) -> utils.RunResult | None:

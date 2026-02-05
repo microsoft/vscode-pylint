@@ -76,7 +76,10 @@ function updateDisplayedScore(): void {
 export function updateScore(uri: string, score: number | undefined): void {
     if (score !== undefined) {
         _scoresByUri.set(uri, score);
-        updateDisplayedScore();
+        const activeUri = window.activeTextEditor?.document.uri.toString();
+        if (activeUri === uri) {
+            updateDisplayedScore();
+        }
     }
 }
 

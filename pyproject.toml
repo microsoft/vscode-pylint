@@ -32,6 +32,9 @@ multi_line_output = 3
 line_length = 99
 include_trailing_comma = true
 
+[tool.pylint.'MAIN']
+ignore-paths = ["src/test/python_tests/test_data"]
+
 [tool.pylint.'FORMAT']
 max-line-length=99
 

@@ -23,6 +23,7 @@ LSP_EXIT_TIMEOUT = 5000
 PUBLISH_DIAGNOSTICS = "textDocument/publishDiagnostics"
 WINDOW_LOG_MESSAGE = "window/logMessage"
 WINDOW_SHOW_MESSAGE = "window/showMessage"
+PYLINT_SCORE = "pylint/score"
 
 
 # pylint: disable=too-many-instance-attributes
@@ -65,6 +66,7 @@ class LspSession(MethodDispatcher):
             PUBLISH_DIAGNOSTICS: self._publish_diagnostics,
             WINDOW_SHOW_MESSAGE: self._window_show_message,
             WINDOW_LOG_MESSAGE: self._window_log_message,
+            PYLINT_SCORE: self._pylint_score,
         }
         self._endpoint = Endpoint(dispatcher, self._writer.write)
         self._thread_pool.submit(self._reader.listen, self._endpoint.consume)
@@ -190,6 +192,10 @@ class LspSession(MethodDispatcher):
         return self._handle_notification(
             WINDOW_SHOW_MESSAGE, window_show_message_params
         )
+
+    def _pylint_score(self, pylint_score_params):
+        """Internal handler for pylint score."""
+        return self._handle_notification(PYLINT_SCORE, pylint_score_params)
 
     def _handle_notification(self, notification_name, params):
         """Internal handler for notifications."""

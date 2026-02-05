@@ -731,7 +731,7 @@ def test_score_notification_on_open():
         diagnostics_done = Event()
         score_done = Event()
 
-        def _diag_handler(params):
+        def _diag_handler(_):
             diagnostics_done.set()
 
         def _score_handler(params):
@@ -771,7 +771,7 @@ def test_score_notification_on_save():
         diagnostics_done = Event()
         score_done = Event()
 
-        def _diag_handler(params):
+        def _diag_handler(_):
             diagnostics_done.set()
 
         def _score_handler(params):
@@ -804,14 +804,14 @@ def test_score_notification_has_correct_structure():
     """Test to ensure score notification contains uri and score fields."""
     contents = TEST_FILE_PATH.read_text(encoding="utf-8")
 
-    actual_score = None
+    actual_score: dict = {}
     with session.LspSession() as ls_session:
         ls_session.initialize()
 
         diagnostics_done = Event()
         score_done = Event()
 
-        def _diag_handler(params):
+        def _diag_handler(_):
             diagnostics_done.set()
 
         def _score_handler(params):
@@ -838,6 +838,7 @@ def test_score_notification_has_correct_structure():
         score_done.wait(TIMEOUT)
 
     # Verify the structure of the score notification
+    assert actual_score
     assert "uri" in actual_score
     assert "score" in actual_score
     assert actual_score["uri"] == TEST_FILE_URI

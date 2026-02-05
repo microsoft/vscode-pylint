@@ -213,10 +213,7 @@
                     "default": true,
                     "markdownDescription": "%settings.showScoreInStatusBar.description%",
                     "scope": "machine",
-                    "type": "boolean",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "type": "boolean"
                 }
             }
         },

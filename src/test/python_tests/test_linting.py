@@ -718,3 +718,128 @@ def test_enabled_setting(enabled):
         }
 
     assert_that(actual, is_(expected))
+
+
+def test_score_notification_on_open():
+    """Test to ensure score notification is sent on file open."""
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
+
+    actual_score = None
+    with session.LspSession() as ls_session:
+        ls_session.initialize()
+
+        diagnostics_done = Event()
+        score_done = Event()
+
+        def _diag_handler(_):
+            diagnostics_done.set()
+
+        def _score_handler(params):
+            nonlocal actual_score
+            actual_score = params
+            score_done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _diag_handler)
+        ls_session.set_notification_callback(session.PYLINT_SCORE, _score_handler)
+
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
+                }
+            }
+        )
+
+        # wait for notifications
+        diagnostics_done.wait(TIMEOUT)
+        score_done.wait(TIMEOUT)
+
+    assert_that(actual_score, is_({"uri": TEST_FILE_URI, "score": 0.0}))
+
+
+def test_score_notification_on_save():
+    """Test to ensure score notification is sent on file save."""
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
+
+    actual_score = None
+    with session.LspSession() as ls_session:
+        ls_session.initialize()
+
+        diagnostics_done = Event()
+        score_done = Event()
+
+        def _diag_handler(_):
+            diagnostics_done.set()
+
+        def _score_handler(params):
+            nonlocal actual_score
+            actual_score = params
+            score_done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _diag_handler)
+        ls_session.set_notification_callback(session.PYLINT_SCORE, _score_handler)
+
+        ls_session.notify_did_save(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
+                }
+            }
+        )
+
+        # wait for notifications
+        diagnostics_done.wait(TIMEOUT)
+        score_done.wait(TIMEOUT)
+
+    assert_that(actual_score, is_({"uri": TEST_FILE_URI, "score": 0.0}))
+
+
+def test_score_notification_has_correct_structure():
+    """Test to ensure score notification contains uri and score fields."""
+    contents = TEST_FILE_PATH.read_text(encoding="utf-8")
+
+    actual_score: dict = {}
+    with session.LspSession() as ls_session:
+        ls_session.initialize()
+
+        diagnostics_done = Event()
+        score_done = Event()
+
+        def _diag_handler(_):
+            diagnostics_done.set()
+
+        def _score_handler(params):
+            nonlocal actual_score
+            actual_score = params
+            score_done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _diag_handler)
+        ls_session.set_notification_callback(session.PYLINT_SCORE, _score_handler)
+
+        ls_session.notify_did_open(
+            {
+                "textDocument": {
+                    "uri": TEST_FILE_URI,
+                    "languageId": "python",
+                    "version": 1,
+                    "text": contents,
+                }
+            }
+        )
+
+        # wait for notifications
+        diagnostics_done.wait(TIMEOUT)
+        score_done.wait(TIMEOUT)
+
+    # Verify the structure of the score notification
+    assert actual_score
+    assert "uri" in actual_score
+    assert "score" in actual_score
+    assert actual_score["uri"] == TEST_FILE_URI
+    assert isinstance(actual_score["score"], (int, float))

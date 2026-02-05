@@ -104,7 +104,7 @@ export async function restartServer(
     traceInfo(`Server: Start requested.`);
     _disposables.push(
         newLSClient.onNotification('pylint/score', (params: { uri: string; score: number }) => {
-            updateScore(params.score);
+            updateScore(params.uri, params.score);
         }),
     );
     _disposables.push(

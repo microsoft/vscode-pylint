@@ -33,6 +33,7 @@ export function registerCommand(command: string, callback: (...args: any[]) => a
 }
 
 export const { onDidChangeConfiguration } = workspace;
+export const { onDidChangeActiveTextEditor } = window;
 
 export function isVirtualWorkspace(): boolean {
     const isVirtual = workspace.workspaceFolders && workspace.workspaceFolders.every((f) => f.uri.scheme !== 'file');

@@ -22,6 +22,11 @@ updates:
           - 'minor'
           - 'patch'
 
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+
   - package-ecosystem: 'pip'
     directory: '/src/test/python_tests'
     schedule:

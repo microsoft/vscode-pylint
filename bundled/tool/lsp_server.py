@@ -202,14 +202,14 @@ def _build_message_doc_url(code: str) -> str:
 def _parse_output(
     content: str,
     severity: Dict[str, str],
-) -> tuple[Sequence[lsp.Diagnostic], float]:
+) -> tuple[Sequence[lsp.Diagnostic], float | None]:
     """Parses linter messages and return LSP diagnostic object for each message."""
     diagnostics = []
     line_offset = 1
 
     json_content = json.loads(content)
     messages: List[Dict[str, Any]] = json_content.get("messages", [])
-    score: float = json_content.get("statistics", {}).get("score", 0.0)
+    score: float | None = json_content.get("statistics", {}).get("score", None)
     for data in messages:
         start = lsp.Position(
             line=int(data.get("line")) - line_offset,

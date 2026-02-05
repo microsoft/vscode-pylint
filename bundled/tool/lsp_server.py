@@ -157,7 +157,9 @@ def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
 
             # deep copy here to prevent accidentally updating global settings.
             settings = copy.deepcopy(_get_settings_by_document(document))
-            diagnostics, score = _parse_output(result.stdout, severity=settings["severity"])
+            diagnostics, score = _parse_output(
+                result.stdout, severity=settings["severity"]
+            )
             if score is not None:
                 LSP_SERVER.protocol.notify(
                     "pylint/score",

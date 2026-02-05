@@ -16,5 +16,6 @@
     "settings.showNotifications.off.description": "Never display a notification. Any errors or warning are still available in the logs.",
     "settings.showNotifications.onError.description": "Show notifications for errors.",
     "settings.showNotifications.onWarning.description": "Show notifications for errors and warnings.",
-    "settings.showNotifications.always.description": "Show all notifications."
+    "settings.showNotifications.always.description": "Show all notifications.",
+    "settings.showScoreInStatusBar.description": "Show the Pylint score in the VS Code status bar."
 }

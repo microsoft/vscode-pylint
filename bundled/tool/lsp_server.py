@@ -85,7 +85,7 @@ TOOL_DISPLAY = "Pylint"
 DOCUMENTATION_HOME = "https://pylint.readthedocs.io/en/latest/user_guide/messages"
 
 # Default arguments always passed to pylint.
-TOOL_ARGS = ["--reports=n", "--output-format=json"]
+TOOL_ARGS = ["--reports=n", "--output-format=json2"]
 
 # Minimum version of pylint supported.
 MIN_VERSION = "2.12.2"
@@ -157,7 +157,16 @@ def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
 
             # deep copy here to prevent accidentally updating global settings.
             settings = copy.deepcopy(_get_settings_by_document(document))
-            return list(_parse_output(result.stdout, severity=settings["severity"]))
+            diagnostics, score = _parse_output(result.stdout, severity=settings["severity"])
+            if score is not None:
+                LSP_SERVER.protocol.notify(
+                    "pylint/score",
+                    {
+                        "uri": document.uri,
+                        "score": score,
+                    },
+                )
+            return list(diagnostics)
     except Exception:  # pylint: disable=broad-except
         log_error(f"Linting failed with error:\r\n{traceback.format_exc()}")
     return []
@@ -191,13 +200,14 @@ def _build_message_doc_url(code: str) -> str:
 def _parse_output(
     content: str,
     severity: Dict[str, str],
-) -> Sequence[lsp.Diagnostic]:
+) -> tuple[Sequence[lsp.Diagnostic], float]:
     """Parses linter messages and return LSP diagnostic object for each message."""
     diagnostics = []
     line_offset = 1
 
     json_content = json.loads(content)
-    messages: List[Dict[str, Any]] = json_content
+    messages: List[Dict[str, Any]] = json_content.get("messages", [])
+    score: float = json_content.get("statistics", {}).get("score", 0.0)
     for data in messages:
         start = lsp.Position(
             line=int(data.get("line")) - line_offset,
@@ -217,7 +227,7 @@ def _parse_output(
             # points to.
             end = start
 
-        msg_id = data.get("message-id")
+        msg_id = data.get("messageId")
         code = f"{msg_id}:{data.get('symbol')}"
         documentation_url = _build_message_doc_url(code)
 
@@ -234,7 +244,7 @@ def _parse_output(
 
         diagnostics.append(diagnostic)
 
-    return diagnostics
+    return diagnostics, score
 
 
 # **********************************************************

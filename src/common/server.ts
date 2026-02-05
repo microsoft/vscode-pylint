@@ -15,7 +15,7 @@ import { traceError, traceInfo, traceVerbose } from './logging';
 import { getDebuggerPath } from './python';
 import { getExtensionSettings, getGlobalSettings, ISettings, isLintOnChangeEnabled } from './settings';
 import { getLSClientTraceLevel, getDocumentSelector } from './utilities';
-import { updateStatus } from './status';
+import { updateScore, updateStatus } from './status';
 
 export type IInitOptions = { settings: ISettings[]; globalSettings: ISettings };
 
@@ -102,6 +102,11 @@ export async function restartServer(
     });
 
     traceInfo(`Server: Start requested.`);
+    _disposables.push(
+        newLSClient.onNotification('pylint/score', (params: { uri: string; score: number }) => {
+            updateScore(params.score);
+        })
+    );
     _disposables.push(
         newLSClient.onDidChangeState((e) => {
             switch (e.newState) {

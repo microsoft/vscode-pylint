@@ -10,6 +10,8 @@ import {
     languages,
     LanguageStatusItem,
     LogOutputChannel,
+    StatusBarAlignment,
+    StatusBarItem,
     Uri,
     window,
     workspace,
@@ -47,4 +49,8 @@ export function getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined {
 
 export function createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem {
     return languages.createLanguageStatusItem(id, selector);
+}
+
+export function createStatusBarItem(id: string, alignment?: StatusBarAlignment, priority?: number): StatusBarItem {
+    return window.createStatusBarItem(id, alignment ?? StatusBarAlignment.Right, priority);
 }

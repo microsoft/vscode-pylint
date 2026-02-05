@@ -10,7 +10,7 @@ import { checkIfConfigurationChanged, getWorkspaceSettings, logLegacySettings } 
 import { loadServerDefaults } from './common/setup';
 import { getInterpreterFromSetting, getLSClientTraceLevel, getProjectRoot } from './common/utilities';
 import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';
-import { registerLanguageStatusItem, updateStatus } from './common/status';
+import { registerLanguageStatusItem, updateStatus, updateStatusBarVisibility } from './common/status';
 import { LS_SERVER_RESTART_DELAY, PYTHON_VERSION } from './common/constants';
 
 let lsClient: LanguageClient | undefined;
@@ -61,8 +61,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 updateStatus(vscode.l10n.t('Please select a Python interpreter.'), vscode.LanguageStatusSeverity.Error);
                 traceError(
                     'Python interpreter missing:\r\n' +
-                        '[Option 1] Select python interpreter using the ms-python.python (select interpreter command).\r\n' +
-                        `[Option 2] Set an interpreter using "${serverId}.interpreter" setting.\r\n`,
+                    '[Option 1] Select python interpreter using the ms-python.python (select interpreter command).\r\n' +
+                    `[Option 2] Set an interpreter using "${serverId}.interpreter" setting.\r\n`,
                     `Please use Python ${PYTHON_VERSION} or greater.`,
                 );
             } else {
@@ -86,6 +86,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         onDidChangeConfiguration(async (e: vscode.ConfigurationChangeEvent) => {
             if (checkIfConfigurationChanged(e, serverId)) {
                 await runServer();
+            }
+            if (e.affectsConfiguration(`${serverId}.showScoreInStatusBar`)) {
+                updateStatusBarVisibility();
             }
         }),
         registerLanguageStatusItem(serverId, serverName, `${serverId}.showLogs`),

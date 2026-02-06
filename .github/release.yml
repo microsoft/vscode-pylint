@@ -15,3 +15,7 @@ changelog:
     - title: Code Health
       labels:
         - 'debt'
+
+    - title: Dependencies
+      labels:
+        - 'dependencies'

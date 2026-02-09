@@ -18,6 +18,8 @@ updates:
     open-pull-requests-limit: 10
     groups:
       pip-minor-patch:
+        patterns:
+          - '*'
         update-types:
           - 'minor'
           - 'patch'
@@ -34,6 +36,8 @@ updates:
     open-pull-requests-limit: 10
     groups:
       pip-minor-patch:
+        patterns:
+          - '*'
         update-types:
           - 'minor'
           - 'patch'

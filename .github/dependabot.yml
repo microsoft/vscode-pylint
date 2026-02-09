@@ -23,6 +23,13 @@ updates:
     directory: '/'
     schedule:
       interval: 'weekly'
+    groups:
+      github-actions-minor-patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
 
   - package-ecosystem: 'pip'
     directory: '/src/test/python_tests'

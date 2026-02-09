@@ -248,7 +248,7 @@
         "mocha": "^10.4.0",
         "prettier": "^3.3.2",
         "sinon": "^18.0.0",
-        "ts-loader": "^9.5.1",
+        "ts-loader": "^9.5.4",
         "typemoq": "^2.1.0",
         "typescript": "^5.4.5",
         "webpack": "^5.92.0",

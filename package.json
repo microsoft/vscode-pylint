@@ -237,7 +237,7 @@
         "@types/mocha": "^10.0.6",
         "@types/node": "22.x",
         "@types/sinon": "^17.0.3",
-        "@types/vscode": "^1.74.0",
+        "@types/vscode": "^1.109.0",
         "@typescript-eslint/eslint-plugin": "^7.13.0",
         "@typescript-eslint/parser": "^7.13.0",
         "@vscode/test-electron": "^2.4.0",

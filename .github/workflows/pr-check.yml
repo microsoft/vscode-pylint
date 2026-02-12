@@ -116,6 +116,6 @@ jobs:
         shell: bash
 
       - name: Run TS tests
-        uses: GabrielBB/xvfb-action@v1.6
+        uses: GabrielBB/xvfb-action@v1.7
         with:
           run: npm run tests

@@ -15,27 +15,24 @@ suite('Config File Watcher Tests', () => {
         onDidDelete: sinon.SinonStub;
         dispose: sinon.SinonStub;
     };
-    let mockDisposable: vscode.Disposable;
+    let changeDisposable: { dispose: sinon.SinonStub };
+    let createDisposable: { dispose: sinon.SinonStub };
+    let deleteDisposable: { dispose: sinon.SinonStub };
     let onConfigChangedCallback: sinon.SinonStub;
 
     setup(() => {
+        // Create separate mock disposables for each event subscription
+        changeDisposable = { dispose: sinon.stub() };
+        createDisposable = { dispose: sinon.stub() };
+        deleteDisposable = { dispose: sinon.stub() };
+
         // Create mock watcher
         mockWatcher = {
-            onDidChange: sinon.stub(),
-            onDidCreate: sinon.stub(),
-            onDidDelete: sinon.stub(),
+            onDidChange: sinon.stub().returns(changeDisposable),
+            onDidCreate: sinon.stub().returns(createDisposable),
+            onDidDelete: sinon.stub().returns(deleteDisposable),
             dispose: sinon.stub(),
         };
-
-        // Create mock disposable
-        mockDisposable = {
-            dispose: sinon.stub(),
-        };
-
-        // Setup the event handlers to return mock disposables
-        mockWatcher.onDidChange.returns(mockDisposable);
-        mockWatcher.onDidCreate.returns(mockDisposable);
-        mockWatcher.onDidDelete.returns(mockDisposable);
 
         // Stub workspace.createFileSystemWatcher
         createFileSystemWatcherStub = sinon.stub(vscode.workspace, 'createFileSystemWatcher');
@@ -120,5 +117,29 @@ suite('Config File Watcher Tests', () => {
         watchers.forEach((watcher) => {
             assert.isDefined(watcher.dispose, 'Each watcher should have a dispose method');
         });
+    });
+
+    test('Should dispose all subscriptions and watcher on dispose', () => {
+        const watchers = createConfigFileWatchers(onConfigChangedCallback);
+
+        watchers[0].dispose();
+
+        assert.strictEqual(changeDisposable.dispose.callCount, 1, 'Change subscription should be disposed');
+        assert.strictEqual(createDisposable.dispose.callCount, 1, 'Create subscription should be disposed');
+        assert.strictEqual(deleteDisposable.dispose.callCount, 1, 'Delete subscription should be disposed');
+        assert.strictEqual(mockWatcher.dispose.callCount, 1, 'Watcher should be disposed');
+    });
+
+    test('Should not call callback after dispose', () => {
+        const watchers = createConfigFileWatchers(onConfigChangedCallback);
+
+        // Dispose the watcher
+        watchers[0].dispose();
+
+        // Get the handlers and call them after disposal
+        const changeHandler = mockWatcher.onDidChange.getCall(0).args[0];
+        changeHandler();
+
+        assert.strictEqual(onConfigChangedCallback.callCount, 0, 'Callback should not be called after dispose');
     });
 });

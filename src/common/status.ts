@@ -67,6 +67,12 @@ function updateDisplayedScore(score: number | undefined, loading?: boolean): voi
         return;
     }
 
+    if (score === -1) {
+        _statusBarItem.text = '$(error) Pylint';
+        _statusBarItem.tooltip = l10n.t('Linting failed. Check logs for details.');
+        return;
+    }
+
     const scoreText = score !== undefined ? `Pylint: ${score.toFixed(2)}/10` : 'Pylint';
     const statusBarText = score !== undefined ? `$(checklist) ${scoreText}` : '$(checklist) Pylint';
     _statusBarItem.tooltip = scoreText;

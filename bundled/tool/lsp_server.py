@@ -143,6 +143,13 @@ if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
 
 def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
     try:
+        # Notify the client that linting has started for this document.
+        LSP_SERVER.protocol.notify(
+            "pylint/lintingStarted",
+            {
+                "uri": document.uri,
+            },
+        )
         extra_args = []
 
         code_workspace = _get_settings_by_document(document)["workspaceFS"]
@@ -160,17 +167,20 @@ def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
             diagnostics, score = _parse_output(
                 result.stdout, severity=settings["severity"]
             )
-            if score is not None:
-                LSP_SERVER.protocol.notify(
-                    "pylint/score",
-                    {
-                        "uri": document.uri,
-                        "score": score,
-                    },
-                )
+            LSP_SERVER.protocol.notify(
+                "pylint/score",
+                {
+                    "uri": document.uri,
+                    "score": score if score is not None else 0.0,
+                },
+            )
             return list(diagnostics)
     except Exception:  # pylint: disable=broad-except
         log_error(f"Linting failed with error:\r\n{traceback.format_exc()}")
+        LSP_SERVER.protocol.notify(
+            "pylint/lintingFailed",
+            {"uri": document.uri},
+        )
     return []
 
 

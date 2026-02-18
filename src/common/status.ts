@@ -29,7 +29,8 @@ export function registerLanguageStatusItem(id: string, name: string, command: st
 
     _disposables.push(
         onDidChangeActiveTextEditor(() => {
-            updateDisplayedScore();
+            const uri = window.activeTextEditor?.document.uri.toString();
+            updateDisplayedScore(_scoresByUri.get(uri ?? ''));
         }),
     );
 
@@ -55,31 +56,34 @@ export function updateStatusBarVisibility(): void {
     }
 }
 
-function updateDisplayedScore(): void {
-    const activeUri = window.activeTextEditor?.document.uri.toString();
-    const score = _scoresByUri.get(activeUri ?? '');
+function updateDisplayedScore(score: number | undefined, loading?: boolean): void {
+    if (!_statusBarItem) {
+        return;
+    }
+
+    if (loading) {
+        _statusBarItem.text = '$(sync~spin) Pylint';
+        _statusBarItem.tooltip = l10n.t('Linting in progress...');
+        return;
+    }
 
     const scoreText = score !== undefined ? `Pylint: ${score.toFixed(2)}/10` : 'Pylint';
     const statusBarText = score !== undefined ? `$(checklist) ${scoreText}` : '$(checklist) Pylint';
-
-    if (_status) {
-        _status.text = scoreText;
-        _status.detail = score !== undefined ? scoreText : undefined;
-    }
-
-    if (_statusBarItem) {
-        _statusBarItem.text = statusBarText;
-        _statusBarItem.tooltip = scoreText;
-    }
+    _statusBarItem.tooltip = scoreText;
+    _statusBarItem.text = statusBarText;
 }
 
 export function updateScore(uri: string, score: number | undefined): void {
+    const activeUri = window.activeTextEditor?.document.uri.toString();
     if (score !== undefined) {
+        // Linting completed for the document, update the score.
         _scoresByUri.set(uri, score);
-        const activeUri = window.activeTextEditor?.document.uri.toString();
         if (activeUri === uri) {
-            updateDisplayedScore();
+            updateDisplayedScore(score);
         }
+    } else if (activeUri === uri) {
+        // Linting started for the document, show loading state.
+        updateDisplayedScore(undefined, true);
     }
 }
 

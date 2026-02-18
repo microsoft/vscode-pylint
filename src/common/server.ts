@@ -108,6 +108,11 @@ export async function restartServer(
         }),
     );
     _disposables.push(
+        newLSClient.onNotification('pylint/lintingStarted', (params: { uri: string }) => {
+            updateScore(params.uri, undefined);
+        }),
+    );
+    _disposables.push(
         newLSClient.onDidChangeState((e) => {
             switch (e.newState) {
                 case State.Stopped:

@@ -143,6 +143,13 @@ if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
 
 def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
     try:
+        # Notify the client that linting has started for this document.
+        LSP_SERVER.protocol.notify(
+            "pylint/lintingStarted",
+            {
+                "uri": document.uri,
+            },
+        )
         extra_args = []
 
         code_workspace = _get_settings_by_document(document)["workspaceFS"]

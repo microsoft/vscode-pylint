@@ -167,14 +167,13 @@ def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
             diagnostics, score = _parse_output(
                 result.stdout, severity=settings["severity"]
             )
-            if score is not None:
-                LSP_SERVER.protocol.notify(
-                    "pylint/score",
-                    {
-                        "uri": document.uri,
-                        "score": score,
-                    },
-                )
+            LSP_SERVER.protocol.notify(
+                "pylint/score",
+                {
+                    "uri": document.uri,
+                    "score": score if score is not None else 0.0,
+                },
+            )
             return list(diagnostics)
     except Exception:  # pylint: disable=broad-except
         log_error(f"Linting failed with error:\r\n{traceback.format_exc()}")

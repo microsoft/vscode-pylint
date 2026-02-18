@@ -180,9 +180,7 @@ def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
         log_error(f"Linting failed with error:\r\n{traceback.format_exc()}")
         LSP_SERVER.protocol.notify(
             "pylint/lintingFailed",
-            {
-                "uri": document.uri
-            },
+            {"uri": document.uri},
         )
     return []
 

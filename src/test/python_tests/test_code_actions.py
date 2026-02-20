@@ -259,6 +259,114 @@ for city, population in data:
             """for city, population in data.items():
 """,
         ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt') as f:
+    content = f.read()
+""",
+            """with open('file.txt', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'r') as f:
+    content = f.read()
+""",
+            """with open('file.txt', 'r', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'w') as f:
+    f.write('Hello, world!')
+""",
+            """with open('file.txt', 'w', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'a') as f:
+    f.write('Hello, world!')
+""",
+            """with open('file.txt', 'a', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'x') as f:
+    f.write('Hello, world!')
+""",
+            """with open('file.txt', 'x', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'x+') as f:
+    f.write('Hello, world!')
+""",
+            """with open('file.txt', 'x+', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'rt') as f:
+    content = f.read()
+""",
+            """with open('file.txt', 'rt', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'wt') as f:
+    f.write('Hello, world!')
+""",
+            """with open('file.txt', 'wt', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'at') as f:
+    f.write('Hello, world!')
+""",
+            """with open('file.txt', 'at', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'rt+') as f:
+    content = f.read()
+""",
+            """with open('file.txt', 'rt+', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'wt+') as f:
+    f.write('Hello, world!')
+""",
+            """with open('file.txt', 'wt+', encoding='utf-8') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('file.txt', 'at+') as f:
+    f.write('Hello, world!')
+""",
+            """with open('file.txt', 'at+', encoding='utf-8') as f:
+""",
+        ),
     ],
 )
 def test_edit_code_action(code, contents, new_text):

@@ -217,6 +217,57 @@ suite('Settings Tests', () => {
             pythonConfigMock.verifyAll();
         });
 
+        test('nearestConfig cwd passes through without resolution', async () => {
+            configMock
+                .setup((c) => c.get<string[]>('args', []))
+                .returns(() => [])
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
+                .setup((c) => c.get('cwd', TypeMoq.It.isAnyString()))
+                .returns(() => '${nearestConfig}')
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
+                .setup((c) => c.get<string[]>('path', []))
+                .returns(() => [])
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
+                .setup((c) => c.get('severity', DEFAULT_SEVERITY))
+                .returns(() => DEFAULT_SEVERITY)
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
+                .setup((c) => c.get('importStrategy', 'useBundled'))
+                .returns(() => 'useBundled')
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
+                .setup((c) => c.get('showNotifications', 'off'))
+                .returns(() => 'off')
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            configMock
+                .setup((c) => c.get('ignorePatterns', []))
+                .returns(() => [])
+                .verifiable(TypeMoq.Times.atLeastOnce());
+
+            pythonConfigMock
+                .setup((c) => c.get('linting.pylintArgs', []))
+                .returns(() => [])
+                .verifiable(TypeMoq.Times.never());
+            pythonConfigMock
+                .setup((c) => c.get('linting.pylintPath', ''))
+                .returns(() => 'pylint')
+                .verifiable(TypeMoq.Times.never());
+            pythonConfigMock
+                .setup((c) => c.get('analysis.extraPaths', []))
+                .returns(() => [])
+                .verifiable(TypeMoq.Times.atLeastOnce());
+
+            const settings: ISettings = await getWorkspaceSettings('pylint', workspace1);
+
+            assert.deepStrictEqual(settings.cwd, '${nearestConfig}');
+
+            configMock.verifyAll();
+            pythonConfigMock.verifyAll();
+        });
+
         test('Legacy Settings test', async () => {
             configMock
                 .setup((c) => c.get('args', []))

@@ -705,6 +705,22 @@ def get_cwd(
             return os.fspath(pathlib.Path(document.path).parent)
         return settings["workspaceFS"]
 
+    if settings["cwd"] == "${nearestConfig}":
+        if document is not None:
+            workspace_folder = pathlib.Path(settings["workspaceFS"])
+            candidate = pathlib.Path(document.path).parent
+            check_for = [".pylintrc", "pyproject.toml", "setup.cfg"]
+            while candidate.is_relative_to(workspace_folder):
+                for name in check_for:
+                    candidate_file = candidate / name
+                    if candidate_file.is_file():
+                        log_warning(
+                            f"Found {name}, using {candidate} as cwd"
+                        )
+                        return os.fspath(candidate)
+                candidate = candidate.parent
+        return settings["workspaceFS"]
+
     return settings["cwd"]
 
 

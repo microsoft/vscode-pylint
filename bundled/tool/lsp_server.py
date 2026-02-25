@@ -659,15 +659,17 @@ def _get_settings_by_path(file_path: pathlib.Path):
 
 def _get_document_key(document: workspace.TextDocument):
     if WORKSPACE_SETTINGS:
-        current_path = pathlib.Path(document.path).resolve()
+        document_workspace = pathlib.Path(document.path)
         workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
 
         # Find workspace settings for the given file.
-        while current_path != current_path.parent:
-            norm_path = utils.normalize_path(current_path)
+        # normalize_path() already resolves symlinks for comparison,
+        # so we traverse the apparent path structure (what VS Code sees).
+        while document_workspace != document_workspace.parent:
+            norm_path = utils.normalize_path(document_workspace)
             if norm_path in workspaces:
                 return norm_path
-            current_path = current_path.parent
+            document_workspace = document_workspace.parent
 
     return None
 

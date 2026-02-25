@@ -192,10 +192,16 @@ export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespa
         `${namespace}.showNotifications`,
         `${namespace}.ignorePatterns`,
         `${namespace}.lintOnChange`,
+        `${namespace}.serverEnabled`,
         'python.analysis.extraPaths',
     ];
     const changed = settings.map((s) => e.affectsConfiguration(s));
     return changed.includes(true);
+}
+
+export function getServerEnabled(namespace: string): boolean {
+    const config = getConfiguration(namespace);
+    return config.get<boolean>('serverEnabled', true);
 }
 
 export function logLegacySettings(): void {

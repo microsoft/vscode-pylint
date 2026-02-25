@@ -7,7 +7,7 @@ import { createConfigFileWatchers } from './common/configWatcher';
 import { registerLogger, traceError, traceLog, traceVerbose } from './common/logging';
 import { initializePython, onDidChangePythonInterpreter } from './common/python';
 import { restartServer } from './common/server';
-import { checkIfConfigurationChanged, getWorkspaceSettings, logLegacySettings } from './common/settings';
+import { checkIfConfigurationChanged, getServerEnabled, getWorkspaceSettings, logLegacySettings } from './common/settings';
 import { loadServerDefaults } from './common/setup';
 import { getInterpreterFromSetting, getLSClientTraceLevel, getProjectRoot } from './common/utilities';
 import { createOutputChannel, onDidChangeConfiguration, registerCommand } from './common/vscodeapi';
@@ -56,6 +56,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }
         isRestarting = true;
         try {
+            if (!getServerEnabled(serverId)) {
+                if (lsClient) {
+                    try {
+                        await lsClient.stop();
+                    } catch (ex) {
+                        traceError(`Server: Stop failed: ${ex}`);
+                    }
+                    lsClient = undefined;
+                }
+                return;
+            }
+
             const projectRoot = await getProjectRoot();
             const workspaceSetting = await getWorkspaceSettings(serverId, projectRoot, true);
             if (workspaceSetting.interpreter.length === 0) {

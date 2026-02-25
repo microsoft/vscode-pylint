@@ -659,15 +659,15 @@ def _get_settings_by_path(file_path: pathlib.Path):
 
 def _get_document_key(document: workspace.TextDocument):
     if WORKSPACE_SETTINGS:
-        document_workspace = pathlib.Path(document.path)
+        current_path = pathlib.Path(document.path).resolve()
         workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
 
         # Find workspace settings for the given file.
-        while document_workspace != document_workspace.parent:
-            norm_path = utils.normalize_path(document_workspace)
+        while current_path != current_path.parent:
+            norm_path = utils.normalize_path(current_path)
             if norm_path in workspaces:
                 return norm_path
-            document_workspace = document_workspace.parent
+            current_path = current_path.parent
 
     return None
 

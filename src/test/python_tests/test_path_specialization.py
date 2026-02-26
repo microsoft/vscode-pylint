@@ -251,10 +251,16 @@ def test_is_same_path_with_symlinks():
         # The string paths are different
         assert real_file_path != symlink_file_path
 
-        # But is_same_path should identify them as the same file
+        # But is_same_path with resolve_paths=True should identify them as the same file
         assert_that(
-            lsp_utils.is_same_path(real_file_path, symlink_file_path), is_(True)
+            lsp_utils.is_same_path(
+                real_file_path, symlink_file_path, resolve_paths=True
+            ),
+            is_(True),
         )
         assert_that(
-            lsp_utils.is_same_path(symlink_file_path, real_file_path), is_(True)
+            lsp_utils.is_same_path(
+                symlink_file_path, real_file_path, resolve_paths=True
+            ),
+            is_(True),
         )

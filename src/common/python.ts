@@ -37,11 +37,21 @@ async function getEnvironmentsExtensionAPI(): Promise<PythonEnvironmentsAPI | un
     if (!extension) {
         return undefined;
     }
-    if (!extension.isActive) {
-        await extension.activate();
+    try {
+        if (!extension.isActive) {
+            await extension.activate();
+        }
+        const exports = extension.exports;
+        if (!exports) {
+            traceError('Python environments extension did not provide any exports.');
+            return undefined;
+        }
+        _envsApi = exports as PythonEnvironmentsAPI;
+        return _envsApi;
+    } catch (ex) {
+        traceError('Failed to activate or retrieve API from Python environments extension.', ex as Error);
+        return undefined;
     }
-    _envsApi = extension.exports as PythonEnvironmentsAPI;
-    return _envsApi;
 }
 
 function sameInterpreter(a: string[], b: string[]): boolean {

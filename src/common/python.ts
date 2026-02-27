@@ -5,7 +5,7 @@
 import { commands, Disposable, Event, EventEmitter, extensions, Uri } from 'vscode';
 import { traceError, traceLog } from './logging';
 import { PythonExtension, ResolvedEnvironment } from '@vscode/python-extension';
-import { PythonEnvironmentsAPI } from '../typings/pythonEnvironments';
+import { PythonEnvironment, PythonEnvironmentsAPI } from '../typings/pythonEnvironments';
 import { PYTHON_MAJOR, PYTHON_MINOR, PYTHON_VERSION } from './constants';
 import { getProjectRoot } from './utilities';
 
@@ -116,7 +116,19 @@ export async function initializePython(disposables: Disposable[]): Promise<void>
     }
 }
 
-export async function resolveInterpreter(interpreter: string[]): Promise<ResolvedEnvironment | undefined> {
+export async function resolveInterpreter(
+    interpreter: string[],
+): Promise<ResolvedEnvironment | PythonEnvironment | undefined> {
+    // Prefer the Python Environments extension if it's available
+    const envsApi = await getEnvironmentsExtensionAPI();
+    if (envsApi) {
+        const environment = await envsApi.getEnvironment(undefined);
+        if (environment && environment.execInfo.run.executable === interpreter[0]) {
+            return environment;
+        }
+    }
+
+    // Fall back to legacy ms-python.python extension API
     const api = await getPythonExtensionAPI();
     return api?.environments.resolveEnvironment(interpreter[0]);
 }

@@ -23,7 +23,7 @@
 #
 # When a new issue is opened — or when a maintainer comments `/triage-issue` on an existing issue — analyze its root cause, check whether the same issue could affect other extensions built from the microsoft/vscode-python-tools-extension-template, and look for related open issues on the upstream Pylint repository (pylint-dev/pylint). If applicable, suggest an upstream fix and surface relevant Pylint issues to the reporter.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"01c86a15fb88447345d877394fabbd136049afdca827ca1314574d8951d67461","compiler_version":"v0.47.5"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"f99ea71ec90919b6d45172e8870660a3cb83a50e66ad591b7a4eac01d29ed3f2","compiler_version":"v0.47.5"}
 
 name: 'Issue Triage'
 'on':
@@ -908,6 +908,7 @@ jobs:
           GH_AW_WORKFLOW_ID: 'issue-triage'
           GH_AW_SECRET_VERIFICATION_RESULT: ${{ needs.agent.outputs.secret_verification_result }}
           GH_AW_CHECKOUT_PR_SUCCESS: ${{ needs.agent.outputs.checkout_pr_success }}
+          GH_AW_SAFE_OUTPUT_MESSAGES: '{"runStarted":"⏳ **Triage Issue Agent**: I will analyze this issue and determine if related issues exist in this repo, the upstream Python tool, or similar extensions. This may take a couple of minutes."}'
           GH_AW_GROUP_REPORTS: 'false'
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
@@ -1068,6 +1069,7 @@ jobs:
     timeout-minutes: 15
     env:
       GH_AW_ENGINE_ID: 'copilot'
+      GH_AW_SAFE_OUTPUT_MESSAGES: '{"runStarted":"⏳ **Triage Issue Agent**: I will analyze this issue and determine if related issues exist in this repo, the upstream Python tool, or similar extensions. This may take a couple of minutes."}'
       GH_AW_WORKFLOW_ID: 'issue-triage'
       GH_AW_WORKFLOW_NAME: 'Issue Triage'
     outputs:

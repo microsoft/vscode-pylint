@@ -13,7 +13,7 @@ import types
 # full VS Code extension environment.
 # ---------------------------------------------------------------------------
 def _setup_mocks():
-    class _MockLS:
+    class _MockLS:  # pylint: disable=unused-argument, missing-function-docstring
         def __init__(self, **kwargs):
             pass
 
@@ -168,41 +168,49 @@ DOC = _make_doc(DOC_PATH)
 
 
 def test_file_resolved():
+    """${file} resolves to the full document path."""
     settings = _make_settings(cwd="${file}")
     assert lsp_server.get_cwd(settings, DOC) == DOC_PATH
 
 
 def test_file_basename_resolved():
+    """${fileBasename} resolves to just the file name."""
     settings = _make_settings(cwd="${fileBasename}")
     assert lsp_server.get_cwd(settings, DOC) == "foo.py"
 
 
 def test_file_basename_no_extension_resolved():
+    """${fileBasenameNoExtension} resolves to the file name without extension."""
     settings = _make_settings(cwd="${fileBasenameNoExtension}")
     assert lsp_server.get_cwd(settings, DOC) == "foo"
 
 
 def test_file_extname_resolved():
+    """${fileExtname} resolves to the file extension."""
     settings = _make_settings(cwd="${fileExtname}")
     assert lsp_server.get_cwd(settings, DOC) == ".py"
 
 
 def test_file_dirname_resolved():
+    """${fileDirname} resolves to the directory containing the file."""
     settings = _make_settings(cwd="${fileDirname}")
     assert lsp_server.get_cwd(settings, DOC) == "/home/user/myproject/src"
 
 
 def test_file_dirname_basename_resolved():
+    """${fileDirnameBasename} resolves to the name of the parent directory."""
     settings = _make_settings(cwd="${fileDirnameBasename}")
     assert lsp_server.get_cwd(settings, DOC) == "src"
 
 
 def test_relative_file_resolved():
+    """${relativeFile} resolves to the workspace-relative file path."""
     settings = _make_settings(cwd="${relativeFile}")
     assert lsp_server.get_cwd(settings, DOC) == os.path.relpath(DOC_PATH, WORKSPACE)
 
 
 def test_relative_file_dirname_resolved():
+    """${relativeFileDirname} resolves to the workspace-relative directory."""
     settings = _make_settings(cwd="${relativeFileDirname}")
     assert lsp_server.get_cwd(settings, DOC) == os.path.relpath(
         "/home/user/myproject/src", WORKSPACE
@@ -210,6 +218,7 @@ def test_relative_file_dirname_resolved():
 
 
 def test_file_workspace_folder_resolved():
+    """${fileWorkspaceFolder} resolves to the workspace root."""
     settings = _make_settings(cwd="${fileWorkspaceFolder}")
     assert lsp_server.get_cwd(settings, DOC) == WORKSPACE
 

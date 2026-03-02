@@ -23,7 +23,7 @@
 #
 # When a new issue is opened — or when a maintainer comments `/triage-issue` on an existing issue — analyze its root cause, check whether the same issue could affect other extensions built from the microsoft/vscode-python-tools-extension-template, and look for related open issues on the upstream Pylint repository (pylint-dev/pylint). If applicable, suggest an upstream fix and surface relevant Pylint issues to the reporter.
 #
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"01c86a15fb88447345d877394fabbd136049afdca827ca1314574d8951d67461","compiler_version":"v0.47.5"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"f99ea71ec90919b6d45172e8870660a3cb83a50e66ad591b7a4eac01d29ed3f2","compiler_version":"v0.47.5"}
 
 name: 'Issue Triage'
 'on':
@@ -56,7 +56,7 @@ jobs:
       title: ${{ steps.sanitized.outputs.title }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@9450254bc994da0d6a346ce438a4b3764f01c456 # v0.47.5
+        uses: github/gh-aw/actions/setup@90ebf8057e8e005103b8d123732d2c64c30e9b27 # v0.50.4
         with:
           destination: /opt/gh-aw/actions
       - name: Validate context variables
@@ -285,7 +285,7 @@ jobs:
       secret_verification_result: ${{ steps.validate-secret.outputs.verification_result }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@9450254bc994da0d6a346ce438a4b3764f01c456 # v0.47.5
+        uses: github/gh-aw/actions/setup@90ebf8057e8e005103b8d123732d2c64c30e9b27 # v0.50.4
         with:
           destination: /opt/gh-aw/actions
       - name: Create gh-aw temp directory
@@ -672,7 +672,7 @@ jobs:
             const { generateWorkflowOverview } = require('/opt/gh-aw/actions/generate_workflow_overview.cjs');
             await generateWorkflowOverview(core);
       - name: Download prompt artifact
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: prompt
           path: /tmp/gh-aw/aw-prompts
@@ -856,12 +856,12 @@ jobs:
       total_count: ${{ steps.missing_tool.outputs.total_count }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@9450254bc994da0d6a346ce438a4b3764f01c456 # v0.47.5
+        uses: github/gh-aw/actions/setup@90ebf8057e8e005103b8d123732d2c64c30e9b27 # v0.50.4
         with:
           destination: /opt/gh-aw/actions
       - name: Download agent output artifact
         continue-on-error: true
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: agent-output
           path: /tmp/gh-aw/safeoutputs/
@@ -908,6 +908,7 @@ jobs:
           GH_AW_WORKFLOW_ID: 'issue-triage'
           GH_AW_SECRET_VERIFICATION_RESULT: ${{ needs.agent.outputs.secret_verification_result }}
           GH_AW_CHECKOUT_PR_SUCCESS: ${{ needs.agent.outputs.checkout_pr_success }}
+          GH_AW_SAFE_OUTPUT_MESSAGES: '{"runStarted":"⏳ **Triage Issue Agent**: I will analyze this issue and determine if related issues exist in this repo, the upstream Python tool, or similar extensions. This may take a couple of minutes."}'
           GH_AW_GROUP_REPORTS: 'false'
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
@@ -944,18 +945,18 @@ jobs:
       success: ${{ steps.parse_results.outputs.success }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@9450254bc994da0d6a346ce438a4b3764f01c456 # v0.47.5
+        uses: github/gh-aw/actions/setup@90ebf8057e8e005103b8d123732d2c64c30e9b27 # v0.50.4
         with:
           destination: /opt/gh-aw/actions
       - name: Download agent artifacts
         continue-on-error: true
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: agent-artifacts
           path: /tmp/gh-aw/threat-detection/
       - name: Download agent output artifact
         continue-on-error: true
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: agent-output
           path: /tmp/gh-aw/threat-detection/
@@ -1039,7 +1040,7 @@ jobs:
       activated: ${{ steps.check_membership.outputs.is_team_member == 'true' }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@9450254bc994da0d6a346ce438a4b3764f01c456 # v0.47.5
+        uses: github/gh-aw/actions/setup@90ebf8057e8e005103b8d123732d2c64c30e9b27 # v0.50.4
         with:
           destination: /opt/gh-aw/actions
       - name: Check team membership for workflow
@@ -1068,6 +1069,7 @@ jobs:
     timeout-minutes: 15
     env:
       GH_AW_ENGINE_ID: 'copilot'
+      GH_AW_SAFE_OUTPUT_MESSAGES: '{"runStarted":"⏳ **Triage Issue Agent**: I will analyze this issue and determine if related issues exist in this repo, the upstream Python tool, or similar extensions. This may take a couple of minutes."}'
       GH_AW_WORKFLOW_ID: 'issue-triage'
       GH_AW_WORKFLOW_NAME: 'Issue Triage'
     outputs:
@@ -1077,12 +1079,12 @@ jobs:
       process_safe_outputs_temporary_id_map: ${{ steps.process_safe_outputs.outputs.temporary_id_map }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw/actions/setup@9450254bc994da0d6a346ce438a4b3764f01c456 # v0.47.5
+        uses: github/gh-aw/actions/setup@90ebf8057e8e005103b8d123732d2c64c30e9b27 # v0.50.4
         with:
           destination: /opt/gh-aw/actions
       - name: Download agent output artifact
         continue-on-error: true
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: agent-output
           path: /tmp/gh-aw/safeoutputs/

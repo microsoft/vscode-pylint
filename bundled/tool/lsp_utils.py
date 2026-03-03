@@ -7,6 +7,7 @@ from __future__ import annotations
 import contextlib
 import fnmatch
 import io
+import logging
 import os
 import os.path
 import pathlib
@@ -155,9 +156,21 @@ def redirect_io(stream: str, new_stream):
 @contextlib.contextmanager
 def change_cwd(new_cwd):
     """Change working directory before running code."""
-    os.chdir(new_cwd)
-    yield
-    os.chdir(SERVER_CWD)
+    try:
+        os.chdir(new_cwd)
+    except OSError as e:
+        logging.warning(
+            "Failed to change directory to %r, running in %r instead: %s",
+            new_cwd,
+            SERVER_CWD,
+            e,
+        )
+        yield
+        return
+    try:
+        yield
+    finally:
+        os.chdir(SERVER_CWD)
 
 
 class LSPServerError(Exception):

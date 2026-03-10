@@ -69,6 +69,7 @@ import lsp_utils as utils
 from lsprotocol import types as lsp
 from pygls import uris, workspace
 from pygls.lsp.server import LanguageServer
+from pygls.workspace import TextDocument
 
 WORKSPACE_SETTINGS = {}
 GLOBAL_SETTINGS = {}
@@ -100,7 +101,7 @@ LSP_SERVER = LanguageServer(
 )
 
 
-def _get_document_path(document: workspace.TextDocument) -> str:
+def _get_document_path(document: TextDocument) -> str:
     """Returns the filesystem path for a document.
 
     Examples:

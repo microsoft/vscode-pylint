@@ -665,6 +665,8 @@ def _get_document_key(document: workspace.TextDocument):
         workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
 
         # Find workspace settings for the given file.
+        # normalize_path() already resolves symlinks for comparison,
+        # so we traverse the apparent path structure (what VS Code sees).
         while document_workspace != document_workspace.parent:
             norm_path = utils.normalize_path(document_workspace)
             if norm_path in workspaces:
@@ -751,7 +753,23 @@ def get_cwd(
         if "${file" in cwd or "${relativeFile" in cwd:
             cwd = workspace_fs
 
-    return cwd
+    if settings["cwd"] == "${nearestConfig}":
+        if document is not None:
+            workspace_folder = pathlib.Path(settings["workspaceFS"])
+            candidate = pathlib.Path(document.path).parent
+            check_for = [".pylintrc", "pyproject.toml", "setup.cfg"]
+            while candidate.is_relative_to(workspace_folder):
+                for name in check_for:
+                    candidate_file = candidate / name
+                    if candidate_file.is_file():
+                        log_warning(
+                            f"Found {name}, using {candidate} as cwd"
+                        )
+                        return os.fspath(candidate)
+                candidate = candidate.parent
+        return settings["workspaceFS"]
+
+    return settings["cwd"]
 
 
 # pylint: disable=too-many-branches,too-many-statements

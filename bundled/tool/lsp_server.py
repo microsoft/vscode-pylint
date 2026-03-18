@@ -247,7 +247,7 @@ def _lint_notebook_cell(cell_uri: str) -> None:
     if document is None:
         return
     # Update path as pygls generates an invalid path.
-    # TODO: Remove when fixed.
+    # TODO: Remove when fixed. # pylint: disable=fixme
     document.path = _get_document_path(cell_uri)
     # Linting is only supported for python cells in notebooks.
     if document.language_id != "python":

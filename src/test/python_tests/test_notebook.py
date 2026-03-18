@@ -174,7 +174,8 @@ def test_notebook_did_change_text_content():
 
         def _change_handler(params):
             received.append(params)
-            done.set()
+            if params.get("uri") == code_cell_uri:
+                done.set()
 
         ls_session.set_notification_callback(
             session.PUBLISH_DIAGNOSTICS, _change_handler
@@ -261,7 +262,8 @@ def test_notebook_did_save():
 
         def _save_handler(params):
             received.append(params)
-            done.set()
+            if params.get("uri") == code_cell_uri:
+                done.set()
 
         ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _save_handler)
 

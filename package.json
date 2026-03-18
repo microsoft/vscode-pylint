@@ -228,7 +228,7 @@
         ]
     },
     "dependencies": {
-        "@vscode/python-environments": "^1.0.0",
+        "@vscode/python-environments": "https://pkgs.dev.azure.com/azure-public/vside/_packaging/msft_consumption/npm/registry/@vscode/python-environments/-/python-environments-1.0.0.tgz",
         "@vscode/python-extension": "^1.0.6",
         "fs-extra": "^11.3.4",
         "semver": "^7.7.4",
@@ -243,8 +243,8 @@
         "@types/semver": "^7.7.1",
         "@types/sinon": "^17.0.3",
         "@types/vscode": "^1.74.0",
-        "@typescript-eslint/eslint-plugin": "^7.13.0",
-        "@typescript-eslint/parser": "^7.13.0",
+        "@typescript-eslint/eslint-plugin": "^8.57.0",
+        "@typescript-eslint/parser": "^8.57.0",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.7.1-1",
         "chai": "^4.5.0",

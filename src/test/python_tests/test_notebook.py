@@ -463,15 +463,15 @@ def test_notebook_cell_reports_specific_error():
         assert (
             "Unused import os" in diag["message"]
         ), f"Unexpected message: {diag['message']!r}"
-        assert diag["severity"] == 2, (
-            f"Expected severity 2 (Warning), got {diag['severity']}"
-        )
+        assert (
+            diag["severity"] == 2
+        ), f"Expected severity 2 (Warning), got {diag['severity']}"
         assert (
             diag["source"] == LINTER["name"]
         ), f"Expected source {LINTER['name']!r}, got {diag['source']!r}"
-        assert diag["range"]["start"]["line"] == 0, (
-            f"Expected error on line 0, got {diag['range']}"
-        )
-        assert diag["range"]["start"]["character"] == 0, (
-            f"Expected error at character 0, got {diag['range']}"
-        )
+        assert (
+            diag["range"]["start"]["line"] == 0
+        ), f"Expected error on line 0, got {diag['range']}"
+        assert (
+            diag["range"]["start"]["character"] == 0
+        ), f"Expected error at character 0, got {diag['range']}"

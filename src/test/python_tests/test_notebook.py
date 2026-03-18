@@ -102,7 +102,8 @@ def test_notebook_did_open():
 
         def _handler(params):
             received.append(params)
-            done.set()
+            if params.get("uri") == code_cell_uri:
+                done.set()
 
         ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
 
@@ -131,10 +132,25 @@ def test_notebook_did_change_text_content():
     nb_uri, cells, cell_text_documents = _load_notebook(nb_path)
     code_cell_uri = cell_text_documents[0]["uri"]
 
+    # Count how many code cells will produce diagnostics on open.
+    expected_open_count = sum(
+        1 for d in cell_text_documents if d["languageId"] == "python"
+    )
+
     with session.LspSession() as ls_session:
         ls_session.initialize(defaults.vscode_initialize_defaults())
 
-        # Open notebook first
+        # Open notebook and drain initial diagnostics
+        open_done = Event()
+        open_received = []
+
+        def _open_handler(params):
+            open_received.append(params)
+            if len(open_received) >= expected_open_count:
+                open_done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _open_handler)
+
         ls_session.notify_notebook_did_open(
             {
                 "notebookDocument": {
@@ -148,14 +164,21 @@ def test_notebook_did_change_text_content():
             }
         )
 
+        assert open_done.wait(
+            TIMEOUT
+        ), "Timed out waiting for initial notebook diagnostics"
+
+        # Set up fresh callback for the change notification
         done = Event()
         received = []
 
-        def _handler(params):
+        def _change_handler(params):
             received.append(params)
             done.set()
 
-        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+        ls_session.set_notification_callback(
+            session.PUBLISH_DIAGNOSTICS, _change_handler
+        )
 
         # Send a change with updated text content
         ls_session.notify_notebook_did_change(
@@ -196,10 +219,25 @@ def test_notebook_did_save():
     nb_uri, cells, cell_text_documents = _load_notebook(nb_path)
     code_cell_uri = cell_text_documents[0]["uri"]
 
+    # Count how many code cells will produce diagnostics on open.
+    expected_open_count = sum(
+        1 for d in cell_text_documents if d["languageId"] == "python"
+    )
+
     with session.LspSession() as ls_session:
         ls_session.initialize(defaults.vscode_initialize_defaults())
 
-        # Open notebook first
+        # Open notebook and drain initial diagnostics
+        open_done = Event()
+        open_received = []
+
+        def _open_handler(params):
+            open_received.append(params)
+            if len(open_received) >= expected_open_count:
+                open_done.set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _open_handler)
+
         ls_session.notify_notebook_did_open(
             {
                 "notebookDocument": {
@@ -213,14 +251,19 @@ def test_notebook_did_save():
             }
         )
 
+        assert open_done.wait(
+            TIMEOUT
+        ), "Timed out waiting for initial notebook diagnostics"
+
+        # Set up fresh callback for the save notification
         done = Event()
         received = []
 
-        def _handler(params):
+        def _save_handler(params):
             received.append(params)
             done.set()
 
-        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _save_handler)
 
         ls_session.notify_notebook_did_save(
             {

@@ -86,7 +86,11 @@ def _setup_mocks():
         "CodeActionParams",
         "PublishDiagnosticsParams",
     ]:
-        setattr(mock_lsp, _name, type(_name, (), {"__init__": lambda self, *args, **kw: None}))
+        setattr(
+            mock_lsp,
+            _name,
+            type(_name, (), {"__init__": lambda self, *args, **kw: None}),
+        )
     mock_lsp.MessageType = type(
         "MessageType", (), {"Log": 4, "Error": 1, "Warning": 2, "Info": 3}
     )

@@ -252,7 +252,7 @@ def _lint_notebook_cell(cell_uri: str) -> None:
     # Linting is only supported for python cells in notebooks.
     if document.language_id != "python":
         return
-    diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
+    diagnostics: list[lsp.Diagnostic] = _linting_helper(document, is_notebook=True)
     LSP_SERVER.text_document_publish_diagnostics(
         lsp.PublishDiagnosticsParams(uri=cell_uri, diagnostics=diagnostics)
     )
@@ -265,8 +265,23 @@ def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
     )
 
 
-def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
+def _is_supported_file(document: workspace.TextDocument) -> bool:
+    """Checks if the given document is supported by this tool."""
+    if document.path:
+        file_path = pathlib.Path(document.path)
+        return file_path.exists()
+
+    return False
+
+
+def _linting_helper(
+    document: workspace.TextDocument, is_notebook: bool = False
+) -> list[lsp.Diagnostic]:
     try:
+        if not is_notebook and not _is_supported_file(document):
+            log_always(f"Skipping linting for {document.uri} skipped: not supported")
+            return []
+
         # Notify the client that linting has started for this document.
         LSP_SERVER.protocol.notify(
             "pylint/lintingStarted",

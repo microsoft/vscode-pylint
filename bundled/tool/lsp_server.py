@@ -15,6 +15,7 @@ import sys
 import sysconfig
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from urllib.parse import urlparse, urlunparse
 
 
 # **********************************************************
@@ -74,9 +75,53 @@ GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
 MAX_WORKERS = 5
-LSP_SERVER = LanguageServer(
-    name="pylint-server", version="v0.1.0", max_workers=MAX_WORKERS
+NOTEBOOK_SYNC_OPTIONS = lsp.NotebookDocumentSyncOptions(
+    notebook_selector=[
+        lsp.NotebookDocumentFilterWithNotebook(
+            notebook="jupyter-notebook",
+            cells=[
+                lsp.NotebookCellLanguage(language="python"),
+            ],
+        ),
+        lsp.NotebookDocumentFilterWithNotebook(
+            notebook="interactive",
+            cells=[
+                lsp.NotebookCellLanguage(language="python"),
+            ],
+        ),
+    ],
+    save=True,
 )
+LSP_SERVER = LanguageServer(
+    name="pylint-server",
+    version="v0.1.0",
+    max_workers=MAX_WORKERS,
+    notebook_document_sync=NOTEBOOK_SYNC_OPTIONS,
+)
+
+
+def _get_document_path(document: str) -> str:
+    """Returns the filesystem path for a document.
+
+    Examples:
+        file:///path/to/file.py -> /path/to/file.py
+        vscode-notebook-cell:/path/to/notebook.ipynb#C00001 -> /path/to/notebook.ipynb
+    """
+    if not document.startswith("file:"):
+        parsed = urlparse(document)
+        file_uri = urlunparse(
+            (
+                "file",
+                parsed.netloc,
+                parsed.path,
+                parsed.params,
+                parsed.query,
+                "",
+            )
+        )
+        if result := uris.to_fs_path(file_uri):
+            return result
+    return uris.to_fs_path(document) or document
 
 
 # **********************************************************
@@ -143,8 +188,92 @@ if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
         )
 
 
-def _linting_helper(document: workspace.TextDocument) -> list[lsp.Diagnostic]:
+@LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_OPEN)
+def notebook_did_open(params: lsp.DidOpenNotebookDocumentParams) -> None:
+    """Run diagnostics on each code cell when a notebook is opened."""
+    nb = LSP_SERVER.workspace.get_notebook_document(
+        notebook_uri=params.notebook_document.uri
+    )
+    if nb is None:
+        return
+    for cell in nb.cells:
+        if cell.kind == lsp.NotebookCellKind.Code and cell.document is not None:
+            _lint_notebook_cell(cell.document)
+
+
+@LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_CHANGE)
+def notebook_did_change(params: lsp.DidChangeNotebookDocumentParams) -> None:
+    """Re-lint cells whose text changed or that were newly added."""
+    if params.change is None or params.change.cells is None:
+        return
+
+    for cell_content in params.change.cells.text_content or []:
+        if cell_content.document:
+            _lint_notebook_cell(cell_content.document.uri)
+
+    structure = params.change.cells.structure
+    if structure and structure.did_open:
+        for cell_document in structure.did_open:
+            _lint_notebook_cell(cell_document.uri)
+
+    if structure and structure.did_close:
+        for cell_document in structure.did_close:
+            _clear_notebook_cell_diagnostics(cell_document.uri)
+
+
+@LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_SAVE)
+def notebook_did_save(params: lsp.DidSaveNotebookDocumentParams) -> None:
+    """Re-lint all cells when a notebook is saved."""
+    nb = LSP_SERVER.workspace.get_notebook_document(
+        notebook_uri=params.notebook_document.uri
+    )
+    if nb is None:
+        return
+    for cell in nb.cells:
+        if cell.kind == lsp.NotebookCellKind.Code and cell.document is not None:
+            _lint_notebook_cell(cell.document)
+
+
+@LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_CLOSE)
+def notebook_did_close(params: lsp.DidCloseNotebookDocumentParams) -> None:
+    """Clear diagnostics for all cells when the notebook is closed."""
+    for cell_doc in params.cell_text_documents:
+        _clear_notebook_cell_diagnostics(cell_doc.uri)
+
+
+def _lint_notebook_cell(cell_uri: str) -> None:
+    """Lint a single notebook cell and publish its diagnostics."""
+    document = LSP_SERVER.workspace.get_text_document(cell_uri)
+    if document is None:
+        return
+    # Update path as pygls generates an invalid path.
+    # TODO: Remove when fixed. # pylint: disable=fixme
+    document.path = _get_document_path(cell_uri)
+    # Linting is only supported for python cells in notebooks.
+    if document.language_id != "python":
+        return
+    diagnostics: list[lsp.Diagnostic] = _linting_helper(document, is_notebook=True)
+    LSP_SERVER.text_document_publish_diagnostics(
+        lsp.PublishDiagnosticsParams(uri=cell_uri, diagnostics=diagnostics)
+    )
+
+
+def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
+    """Clear diagnostics for a single notebook cell."""
+    LSP_SERVER.text_document_publish_diagnostics(
+        lsp.PublishDiagnosticsParams(uri=cell_uri, diagnostics=[])
+    )
+
+
+def _linting_helper(
+    document: workspace.TextDocument, is_notebook: bool = False
+) -> list[lsp.Diagnostic]:
     try:
+        # Skip notebook cells — they are linted via _lint_notebook_cell which
+        # passes cell content directly, not the notebook file path.
+        if not is_notebook and str(document.uri).startswith("vscode-notebook-cell"):
+            return []
+
         # Notify the client that linting has started for this document.
         LSP_SERVER.protocol.notify(
             "pylint/lintingStarted",
@@ -774,10 +903,6 @@ def _run_tool_on_document(
     if not settings["enabled"]:
         log_warning(f"Skipping file [Linting Disabled]: {document.path}")
         log_warning("See `pylint.enabled` in settings.json to enabling linting.")
-        return None
-
-    if str(document.uri).startswith("vscode-notebook-cell"):
-        log_warning(f"Skipping notebook cells [Not Supported]: {str(document.uri)}")
         return None
 
     if utils.is_stdlib_file(document.path):

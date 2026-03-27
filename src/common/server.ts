@@ -27,7 +27,12 @@ async function createServer(
     initializationOptions: IInitOptions,
 ): Promise<LanguageClient> {
     const command = settings.interpreter[0];
-    const cwd = settings.cwd === '${fileDirname}' ? Uri.parse(settings.workspace).fsPath : settings.cwd;
+    let cwd: string;
+    if (settings.cwd === '${fileDirname}' || settings.cwd === '${nearestConfig}') {
+        cwd = Uri.parse(settings.workspace).fsPath;
+    } else {
+        cwd = settings.cwd;
+    }
 
     // Set debugger path needed for debugging Python code.
     const newEnv = { ...process.env };

@@ -95,7 +95,8 @@
                     "type": "string",
                     "examples": [
                         "${workspaceFolder}/src",
-                        "${fileDirname}"
+                        "${fileDirname}",
+                        "${nearestConfig}"
                     ]
                 },
                 "pylint.enabled": {

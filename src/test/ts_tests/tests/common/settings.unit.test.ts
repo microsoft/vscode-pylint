@@ -13,6 +13,7 @@ import {
     getWorkspaceSettings,
     isLintOnChangeEnabled,
     checkIfConfigurationChanged,
+    getTrackedSettings,
 } from '../../../../common/settings';
 import * as vscodeapi from '../../../../common/vscodeapi';
 
@@ -324,19 +325,7 @@ suite('Settings Tests', () => {
         });
 
         test('Returns true when a tracked setting changes', () => {
-            const trackedSettings = [
-                'pylint.args',
-                'pylint.cwd',
-                'pylint.enabled',
-                'pylint.severity',
-                'pylint.path',
-                'pylint.interpreter',
-                'pylint.importStrategy',
-                'pylint.showNotifications',
-                'pylint.ignorePatterns',
-                'pylint.lintOnChange',
-                'python.analysis.extraPaths',
-            ];
+            const trackedSettings = getTrackedSettings('pylint');
             for (const setting of trackedSettings) {
                 const mockEvent = {
                     affectsConfiguration: (section: string) => section === setting,

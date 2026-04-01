@@ -58,9 +58,14 @@ suite('Status Bar Score Display Tests', () => {
 
     test('updateScore with numeric score updates status bar text', () => {
         const testUri = 'file:///test/file.py';
-        sinon.replaceGetter(window, 'activeTextEditor', () => ({
-            document: { uri: { toString: () => testUri } },
-        }) as any);
+        sinon.replaceGetter(
+            window,
+            'activeTextEditor',
+            () =>
+                ({
+                    document: { uri: { toString: () => testUri } },
+                }) as any,
+        );
 
         updateScore(testUri, 8.5);
 
@@ -70,9 +75,14 @@ suite('Status Bar Score Display Tests', () => {
 
     test('updateScore with undefined shows loading state for active document', () => {
         const testUri = 'file:///test/file.py';
-        sinon.replaceGetter(window, 'activeTextEditor', () => ({
-            document: { uri: { toString: () => testUri } },
-        }) as any);
+        sinon.replaceGetter(
+            window,
+            'activeTextEditor',
+            () =>
+                ({
+                    document: { uri: { toString: () => testUri } },
+                }) as any,
+        );
 
         updateScore(testUri, undefined);
 
@@ -83,9 +93,14 @@ suite('Status Bar Score Display Tests', () => {
 
     test('updateScore with -1 shows error state', () => {
         const testUri = 'file:///test/file.py';
-        sinon.replaceGetter(window, 'activeTextEditor', () => ({
-            document: { uri: { toString: () => testUri } },
-        }) as any);
+        sinon.replaceGetter(
+            window,
+            'activeTextEditor',
+            () =>
+                ({
+                    document: { uri: { toString: () => testUri } },
+                }) as any,
+        );
 
         updateScore(testUri, -1);
 
@@ -97,9 +112,14 @@ suite('Status Bar Score Display Tests', () => {
     test('updateScore does not show loading for non-active document', () => {
         const activeUri = 'file:///test/active.py';
         const otherUri = 'file:///test/other.py';
-        sinon.replaceGetter(window, 'activeTextEditor', () => ({
-            document: { uri: { toString: () => activeUri } },
-        }) as any);
+        sinon.replaceGetter(
+            window,
+            'activeTextEditor',
+            () =>
+                ({
+                    document: { uri: { toString: () => activeUri } },
+                }) as any,
+        );
 
         // Set initial state
         updateScore(activeUri, 7.0);
@@ -113,9 +133,14 @@ suite('Status Bar Score Display Tests', () => {
 
     test('updateScore with zero score displays correctly', () => {
         const testUri = 'file:///test/file.py';
-        sinon.replaceGetter(window, 'activeTextEditor', () => ({
-            document: { uri: { toString: () => testUri } },
-        }) as any);
+        sinon.replaceGetter(
+            window,
+            'activeTextEditor',
+            () =>
+                ({
+                    document: { uri: { toString: () => testUri } },
+                }) as any,
+        );
 
         updateScore(testUri, 0.0);
 

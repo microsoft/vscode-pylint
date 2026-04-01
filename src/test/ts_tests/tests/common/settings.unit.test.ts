@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../common/constants';
 import * as python from '../../../../common/python';
-import { ISettings, getWorkspaceSettings, isLintOnChangeEnabled } from '../../../../common/settings';
+import { ISettings, getWorkspaceSettings, isLintOnChangeEnabled, checkIfConfigurationChanged } from '../../../../common/settings';
 import * as vscodeapi from '../../../../common/vscodeapi';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -306,6 +306,48 @@ suite('Settings Tests', () => {
                     .verifiable(TypeMoq.Times.atLeastOnce());
                 assert.deepStrictEqual(isLintOnChangeEnabled('pylint'), value);
             });
+        });
+    });
+
+    suite('checkIfConfigurationChanged tests', () => {
+        setup(() => {
+            sinon.stub(vscodeapi, 'getConfiguration');
+        });
+
+        teardown(() => {
+            sinon.restore();
+        });
+
+        test('Returns true when a tracked setting changes', () => {
+            const trackedSettings = [
+                'pylint.args',
+                'pylint.cwd',
+                'pylint.enabled',
+                'pylint.severity',
+                'pylint.path',
+                'pylint.interpreter',
+                'pylint.importStrategy',
+                'pylint.showNotifications',
+                'pylint.ignorePatterns',
+                'pylint.lintOnChange',
+                'python.analysis.extraPaths',
+            ];
+            for (const setting of trackedSettings) {
+                const mockEvent = {
+                    affectsConfiguration: (section: string) => section === setting,
+                };
+                assert.isTrue(
+                    checkIfConfigurationChanged(mockEvent as any, 'pylint'),
+                    `Expected true for setting: ${setting}`,
+                );
+            }
+        });
+
+        test('Returns false when unrelated setting changes', () => {
+            const mockEvent = {
+                affectsConfiguration: (_section: string) => false,
+            };
+            assert.isFalse(checkIfConfigurationChanged(mockEvent as any, 'pylint'));
         });
     });
 });

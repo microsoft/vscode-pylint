@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
-import * as path from 'path';
 import { Disposable, env, l10n, LanguageStatusSeverity, LogOutputChannel, Uri } from 'vscode';
 import { State } from 'vscode-languageclient';
 import {
@@ -15,7 +14,7 @@ import { DEBUG_SERVER_SCRIPT_PATH, SERVER_SCRIPT_PATH } from './constants';
 import { traceError, traceInfo, traceVerbose } from './logging';
 import { getDebuggerPath } from './python';
 import { getExtensionSettings, getGlobalSettings, ISettings, isLintOnChangeEnabled } from './settings';
-import { getLSClientTraceLevel, getDocumentSelector, getProjectRoot } from './utilities';
+import { getLSClientTraceLevel, getDocumentSelector } from './utilities';
 import { updateScore, updateStatus } from './status';
 import { getConfiguration } from './vscodeapi';
 

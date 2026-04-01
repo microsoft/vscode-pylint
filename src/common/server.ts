@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fsapi from 'fs-extra';
+import * as path from 'path';
 import { Disposable, env, l10n, LanguageStatusSeverity, LogOutputChannel, Uri } from 'vscode';
 import { State } from 'vscode-languageclient';
 import {
@@ -14,10 +15,54 @@ import { DEBUG_SERVER_SCRIPT_PATH, SERVER_SCRIPT_PATH } from './constants';
 import { traceError, traceInfo, traceVerbose } from './logging';
 import { getDebuggerPath } from './python';
 import { getExtensionSettings, getGlobalSettings, ISettings, isLintOnChangeEnabled } from './settings';
-import { getLSClientTraceLevel, getDocumentSelector } from './utilities';
+import { getLSClientTraceLevel, getDocumentSelector, getProjectRoot } from './utilities';
 import { updateScore, updateStatus } from './status';
+import { getConfiguration } from './vscodeapi';
 
 export type IInitOptions = { settings: ISettings[]; globalSettings: ISettings };
+
+function parseEnvFile(content: string): Record<string, string> {
+    const env: Record<string, string> = {};
+    for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) {
+            continue;
+        }
+        const eqIndex = trimmed.indexOf('=');
+        if (eqIndex === -1) {
+            continue;
+        }
+        const key = trimmed.substring(0, eqIndex).trim();
+        let value = trimmed.substring(eqIndex + 1).trim();
+        // Strip surrounding quotes
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+        }
+        if (key) {
+            env[key] = value;
+        }
+    }
+    return env;
+}
+
+async function loadEnvVarsFromFile(workspace: Uri): Promise<Record<string, string>> {
+    const pythonConfig = getConfiguration('python', workspace);
+    let envFileSetting = pythonConfig.get<string>('envFile', '${workspaceFolder}/.env');
+    envFileSetting = envFileSetting.replace('${workspaceFolder}', workspace.fsPath);
+
+    if (!envFileSetting || !(await fsapi.pathExists(envFileSetting))) {
+        return {};
+    }
+
+    try {
+        const content = await fsapi.readFile(envFileSetting, 'utf-8');
+        traceInfo(`Loaded environment variables from ${envFileSetting}`);
+        return parseEnvFile(content);
+    } catch (ex) {
+        traceError(`Failed to read env file ${envFileSetting}: ${ex}`);
+        return {};
+    }
+}
 
 async function createServer(
     settings: ISettings,
@@ -31,6 +76,12 @@ async function createServer(
 
     // Set debugger path needed for debugging Python code.
     const newEnv = { ...process.env };
+
+    // Load environment variables from the envFile (python.envFile setting)
+    const workspaceUri = Uri.parse(settings.workspace);
+    const envFileVars = await loadEnvVarsFromFile(workspaceUri);
+    Object.assign(newEnv, envFileVars);
+
     const debuggerPath = await getDebuggerPath();
     const isDebugScript = await fsapi.pathExists(DEBUG_SERVER_SCRIPT_PATH);
     if (newEnv.USE_DEBUGPY && debuggerPath) {

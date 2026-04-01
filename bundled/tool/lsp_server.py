@@ -76,6 +76,7 @@ GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
 MAX_WORKERS = 5
+_STDERR_ERROR_KEYWORDS = ("error", "traceback", "exception", "fatal")
 
 # Track lint request versions per URI to discard stale results from superseded runs.
 _lint_versions: Dict[str, int] = {}
@@ -991,7 +992,7 @@ def _run_tool_on_document(
         )
         if result.stderr:
             log_to_output(result.stderr)
-            if any(kw in result.stderr.lower() for kw in ("error", "traceback", "exception", "fatal")):
+            if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
                 log_warning(result.stderr)
     elif use_rpc:
         # This mode is used if the interpreter running this server is different from
@@ -1030,7 +1031,7 @@ def _run_tool_on_document(
                 raise
         if result.stderr:
             log_to_output(result.stderr)
-            if any(kw in result.stderr.lower() for kw in ("error", "traceback", "exception", "fatal")):
+            if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
                 log_warning(result.stderr)
 
     return result
@@ -1074,7 +1075,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd, env=env)
         if result.stderr:
             log_to_output(result.stderr)
-            if any(kw in result.stderr.lower() for kw in ("error", "traceback", "exception", "fatal")):
+            if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
                 log_warning(result.stderr)
     elif use_rpc:
         # This mode is used if the interpreter running this server is different from
@@ -1107,7 +1108,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
                 raise
         if result.stderr:
             log_to_output(result.stderr)
-            if any(kw in result.stderr.lower() for kw in ("error", "traceback", "exception", "fatal")):
+            if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
                 log_warning(result.stderr)
 
     log_to_output(f"\r\n{result.stdout}\r\n")

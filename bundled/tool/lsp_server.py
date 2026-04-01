@@ -990,7 +990,9 @@ def _run_tool_on_document(
             env=env,
         )
         if result.stderr:
-            log_warning(result.stderr)
+            log_to_output(result.stderr)
+            if any(kw in result.stderr.lower() for kw in ("error", "traceback", "exception", "fatal")):
+                log_warning(result.stderr)
     elif use_rpc:
         # This mode is used if the interpreter running this server is different from
         # the interpreter used for running this server.
@@ -1027,7 +1029,9 @@ def _run_tool_on_document(
                 log_error(traceback.format_exc(chain=True))
                 raise
         if result.stderr:
-            log_warning(result.stderr)
+            log_to_output(result.stderr)
+            if any(kw in result.stderr.lower() for kw in ("error", "traceback", "exception", "fatal")):
+                log_warning(result.stderr)
 
     return result
 
@@ -1069,7 +1073,9 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         log_to_output(f"CWD Server: {cwd}")
         result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd, env=env)
         if result.stderr:
-            log_warning(result.stderr)
+            log_to_output(result.stderr)
+            if any(kw in result.stderr.lower() for kw in ("error", "traceback", "exception", "fatal")):
+                log_warning(result.stderr)
     elif use_rpc:
         # This mode is used if the interpreter running this server is different from
         # the interpreter used for running this server.
@@ -1100,7 +1106,9 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
                 log_error(traceback.format_exc(chain=True))
                 raise
         if result.stderr:
-            log_warning(result.stderr)
+            log_to_output(result.stderr)
+            if any(kw in result.stderr.lower() for kw in ("error", "traceback", "exception", "fatal")):
+                log_warning(result.stderr)
 
     log_to_output(f"\r\n{result.stdout}\r\n")
     return result

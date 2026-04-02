@@ -87,8 +87,7 @@ suite('Status Bar Score Display Tests', () => {
         updateScore(testUri, undefined);
 
         assert.strictEqual(mockStatusBarItem.text, '$(sync~spin) Pylint');
-        assert.isString(mockStatusBarItem.tooltip);
-        assert.include(mockStatusBarItem.tooltip as string, 'progress');
+        assert.strictEqual(mockStatusBarItem.tooltip, 'Linting in progress...');
     });
 
     test('updateScore with -1 shows error state', () => {
@@ -105,8 +104,7 @@ suite('Status Bar Score Display Tests', () => {
         updateScore(testUri, -1);
 
         assert.strictEqual(mockStatusBarItem.text, '$(error) Pylint');
-        assert.isString(mockStatusBarItem.tooltip);
-        assert.include(mockStatusBarItem.tooltip as string, 'failed');
+        assert.strictEqual(mockStatusBarItem.tooltip, 'Linting failed. Check logs for details.');
     });
 
     test('updateScore does not show loading for non-active document', () => {

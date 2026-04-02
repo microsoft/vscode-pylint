@@ -158,4 +158,70 @@ suite('Python Interpreter Resolution Tests', () => {
         assert.isUndefined(result.path);
         assert.isTrue(mockLegacyApi.environments.resolveEnvironment.calledOnce);
     });
+
+    test('Rejects Python 3.9 from Environments extension (boundary for PYTHON_MINOR=10)', async () => {
+        const mockEnvsApi = {
+            getEnvironment: sinon.stub().resolves({
+                version: '3.9.0',
+                execInfo: {
+                    run: { executable: '/usr/bin/python3.9', args: [] },
+                },
+                envId: { id: 'boundary-env', managerId: 'test-manager' },
+                sysPrefix: '/usr',
+                name: 'python39',
+                displayName: 'Python 3.9',
+                environmentPath: Uri.file('/usr/bin/python3.9'),
+            }),
+            resolveEnvironment: sinon.stub(),
+            onDidChangeEnvironment: new EventEmitter().event,
+        };
+
+        getExtensionStub.withArgs('ms-python.vscode-python-envs').returns({
+            isActive: true,
+            activate: sinon.stub().resolves(),
+            exports: mockEnvsApi,
+        });
+
+        const result = await getInterpreterDetails(Uri.file('/test/workspace'));
+
+        assert.isUndefined(result.path);
+        assert.isTrue(mockEnvsApi.getEnvironment.calledOnce);
+        assert.isTrue(pythonExtensionApiStub.notCalled);
+    });
+
+    test('Rejects Python 3.9 from legacy extension (boundary for PYTHON_MINOR=10)', async () => {
+        getExtensionStub.withArgs('ms-python.vscode-python-envs').returns(undefined);
+
+        const interpreterUri = Uri.file('/usr/bin/python3.9');
+        const mockLegacyApi = {
+            environments: {
+                getActiveEnvironmentPath: sinon.stub().returns('/usr/bin/python3.9'),
+                resolveEnvironment: sinon.stub().resolves({
+                    executable: {
+                        uri: interpreterUri,
+                        bitness: '64-bit',
+                        sysPrefix: '/usr',
+                    },
+                    version: {
+                        major: 3,
+                        minor: 9,
+                        micro: 0,
+                        release: { level: 'final', serial: 0 },
+                        sysVersion: '3.9.0',
+                    },
+                }),
+                onDidChangeActiveEnvironmentPath: new EventEmitter().event,
+            },
+            debug: {
+                getDebuggerPackagePath: sinon.stub(),
+            },
+        };
+
+        pythonExtensionApiStub.resolves(mockLegacyApi);
+
+        const result = await getInterpreterDetails(Uri.file('/test/workspace'));
+
+        assert.isUndefined(result.path);
+        assert.isTrue(mockLegacyApi.environments.resolveEnvironment.calledOnce);
+    });
 });

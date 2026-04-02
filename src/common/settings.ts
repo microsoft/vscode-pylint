@@ -180,8 +180,8 @@ export function isLintOnChangeEnabled(namespace: string): boolean {
     return config.get<boolean>('lintOnChange', false);
 }
 
-export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
-    const settings = [
+export function getTrackedSettings(namespace: string): string[] {
+    return [
         `${namespace}.args`,
         `${namespace}.cwd`,
         `${namespace}.enabled`,
@@ -194,6 +194,10 @@ export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespa
         `${namespace}.lintOnChange`,
         'python.analysis.extraPaths',
     ];
+}
+
+export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
+    const settings = getTrackedSettings(namespace);
     const changed = settings.map((s) => e.affectsConfiguration(s));
     return changed.includes(true);
 }

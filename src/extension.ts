@@ -69,6 +69,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             } else {
                 lsClient = await restartServer(workspaceSetting, serverId, serverName, outputChannel, lsClient);
             }
+        } catch (ex) {
+            traceError(`Server restart failed: ${ex}`);
         } finally {
             isRestarting = false;
         }
@@ -103,13 +105,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     logLegacySettings();
 
     setImmediate(async () => {
-        const interpreter = getInterpreterFromSetting(serverId);
-        if (interpreter === undefined || interpreter.length === 0) {
-            traceLog(`Python extension loading`);
-            await initializePython(context.subscriptions);
-            traceLog(`Python extension loaded`);
-        } else {
-            await runServer();
+        try {
+            const interpreter = getInterpreterFromSetting(serverId);
+            if (interpreter === undefined || interpreter.length === 0) {
+                traceLog(`Python extension loading`);
+                await initializePython(context.subscriptions);
+                traceLog(`Python extension loaded`);
+            } else {
+                await runServer();
+            }
+        } catch (ex) {
+            traceError(`Extension activation failed: ${ex}`);
         }
     });
 }

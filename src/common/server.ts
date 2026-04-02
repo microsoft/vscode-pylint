@@ -16,8 +16,55 @@ import { getDebuggerPath } from './python';
 import { getExtensionSettings, getGlobalSettings, ISettings, isLintOnChangeEnabled } from './settings';
 import { getLSClientTraceLevel, getDocumentSelector } from './utilities';
 import { updateScore, updateStatus } from './status';
+import { getConfiguration } from './vscodeapi';
 
 export type IInitOptions = { settings: ISettings[]; globalSettings: ISettings };
+
+function parseEnvFile(content: string): Record<string, string> {
+    const env: Record<string, string> = {};
+    for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) {
+            continue;
+        }
+        const eqIndex = trimmed.indexOf('=');
+        if (eqIndex === -1) {
+            continue;
+        }
+        const key = trimmed
+            .substring(0, eqIndex)
+            .trim()
+            .replace(/^export\s+/, '');
+        let value = trimmed.substring(eqIndex + 1).trim();
+        // Strip surrounding quotes
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+        }
+        if (key) {
+            env[key] = value;
+        }
+    }
+    return env;
+}
+
+async function loadEnvVarsFromFile(workspace: Uri): Promise<Record<string, string>> {
+    const pythonConfig = getConfiguration('python', workspace);
+    let envFileSetting = pythonConfig.get<string>('envFile', '${workspaceFolder}/.env');
+    envFileSetting = envFileSetting.replace('${workspaceFolder}', workspace.fsPath);
+
+    if (!envFileSetting || !(await fsapi.pathExists(envFileSetting))) {
+        return {};
+    }
+
+    try {
+        const content = await fsapi.readFile(envFileSetting, 'utf-8');
+        traceInfo(`Loaded environment variables from ${envFileSetting}`);
+        return parseEnvFile(content);
+    } catch (ex) {
+        traceError(`Failed to read env file ${envFileSetting}: ${ex}`);
+        return {};
+    }
+}
 
 async function createServer(
     settings: ISettings,
@@ -27,10 +74,16 @@ async function createServer(
     initializationOptions: IInitOptions,
 ): Promise<LanguageClient> {
     const command = settings.interpreter[0];
-    const cwd = settings.cwd === '${fileDirname}' ? Uri.parse(settings.workspace).fsPath : settings.cwd;
+    const cwd = settings.cwd === '${fileDirname}' ? Uri.file(settings.workspace).fsPath : settings.cwd;
 
     // Set debugger path needed for debugging Python code.
     const newEnv = { ...process.env };
+
+    // Load environment variables from the envFile (python.envFile setting)
+    const workspaceUri = Uri.file(settings.workspace);
+    const envFileVars = await loadEnvVarsFromFile(workspaceUri);
+    Object.assign(newEnv, envFileVars);
+
     const debuggerPath = await getDebuggerPath();
     const isDebugScript = await fsapi.pathExists(DEBUG_SERVER_SCRIPT_PATH);
     if (newEnv.USE_DEBUGPY && debuggerPath) {
@@ -135,10 +188,16 @@ export async function restartServer(
     );
     try {
         await newLSClient.start();
-        await newLSClient.setTrace(getLSClientTraceLevel(outputChannel.logLevel, env.logLevel));
     } catch (ex) {
         updateStatus(l10n.t('Server failed to start.'), LanguageStatusSeverity.Error);
         traceError(`Server: Start failed: ${ex}`);
+        return undefined;
+    }
+
+    try {
+        await newLSClient.setTrace(getLSClientTraceLevel(outputChannel.logLevel, env.logLevel));
+    } catch (ex) {
+        traceError(`Server: Failed to set trace level: ${ex}`);
     }
 
     return newLSClient;

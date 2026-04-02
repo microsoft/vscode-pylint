@@ -13,6 +13,7 @@ import pathlib
 import re
 import sys
 import sysconfig
+import threading
 import traceback
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 from urllib.parse import urlparse, urlunparse
@@ -75,6 +76,11 @@ GLOBAL_SETTINGS = {}
 RUNNER = pathlib.Path(__file__).parent / "runner.py"
 
 MAX_WORKERS = 5
+_STDERR_ERROR_KEYWORDS = ("error", "traceback", "exception", "fatal")
+
+# Track lint request versions per URI to discard stale results from superseded runs.
+_lint_versions: Dict[str, int] = {}
+_lint_versions_lock = threading.Lock()
 NOTEBOOK_SYNC_OPTIONS = lsp.NotebookDocumentSyncOptions(
     notebook_selector=[
         lsp.NotebookDocumentFilterWithNotebook(
@@ -274,6 +280,12 @@ def _linting_helper(
         if not is_notebook and str(document.uri).startswith("vscode-notebook-cell"):
             return []
 
+        # Bump the version for this URI so any concurrent or queued lint for
+        # the same document can detect that it has been superseded.
+        with _lint_versions_lock:
+            version = _lint_versions.get(document.uri, 0) + 1
+            _lint_versions[document.uri] = version
+
         # Notify the client that linting has started for this document.
         LSP_SERVER.protocol.notify(
             "pylint/lintingStarted",
@@ -290,6 +302,17 @@ def _linting_helper(
                 extra_args += ["--clear-cache-post-run=y"]
 
         result = _run_tool_on_document(document, use_stdin=True, extra_args=extra_args)
+
+        # If a newer lint request arrived while we were running, discard
+        # these stale results — the newer request will publish its own.
+        with _lint_versions_lock:
+            if _lint_versions.get(document.uri, 0) != version:
+                log_to_output(
+                    f"Discarding stale lint results for {document.uri} "
+                    f"(version {version} superseded by {_lint_versions[document.uri]})"
+                )
+                return []
+
         if result and result.stdout:
             log_to_output(f"{document.uri} :\r\n{result.stdout}")
 
@@ -724,7 +747,7 @@ def _log_version_info() -> None:
                     f"FOUND {TOOL_MODULE}=={actual_version}\r\n"
                 )
         except:  # pylint: disable=bare-except
-            log_to_output(
+            log_warning(
                 f"Error while detecting pylint version:\r\n{traceback.format_exc()}"
             )
 
@@ -969,6 +992,8 @@ def _run_tool_on_document(
         )
         if result.stderr:
             log_to_output(result.stderr)
+            if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
+                log_warning(result.stderr)
     elif use_rpc:
         # This mode is used if the interpreter running this server is different from
         # the interpreter used for running this server.
@@ -1006,6 +1031,8 @@ def _run_tool_on_document(
                 raise
         if result.stderr:
             log_to_output(result.stderr)
+            if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
+                log_warning(result.stderr)
 
     return result
 
@@ -1048,6 +1075,8 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd, env=env)
         if result.stderr:
             log_to_output(result.stderr)
+            if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
+                log_warning(result.stderr)
     elif use_rpc:
         # This mode is used if the interpreter running this server is different from
         # the interpreter used for running this server.
@@ -1079,6 +1108,8 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
                 raise
         if result.stderr:
             log_to_output(result.stderr)
+            if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
+                log_warning(result.stderr)
 
     log_to_output(f"\r\n{result.stdout}\r\n")
     return result

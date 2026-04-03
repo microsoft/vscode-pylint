@@ -74,13 +74,13 @@ async function createServer(
     initializationOptions: IInitOptions,
 ): Promise<LanguageClient> {
     const command = settings.interpreter[0];
-    const cwd = settings.cwd === '${fileDirname}' ? Uri.file(settings.workspace).fsPath : settings.cwd;
+    const cwd = settings.cwd === '${fileDirname}' ? Uri.parse(settings.workspace).fsPath : settings.cwd;
 
     // Set debugger path needed for debugging Python code.
     const newEnv = { ...process.env };
 
     // Load environment variables from the envFile (python.envFile setting)
-    const workspaceUri = Uri.file(settings.workspace);
+    const workspaceUri = Uri.parse(settings.workspace);
     const envFileVars = await loadEnvVarsFromFile(workspaceUri);
     Object.assign(newEnv, envFileVars);
 

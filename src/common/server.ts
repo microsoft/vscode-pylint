@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as dotenv from 'dotenv';
 import * as fsapi from 'fs-extra';
 import { Disposable, env, l10n, LanguageStatusSeverity, LogOutputChannel, Uri } from 'vscode';
 import { State } from 'vscode-languageclient';
@@ -20,33 +21,6 @@ import { getConfiguration } from './vscodeapi';
 
 export type IInitOptions = { settings: ISettings[]; globalSettings: ISettings };
 
-function parseEnvFile(content: string): Record<string, string> {
-    const env: Record<string, string> = {};
-    for (const line of content.split(/\r?\n/)) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) {
-            continue;
-        }
-        const eqIndex = trimmed.indexOf('=');
-        if (eqIndex === -1) {
-            continue;
-        }
-        const key = trimmed
-            .substring(0, eqIndex)
-            .trim()
-            .replace(/^export\s+/, '');
-        let value = trimmed.substring(eqIndex + 1).trim();
-        // Strip surrounding quotes
-        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-            value = value.slice(1, -1);
-        }
-        if (key) {
-            env[key] = value;
-        }
-    }
-    return env;
-}
-
 async function loadEnvVarsFromFile(workspace: Uri): Promise<Record<string, string>> {
     const pythonConfig = getConfiguration('python', workspace);
     let envFileSetting = pythonConfig.get<string>('envFile', '${workspaceFolder}/.env');
@@ -59,7 +33,7 @@ async function loadEnvVarsFromFile(workspace: Uri): Promise<Record<string, strin
     try {
         const content = await fsapi.readFile(envFileSetting, 'utf-8');
         traceInfo(`Loaded environment variables from ${envFileSetting}`);
-        return parseEnvFile(content);
+        return dotenv.parse(content);
     } catch (ex) {
         traceError(`Failed to read env file ${envFileSetting}: ${ex}`);
         return {};
@@ -74,13 +48,13 @@ async function createServer(
     initializationOptions: IInitOptions,
 ): Promise<LanguageClient> {
     const command = settings.interpreter[0];
-    const cwd = settings.cwd === '${fileDirname}' ? Uri.file(settings.workspace).fsPath : settings.cwd;
+    const cwd = settings.cwd === '${fileDirname}' ? Uri.parse(settings.workspace).fsPath : settings.cwd;
 
     // Set debugger path needed for debugging Python code.
     const newEnv = { ...process.env };
 
     // Load environment variables from the envFile (python.envFile setting)
-    const workspaceUri = Uri.file(settings.workspace);
+    const workspaceUri = Uri.parse(settings.workspace);
     const envFileVars = await loadEnvVarsFromFile(workspaceUri);
     Object.assign(newEnv, envFileVars);
 

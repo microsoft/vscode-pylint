@@ -7,6 +7,7 @@ import {
     commands,
     ConfigurationScope,
     Disposable,
+    DocumentFormattingEditProvider,
     languages,
     LanguageStatusItem,
     LogOutputChannel,
@@ -46,6 +47,13 @@ export function getWorkspaceFolders(): readonly WorkspaceFolder[] {
 
 export function getWorkspaceFolder(uri: Uri): WorkspaceFolder | undefined {
     return workspace.getWorkspaceFolder(uri);
+}
+
+export function registerDocumentFormattingEditProvider(
+    selector: DocumentSelector,
+    provider: DocumentFormattingEditProvider,
+): Disposable {
+    return languages.registerDocumentFormattingEditProvider(selector, provider);
 }
 
 export function createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem {

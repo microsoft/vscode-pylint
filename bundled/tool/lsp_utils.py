@@ -142,9 +142,12 @@ def is_match(
 class RunResult:
     """Object to hold result from running tool."""
 
-    def __init__(self, stdout, stderr):
-        self.stdout = stdout
-        self.stderr = stderr
+    def __init__(
+        self, stdout: str, stderr: str, exit_code: Optional[Union[int, str]] = None
+    ):
+        self.stdout: str = stdout
+        self.stderr: str = stderr
+        self.exit_code: Optional[Union[int, str]] = exit_code
 
 
 class CustomIO(io.TextIOWrapper):

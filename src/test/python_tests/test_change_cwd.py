@@ -4,14 +4,7 @@
 
 import logging
 import os
-import pathlib
-import sys
 from unittest.mock import patch
-
-# Ensure bundled libs and tool are importable.
-_PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, os.fsdecode(_PROJECT_ROOT / "bundled" / "libs"))
-sys.path.insert(0, os.fsdecode(_PROJECT_ROOT / "bundled" / "tool"))
 
 import lsp_utils
 

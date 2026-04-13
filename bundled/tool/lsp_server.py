@@ -228,10 +228,10 @@ def notebook_did_close(params: lsp.DidCloseNotebookDocumentParams) -> None:
         _clear_notebook_cell_diagnostics(cell_doc.uri)
 
 
-def _build_concatenated_source(
+def _build_notebook_source(
     nb,
 ) -> tuple[str, list[tuple[str, int, int]]]:
-    """Concatenate all Python code cells into a single source string.
+    """Build a single Python source string from all code cells in *nb*.
 
     Returns:
         (combined_source, cell_map) where cell_map is a list of
@@ -241,7 +241,7 @@ def _build_concatenated_source(
     IPython magic lines (%, %%, !, etc.) are replaced with ``pass``
     statements so pylint does not raise syntax errors on them.
     """
-    parts = []
+    source_parts: list[str] = []
     cell_map: list[tuple[str, int, int]] = []
     current_line = 0
 
@@ -261,23 +261,23 @@ def _build_concatenated_source(
         if lines and not lines[-1].endswith("\n"):
             lines[-1] += "\n"
 
-        sanitized = [
+        sanitized_lines = [
             "pass\n" if _MAGIC_LINE_RE.match(line) else line for line in lines
         ]
 
-        cell_map.append((cell.document, current_line, len(sanitized)))
-        parts.extend(sanitized)
-        current_line += len(sanitized)
+        cell_map.append((cell.document, current_line, len(sanitized_lines)))
+        source_parts.extend(sanitized_lines)
+        current_line += len(sanitized_lines)
 
-    return "".join(parts), cell_map
+    return "".join(source_parts), cell_map
 
 
-def _cell_for_line(
+def _get_cell_for_line(
     global_line: int, cell_map: list[tuple[str, int, int]]
 ) -> tuple[str, int, int] | None:
     """Return the (cell_uri, start_line, line_count) entry that owns *global_line*.
 
-    *global_line* is a 0-based line number in the concatenated source.
+    *global_line* is a 0-based line number in the combined notebook source.
     Returns ``None`` if no cell owns the line.
     """
     for entry in cell_map:
@@ -287,7 +287,7 @@ def _cell_for_line(
     return None
 
 
-def _remap_diagnostics(
+def _remap_diagnostics_to_cells(
     diagnostics: Sequence[lsp.Diagnostic],
     cell_map: list[tuple[str, int, int]],
 ) -> dict[str, list[lsp.Diagnostic]]:
@@ -300,12 +300,12 @@ def _remap_diagnostics(
     per_cell: dict[str, list[lsp.Diagnostic]] = {uri: [] for uri, _, _ in cell_map}
 
     for diag in diagnostics:
-        entry = _cell_for_line(diag.range.start.line, cell_map)
+        entry = _get_cell_for_line(diag.range.start.line, cell_map)
         if entry is None:
             continue
-        cell_uri, offset, line_count = entry
+        cell_uri, start_line, line_count = entry
 
-        local_start_line = diag.range.start.line - offset
+        local_start_line = diag.range.start.line - start_line
         local_start = lsp.Position(
             line=local_start_line,
             character=diag.range.start.character,
@@ -313,7 +313,7 @@ def _remap_diagnostics(
 
         # Clamp end line to the cell boundary (defensive).
         max_end_line = line_count - 1
-        raw_end_line = diag.range.end.line - offset
+        raw_end_line = diag.range.end.line - start_line
         clamped = raw_end_line > max_end_line
         local_end_line = min(raw_end_line, max_end_line)
         local_end = lsp.Position(
@@ -341,7 +341,7 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
         if nb is None:
             return
 
-        combined_source, cell_map = _build_concatenated_source(nb)
+        combined_source, cell_map = _build_notebook_source(nb)
         if not cell_map:
             return
 
@@ -384,15 +384,15 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
                 )
                 return
 
-        all_diagnostics: Sequence[lsp.Diagnostic] = []
+        combined_diagnostics: Sequence[lsp.Diagnostic] = []
         if result and result.stdout:
             log_to_output(f"{notebook_uri} :\r\n{result.stdout}")
             settings = copy.deepcopy(_get_settings_by_document(combined_doc))
-            all_diagnostics, _ = _parse_output(
+            combined_diagnostics, _ = _parse_output(
                 result.stdout, severity=settings["severity"]
             )
 
-        per_cell = _remap_diagnostics(all_diagnostics, cell_map)
+        per_cell = _remap_diagnostics_to_cells(combined_diagnostics, cell_map)
 
         # Publish per-cell diagnostics; cells with no issues get an empty list
         # so that stale diagnostics from a previous run are cleared.

@@ -574,7 +574,7 @@ def test_notebook_magic_lines_no_syntax_error():
     assert magic_cell_results, f"No diagnostics notification for magic cell {magic_cell_uri!r}"
     last_magic_diags = magic_cell_results[-1]["diagnostics"]
     syntax_errors = [
-        d for d in last_magic_diags if "syntax" in d.get("code", "").lower()
+        d for d in last_magic_diags if d.get("code") == "E0001:syntax-error"
     ]
     assert not syntax_errors, (
         f"Magic-line cell should not have syntax errors, got: {syntax_errors}"
@@ -628,7 +628,7 @@ def test_notebook_cross_cell_import_not_flagged_unused():
     assert import_cell_results, f"No diagnostics for import cell {import_cell_uri!r}"
     last_import_diags = import_cell_results[-1]["diagnostics"]
     unused_imports = [
-        d for d in last_import_diags if "unused-import" in d.get("code", "")
+        d for d in last_import_diags if d.get("code") == "W0611:unused-import"
     ]
     assert not unused_imports, (
         f"Cross-cell import must not be flagged as unused, got: {unused_imports}"

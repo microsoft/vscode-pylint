@@ -547,7 +547,9 @@ def test_notebook_magic_lines_no_syntax_error():
         def _handler(params):
             all_received.append(params)
             # Wait until both code cells have been published.
-            code_cell_uris = {d["uri"] for d in cell_text_documents if d["languageId"] == "python"}
+            code_cell_uris = {
+                d["uri"] for d in cell_text_documents if d["languageId"] == "python"
+            }
             received_uris = {r["uri"] for r in all_received}
             if code_cell_uris.issubset(received_uris):
                 done.set()
@@ -571,14 +573,16 @@ def test_notebook_magic_lines_no_syntax_error():
 
     # The magic-line cell must not have a syntax-error diagnostic.
     magic_cell_results = [r for r in all_received if r.get("uri") == magic_cell_uri]
-    assert magic_cell_results, f"No diagnostics notification for magic cell {magic_cell_uri!r}"
+    assert (
+        magic_cell_results
+    ), f"No diagnostics notification for magic cell {magic_cell_uri!r}"
     last_magic_diags = magic_cell_results[-1]["diagnostics"]
     syntax_errors = [
         d for d in last_magic_diags if d.get("code") == "E0001:syntax-error"
     ]
-    assert not syntax_errors, (
-        f"Magic-line cell should not have syntax errors, got: {syntax_errors}"
-    )
+    assert (
+        not syntax_errors
+    ), f"Magic-line cell should not have syntax errors, got: {syntax_errors}"
 
 
 def test_notebook_cross_cell_import_not_flagged_unused():
@@ -601,7 +605,9 @@ def test_notebook_cross_cell_import_not_flagged_unused():
 
         def _handler(params):
             all_received.append(params)
-            code_cell_uris = {d["uri"] for d in cell_text_documents if d["languageId"] == "python"}
+            code_cell_uris = {
+                d["uri"] for d in cell_text_documents if d["languageId"] == "python"
+            }
             received_uris = {r["uri"] for r in all_received}
             if code_cell_uris.issubset(received_uris):
                 done.set()
@@ -630,6 +636,6 @@ def test_notebook_cross_cell_import_not_flagged_unused():
     unused_imports = [
         d for d in last_import_diags if d.get("code") == "W0611:unused-import"
     ]
-    assert not unused_imports, (
-        f"Cross-cell import must not be flagged as unused, got: {unused_imports}"
-    )
+    assert (
+        not unused_imports
+    ), f"Cross-cell import must not be flagged as unused, got: {unused_imports}"

@@ -15,6 +15,7 @@ import sys
 import sysconfig
 import threading
 import traceback
+import types
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 from urllib.parse import urlparse, urlunparse
 
@@ -81,6 +82,9 @@ _STDERR_ERROR_KEYWORDS = ("error", "traceback", "exception", "fatal")
 # Track lint request versions per URI to discard stale results from superseded runs.
 _lint_versions: Dict[str, int] = {}
 _lint_versions_lock = threading.Lock()
+
+# Matches IPython magic lines (%, %%, !, !!) so they can be replaced with `pass`.
+_MAGIC_LINE_RE = re.compile(r"^\s*[%!]")
 NOTEBOOK_SYNC_OPTIONS = lsp.NotebookDocumentSyncOptions(
     notebook_selector=[
         lsp.NotebookDocumentFilterWithNotebook(
@@ -196,48 +200,25 @@ if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_OPEN)
 def notebook_did_open(params: lsp.DidOpenNotebookDocumentParams) -> None:
-    """Run diagnostics on each code cell when a notebook is opened."""
-    nb = LSP_SERVER.workspace.get_notebook_document(
-        notebook_uri=params.notebook_document.uri
-    )
-    if nb is None:
-        return
-    for cell in nb.cells:
-        if cell.kind == lsp.NotebookCellKind.Code and cell.document is not None:
-            _lint_notebook_cell(cell.document)
+    """Run diagnostics on all code cells when a notebook is opened."""
+    _linting_helper_notebook(params.notebook_document.uri)
 
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_CHANGE)
 def notebook_did_change(params: lsp.DidChangeNotebookDocumentParams) -> None:
-    """Re-lint cells whose text changed or that were newly added."""
-    if params.change is None or params.change.cells is None:
-        return
-
-    for cell_content in params.change.cells.text_content or []:
-        if cell_content.document:
-            _lint_notebook_cell(cell_content.document.uri)
-
-    structure = params.change.cells.structure
-    if structure and structure.did_open:
-        for cell_document in structure.did_open:
-            _lint_notebook_cell(cell_document.uri)
-
-    if structure and structure.did_close:
-        for cell_document in structure.did_close:
-            _clear_notebook_cell_diagnostics(cell_document.uri)
+    """Re-lint all cells when any cell changes (for cross-cell context)."""
+    if params.change is not None and params.change.cells is not None:
+        structure = params.change.cells.structure
+        if structure and structure.did_close:
+            for cell_document in structure.did_close:
+                _clear_notebook_cell_diagnostics(cell_document.uri)
+    _linting_helper_notebook(params.notebook_document.uri)
 
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_SAVE)
 def notebook_did_save(params: lsp.DidSaveNotebookDocumentParams) -> None:
     """Re-lint all cells when a notebook is saved."""
-    nb = LSP_SERVER.workspace.get_notebook_document(
-        notebook_uri=params.notebook_document.uri
-    )
-    if nb is None:
-        return
-    for cell in nb.cells:
-        if cell.kind == lsp.NotebookCellKind.Code and cell.document is not None:
-            _lint_notebook_cell(cell.document)
+    _linting_helper_notebook(params.notebook_document.uri)
 
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_CLOSE)
@@ -247,21 +228,180 @@ def notebook_did_close(params: lsp.DidCloseNotebookDocumentParams) -> None:
         _clear_notebook_cell_diagnostics(cell_doc.uri)
 
 
-def _lint_notebook_cell(cell_uri: str) -> None:
-    """Lint a single notebook cell and publish its diagnostics."""
-    document = LSP_SERVER.workspace.get_text_document(cell_uri)
-    if document is None:
-        return
-    # Update path as pygls generates an invalid path.
-    # TODO: Remove when fixed. # pylint: disable=fixme
-    document.path = _get_document_path(cell_uri)
-    # Linting is only supported for python cells in notebooks.
-    if document.language_id != "python":
-        return
-    diagnostics: list[lsp.Diagnostic] = _linting_helper(document, is_notebook=True)
-    LSP_SERVER.text_document_publish_diagnostics(
-        lsp.PublishDiagnosticsParams(uri=cell_uri, diagnostics=diagnostics)
-    )
+def _build_concatenated_source(
+    nb,
+) -> tuple[str, list[tuple[str, int, int]]]:
+    """Concatenate all Python code cells into a single source string.
+
+    Returns:
+        (combined_source, cell_map) where cell_map is a list of
+        (cell_uri, start_line, line_count) tuples describing where each
+        cell's lines begin in the combined source.
+
+    IPython magic lines (%, %%, !, etc.) are replaced with ``pass``
+    statements so pylint does not raise syntax errors on them.
+    """
+    parts = []
+    cell_map: list[tuple[str, int, int]] = []
+    current_line = 0
+
+    for cell in nb.cells:
+        if cell.kind != lsp.NotebookCellKind.Code or cell.document is None:
+            continue
+        doc = LSP_SERVER.workspace.get_text_document(cell.document)
+        if doc is None or doc.language_id != "python":
+            continue
+
+        source = doc.source
+        if not source:
+            continue
+
+        lines = source.splitlines(keepends=True)
+        # Ensure the last line ends with a newline.
+        if lines and not lines[-1].endswith("\n"):
+            lines[-1] += "\n"
+
+        sanitized = [
+            "pass\n" if _MAGIC_LINE_RE.match(line) else line for line in lines
+        ]
+
+        cell_map.append((cell.document, current_line, len(sanitized)))
+        parts.extend(sanitized)
+        current_line += len(sanitized)
+
+    return "".join(parts), cell_map
+
+
+def _cell_for_line(
+    global_line: int, cell_map: list[tuple[str, int, int]]
+) -> tuple[str, int, int] | None:
+    """Return the (cell_uri, start_line, line_count) entry that owns *global_line*.
+
+    *global_line* is a 0-based line number in the concatenated source.
+    Returns ``None`` if no cell owns the line.
+    """
+    for entry in cell_map:
+        cell_uri, start_line, line_count = entry
+        if start_line <= global_line < start_line + line_count:
+            return entry
+    return None
+
+
+def _remap_diagnostics(
+    diagnostics: Sequence[lsp.Diagnostic],
+    cell_map: list[tuple[str, int, int]],
+) -> dict[str, list[lsp.Diagnostic]]:
+    """Map combined-source diagnostics back to individual cell URIs.
+
+    Each diagnostic's line range is adjusted relative to the owning cell.
+    Diagnostics whose start line doesn't fall in any cell are discarded.
+    If a diagnostic's end line crosses a cell boundary it is clamped.
+    """
+    per_cell: dict[str, list[lsp.Diagnostic]] = {uri: [] for uri, _, _ in cell_map}
+
+    for diag in diagnostics:
+        entry = _cell_for_line(diag.range.start.line, cell_map)
+        if entry is None:
+            continue
+        cell_uri, offset, line_count = entry
+
+        local_start_line = diag.range.start.line - offset
+        local_start = lsp.Position(
+            line=local_start_line,
+            character=diag.range.start.character,
+        )
+
+        # Clamp end line to the cell boundary (defensive).
+        max_end_line = line_count - 1
+        raw_end_line = diag.range.end.line - offset
+        clamped = raw_end_line > max_end_line
+        local_end_line = min(raw_end_line, max_end_line)
+        local_end = lsp.Position(
+            line=local_end_line,
+            character=0 if clamped else diag.range.end.character,
+        )
+
+        remapped = lsp.Diagnostic(
+            range=lsp.Range(start=local_start, end=local_end),
+            message=diag.message,
+            severity=diag.severity,
+            code=diag.code,
+            code_description=diag.code_description,
+            source=diag.source,
+        )
+        per_cell[cell_uri].append(remapped)
+
+    return per_cell
+
+
+def _linting_helper_notebook(notebook_uri: str) -> None:
+    """Lint all code cells together and publish per-cell diagnostics."""
+    try:
+        nb = LSP_SERVER.workspace.get_notebook_document(notebook_uri=notebook_uri)
+        if nb is None:
+            return
+
+        combined_source, cell_map = _build_concatenated_source(nb)
+        if not cell_map:
+            return
+
+        # Build a synthetic document pointing at the notebook's .ipynb path so
+        # that settings resolution and pylint invocation work correctly.
+        nb_path = _get_document_path(notebook_uri)
+        combined_doc = types.SimpleNamespace(
+            uri=notebook_uri,
+            path=nb_path,
+            source=combined_source,
+            language_id="python",
+            version=0,
+        )
+
+        # Debounce: key on the notebook URI.
+        with _lint_versions_lock:
+            version = _lint_versions.get(notebook_uri, 0) + 1
+            _lint_versions[notebook_uri] = version
+
+        LSP_SERVER.protocol.notify(
+            "pylint/lintingStarted",
+            {"uri": notebook_uri},
+        )
+
+        extra_args = []
+        code_workspace = _get_settings_by_document(combined_doc)["workspaceFS"]
+        if VERSION_TABLE.get(code_workspace, None):
+            major, minor, _ = VERSION_TABLE[code_workspace]
+            if (major, minor) >= (2, 16):
+                extra_args += ["--clear-cache-post-run=y"]
+
+        result = _run_tool_on_document(combined_doc, use_stdin=True, extra_args=extra_args)
+
+        # Discard stale results if a newer request has arrived.
+        with _lint_versions_lock:
+            if _lint_versions.get(notebook_uri, 0) != version:
+                log_to_output(
+                    f"Discarding stale lint results for {notebook_uri} "
+                    f"(version {version} superseded by {_lint_versions[notebook_uri]})"
+                )
+                return
+
+        all_diagnostics: Sequence[lsp.Diagnostic] = []
+        if result and result.stdout:
+            log_to_output(f"{notebook_uri} :\r\n{result.stdout}")
+            settings = copy.deepcopy(_get_settings_by_document(combined_doc))
+            all_diagnostics, _ = _parse_output(
+                result.stdout, severity=settings["severity"]
+            )
+
+        per_cell = _remap_diagnostics(all_diagnostics, cell_map)
+
+        # Publish per-cell diagnostics; cells with no issues get an empty list
+        # so that stale diagnostics from a previous run are cleared.
+        for cell_uri, diags in per_cell.items():
+            LSP_SERVER.text_document_publish_diagnostics(
+                lsp.PublishDiagnosticsParams(uri=cell_uri, diagnostics=diags)
+            )
+    except Exception:  # pylint: disable=broad-except
+        log_error(f"Notebook linting failed with error:\r\n{traceback.format_exc()}")
 
 
 def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
@@ -272,12 +412,12 @@ def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
 
 
 def _linting_helper(
-    document: workspace.TextDocument, is_notebook: bool = False
+    document: workspace.TextDocument,
 ) -> list[lsp.Diagnostic]:
     try:
-        # Skip notebook cells — they are linted via _lint_notebook_cell which
-        # passes cell content directly, not the notebook file path.
-        if not is_notebook and str(document.uri).startswith("vscode-notebook-cell"):
+        # Skip notebook cells — they are linted via _linting_helper_notebook
+        # which concatenates all cells before passing to pylint.
+        if str(document.uri).startswith("vscode-notebook-cell"):
             return []
 
         # Bump the version for this URI so any concurrent or queued lint for

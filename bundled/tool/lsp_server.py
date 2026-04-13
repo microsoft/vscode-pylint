@@ -67,6 +67,7 @@ update_environ_path()
 # **********************************************************
 # pylint: disable=wrong-import-position,import-error
 import lsp_jsonrpc as jsonrpc
+import lsp_notebook as notebook
 import lsp_utils as utils
 from lsprotocol import types as lsp
 from pygls import uris, workspace
@@ -83,30 +84,11 @@ _STDERR_ERROR_KEYWORDS = ("error", "traceback", "exception", "fatal")
 _lint_versions: Dict[str, int] = {}
 _lint_versions_lock = threading.Lock()
 
-# Matches IPython magic lines (%, %%, !, !!) so they can be replaced with `pass`.
-_MAGIC_LINE_RE = re.compile(r"^\s*[%!]")
-NOTEBOOK_SYNC_OPTIONS = lsp.NotebookDocumentSyncOptions(
-    notebook_selector=[
-        lsp.NotebookDocumentFilterWithNotebook(
-            notebook="jupyter-notebook",
-            cells=[
-                lsp.NotebookCellLanguage(language="python"),
-            ],
-        ),
-        lsp.NotebookDocumentFilterWithNotebook(
-            notebook="interactive",
-            cells=[
-                lsp.NotebookCellLanguage(language="python"),
-            ],
-        ),
-    ],
-    save=True,
-)
 LSP_SERVER = LanguageServer(
     name="pylint-server",
     version="v0.1.0",
     max_workers=MAX_WORKERS,
-    notebook_document_sync=NOTEBOOK_SYNC_OPTIONS,
+    notebook_document_sync=notebook.NOTEBOOK_SYNC_OPTIONS,
 )
 
 
@@ -228,112 +210,6 @@ def notebook_did_close(params: lsp.DidCloseNotebookDocumentParams) -> None:
         _clear_notebook_cell_diagnostics(cell_doc.uri)
 
 
-def _build_notebook_source(
-    nb,
-) -> tuple[str, list[tuple[str, int, int]]]:
-    """Build a single Python source string from all code cells in *nb*.
-
-    Returns:
-        (combined_source, cell_map) where cell_map is a list of
-        (cell_uri, start_line, line_count) tuples describing where each
-        cell's lines begin in the combined source.
-
-    IPython magic lines (%, %%, !, etc.) are replaced with ``pass``
-    statements so pylint does not raise syntax errors on them.
-    """
-    source_parts: list[str] = []
-    cell_map: list[tuple[str, int, int]] = []
-    current_line = 0
-
-    for cell in nb.cells:
-        if cell.kind != lsp.NotebookCellKind.Code or cell.document is None:
-            continue
-        doc = LSP_SERVER.workspace.get_text_document(cell.document)
-        if doc is None or doc.language_id != "python":
-            continue
-
-        source = doc.source
-        if not source:
-            continue
-
-        lines = source.splitlines(keepends=True)
-        # Ensure the last line ends with a newline.
-        if lines and not lines[-1].endswith("\n"):
-            lines[-1] += "\n"
-
-        sanitized_lines = [
-            "pass\n" if _MAGIC_LINE_RE.match(line) else line for line in lines
-        ]
-
-        cell_map.append((cell.document, current_line, len(sanitized_lines)))
-        source_parts.extend(sanitized_lines)
-        current_line += len(sanitized_lines)
-
-    return "".join(source_parts), cell_map
-
-
-def _get_cell_for_line(
-    global_line: int, cell_map: list[tuple[str, int, int]]
-) -> tuple[str, int, int] | None:
-    """Return the (cell_uri, start_line, line_count) entry that owns *global_line*.
-
-    *global_line* is a 0-based line number in the combined notebook source.
-    Returns ``None`` if no cell owns the line.
-    """
-    for entry in cell_map:
-        cell_uri, start_line, line_count = entry
-        if start_line <= global_line < start_line + line_count:
-            return entry
-    return None
-
-
-def _remap_diagnostics_to_cells(
-    diagnostics: Sequence[lsp.Diagnostic],
-    cell_map: list[tuple[str, int, int]],
-) -> dict[str, list[lsp.Diagnostic]]:
-    """Map combined-source diagnostics back to individual cell URIs.
-
-    Each diagnostic's line range is adjusted relative to the owning cell.
-    Diagnostics whose start line doesn't fall in any cell are discarded.
-    If a diagnostic's end line crosses a cell boundary it is clamped.
-    """
-    per_cell: dict[str, list[lsp.Diagnostic]] = {uri: [] for uri, _, _ in cell_map}
-
-    for diag in diagnostics:
-        entry = _get_cell_for_line(diag.range.start.line, cell_map)
-        if entry is None:
-            continue
-        cell_uri, start_line, line_count = entry
-
-        local_start_line = diag.range.start.line - start_line
-        local_start = lsp.Position(
-            line=local_start_line,
-            character=diag.range.start.character,
-        )
-
-        # Clamp end line to the cell boundary (defensive).
-        max_end_line = line_count - 1
-        raw_end_line = diag.range.end.line - start_line
-        clamped = raw_end_line > max_end_line
-        local_end_line = min(raw_end_line, max_end_line)
-        local_end = lsp.Position(
-            line=local_end_line,
-            character=0 if clamped else diag.range.end.character,
-        )
-
-        remapped = lsp.Diagnostic(
-            range=lsp.Range(start=local_start, end=local_end),
-            message=diag.message,
-            severity=diag.severity,
-            code=diag.code,
-            code_description=diag.code_description,
-            source=diag.source,
-        )
-        per_cell[cell_uri].append(remapped)
-
-    return per_cell
-
-
 def _linting_helper_notebook(notebook_uri: str) -> None:
     """Lint all code cells together and publish per-cell diagnostics."""
     try:
@@ -341,7 +217,9 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
         if nb is None:
             return
 
-        combined_source, cell_map = _build_notebook_source(nb)
+        combined_source, cell_map = notebook.build_notebook_source(
+            nb.cells, LSP_SERVER.workspace.get_text_document
+        )
         if not cell_map:
             return
 
@@ -392,7 +270,7 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
                 result.stdout, severity=settings["severity"]
             )
 
-        per_cell = _remap_diagnostics_to_cells(combined_diagnostics, cell_map)
+        per_cell = notebook.remap_diagnostics_to_cells(combined_diagnostics, cell_map)
 
         # Publish per-cell diagnostics; cells with no issues get an empty list
         # so that stale diagnostics from a previous run are cleared.

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import re
 from typing import Callable, Optional, Sequence
 
@@ -30,9 +31,17 @@ NOTEBOOK_SYNC_OPTIONS = lsp.NotebookDocumentSyncOptions(
     save=True,
 )
 
-# Type alias for the cell map used to track line offsets.
-# Each entry is (cell_uri, start_line, line_count).
-CellMap = list[tuple[str, int, int]]
+
+@dataclasses.dataclass
+class CellOffset:
+    """Describes where a single notebook cell's lines begin in the combined source."""
+
+    cell_uri: str
+    start_line: int
+    line_count: int
+
+
+CellMap = list[CellOffset]
 
 
 def build_notebook_source(
@@ -49,8 +58,8 @@ def build_notebook_source(
 
     Returns:
         (combined_source, cell_map) where *cell_map* is a list of
-        ``(cell_uri, start_line, line_count)`` tuples describing where each
-        cell's lines begin in the combined source.
+        :class:`CellOffset` instances describing where each cell's lines
+        begin in the combined source.
 
     IPython magic lines (``%``, ``%%``, ``!``, etc.) are replaced with
     ``pass`` statements so pylint does not raise syntax errors on them.
@@ -79,7 +88,7 @@ def build_notebook_source(
             "pass\n" if MAGIC_LINE_RE.match(line) else line for line in lines
         ]
 
-        cell_map.append((cell.document, current_line, len(sanitized_lines)))
+        cell_map.append(CellOffset(cell.document, current_line, len(sanitized_lines)))
         source_parts.extend(sanitized_lines)
         current_line += len(sanitized_lines)
 
@@ -88,15 +97,14 @@ def build_notebook_source(
 
 def get_cell_for_line(
     global_line: int, cell_map: CellMap
-) -> tuple[str, int, int] | None:
-    """Return the ``(cell_uri, start_line, line_count)`` entry that owns *global_line*.
+) -> CellOffset | None:
+    """Return the :class:`CellOffset` entry that owns *global_line*.
 
     *global_line* is a 0-based line number in the combined notebook source.
     Returns ``None`` if no cell owns the line.
     """
     for entry in cell_map:
-        _cell_uri, start_line, line_count = entry
-        if start_line <= global_line < start_line + line_count:
+        if entry.start_line <= global_line < entry.start_line + entry.line_count:
             return entry
     return None
 
@@ -111,23 +119,24 @@ def remap_diagnostics_to_cells(
     Diagnostics whose start line doesn't fall in any cell are discarded.
     If a diagnostic's end line crosses a cell boundary it is clamped.
     """
-    per_cell: dict[str, list[lsp.Diagnostic]] = {uri: [] for uri, _, _ in cell_map}
+    per_cell: dict[str, list[lsp.Diagnostic]] = {
+        entry.cell_uri: [] for entry in cell_map
+    }
 
     for diag in diagnostics:
         entry = get_cell_for_line(diag.range.start.line, cell_map)
         if entry is None:
             continue
-        cell_uri, start_line, line_count = entry
 
-        local_start_line = diag.range.start.line - start_line
+        local_start_line = diag.range.start.line - entry.start_line
         local_start = lsp.Position(
             line=local_start_line,
             character=diag.range.start.character,
         )
 
         # Clamp end line to the cell boundary (defensive).
-        max_end_line = line_count - 1
-        raw_end_line = diag.range.end.line - start_line
+        max_end_line = entry.line_count - 1
+        raw_end_line = diag.range.end.line - entry.start_line
         clamped = raw_end_line > max_end_line
         local_end_line = min(raw_end_line, max_end_line)
         local_end = lsp.Position(
@@ -143,6 +152,6 @@ def remap_diagnostics_to_cells(
             code_description=diag.code_description,
             source=diag.source,
         )
-        per_cell[cell_uri].append(remapped)
+        per_cell[entry.cell_uri].append(remapped)
 
     return per_cell

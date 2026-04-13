@@ -6,12 +6,35 @@ from __future__ import annotations
 
 import dataclasses
 import re
-from typing import Callable, Optional, Sequence
+from typing import Callable, Optional, Protocol, Sequence
 
 from lsprotocol import types as lsp
 
+
+class TextDocumentLike(Protocol):
+    """Protocol for objects that provide text document attributes."""
+
+    source: str
+    language_id: str
+
+
+@dataclasses.dataclass
+class SyntheticDocument:
+    """Typed stand-in for ``workspace.TextDocument`` used in notebook linting.
+
+    Replaces ``types.SimpleNamespace`` so that the synthetic document has
+    an explicit, portable shape that can be type-checked.
+    """
+
+    uri: str
+    path: str
+    source: str
+    language_id: str = "python"
+    version: int = 0
+
+
 # Matches IPython magic lines (%, %%, !, !!) so they can be replaced with `pass`.
-MAGIC_LINE_RE = re.compile(r"^\s*[%!]")
+MAGIC_LINE_RE = re.compile(r"^\s*(?:%%\w|%(?!=)\w|!!|!(?!=)\w)")
 
 NOTEBOOK_SYNC_OPTIONS = lsp.NotebookDocumentSyncOptions(
     notebook_selector=[
@@ -45,8 +68,8 @@ CellMap = list[CellOffset]
 
 
 def build_notebook_source(
-    cells: list,
-    get_text_document: Callable[[str], Optional[object]],
+    cells: list,  # NotebookCell objects (can't import type without pygls dependency)
+    get_text_document: Callable[[str], Optional[TextDocumentLike]],
 ) -> tuple[str, CellMap]:
     """Build a single Python source string from all code cells.
 
@@ -142,6 +165,15 @@ def remap_diagnostics_to_cells(
             character=0 if clamped else diag.range.end.character,
         )
 
+        # Ensure end is not before start (inverted range violates LSP spec)
+        if (
+            local_end.line == local_start.line
+            and local_end.character < local_start.character
+        ):
+            local_end = lsp.Position(
+                line=local_start.line, character=local_start.character
+            )
+
         remapped = lsp.Diagnostic(
             range=lsp.Range(start=local_start, end=local_end),
             message=diag.message,
@@ -149,6 +181,9 @@ def remap_diagnostics_to_cells(
             code=diag.code,
             code_description=diag.code_description,
             source=diag.source,
+            related_information=diag.related_information,
+            tags=diag.tags,
+            data=diag.data,
         )
         per_cell[entry.cell_uri].append(remapped)
 

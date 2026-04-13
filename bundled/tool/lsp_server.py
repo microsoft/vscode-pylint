@@ -15,7 +15,6 @@ import sys
 import sysconfig
 import threading
 import traceback
-import types
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 from urllib.parse import urlparse, urlunparse
 
@@ -211,7 +210,7 @@ def notebook_did_close(params: lsp.DidCloseNotebookDocumentParams) -> None:
         _clear_notebook_cell_diagnostics(cell_doc.uri)
 
 
-def _get_extra_args(document: workspace.TextDocument | None) -> list[str]:
+def _get_extra_args(document: TextDocument | None) -> list[str]:
     """Return extra pylint CLI args based on the pylint version for the workspace."""
     code_workspace = _get_settings_by_document(document)["workspaceFS"]
     if VERSION_TABLE.get(code_workspace, None):
@@ -228,6 +227,12 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
         if nb is None:
             return
 
+        # Increment version early so that any in-flight run from a prior call
+        # will see a newer version and discard its stale results.
+        with _lint_versions_lock:
+            version = _lint_versions.get(notebook_uri, 0) + 1
+            _lint_versions[notebook_uri] = version
+
         combined_source, cell_map = notebook.build_notebook_source(
             nb.cells, LSP_SERVER.workspace.get_text_document
         )
@@ -241,23 +246,12 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
 
         # Build a synthetic document pointing at the notebook's .ipynb path so
         # that settings resolution and pylint invocation work correctly.
-        # NOTE: SimpleNamespace is used here as a lightweight stand-in for
-        # workspace.TextDocument. If _run_tool_on_document or
-        # _get_settings_by_document begin accessing additional attributes,
-        # consider replacing this with a Protocol or TypedDict.
         nb_path = _get_document_path(notebook_uri)
-        combined_doc = types.SimpleNamespace(
+        combined_doc = notebook.SyntheticDocument(
             uri=notebook_uri,
             path=nb_path,
             source=combined_source,
-            language_id="python",
-            version=0,
         )
-
-        # Debounce: key on the notebook URI.
-        with _lint_versions_lock:
-            version = _lint_versions.get(notebook_uri, 0) + 1
-            _lint_versions[notebook_uri] = version
 
         LSP_SERVER.protocol.notify(
             "pylint/lintingStarted",
@@ -293,6 +287,18 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
             LSP_SERVER.text_document_publish_diagnostics(
                 lsp.PublishDiagnosticsParams(uri=cell_uri, diagnostics=diags)
             )
+
+        # Clear diagnostics for empty code cells that were skipped by
+        # build_notebook_source so stale diagnostics don't persist.
+        for cell in nb.cells:
+            if (
+                cell.kind == lsp.NotebookCellKind.Code
+                and cell.document
+                and cell.document not in per_cell
+            ):
+                LSP_SERVER.text_document_publish_diagnostics(
+                    lsp.PublishDiagnosticsParams(uri=cell.document, diagnostics=[])
+                )
     except Exception:  # pylint: disable=broad-except
         log_error(f"Notebook linting failed with error:\r\n{traceback.format_exc()}")
         LSP_SERVER.protocol.notify(
@@ -308,9 +314,7 @@ def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
     )
 
 
-def _linting_helper(
-    document: TextDocument, is_notebook: bool = False
-) -> list[lsp.Diagnostic]:
+def _linting_helper(document: TextDocument) -> list[lsp.Diagnostic]:
     try:
         # Skip notebook cells — they are linted via _linting_helper_notebook
         # which concatenates all cells before passing to pylint.

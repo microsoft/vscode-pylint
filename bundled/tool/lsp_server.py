@@ -240,6 +240,10 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
 
         # Build a synthetic document pointing at the notebook's .ipynb path so
         # that settings resolution and pylint invocation work correctly.
+        # NOTE: SimpleNamespace is used here as a lightweight stand-in for
+        # workspace.TextDocument. If _run_tool_on_document or
+        # _get_settings_by_document begin accessing additional attributes,
+        # consider replacing this with a Protocol or TypedDict.
         nb_path = _get_document_path(notebook_uri)
         combined_doc = types.SimpleNamespace(
             uri=notebook_uri,
@@ -290,6 +294,10 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
             )
     except Exception:  # pylint: disable=broad-except
         log_error(f"Notebook linting failed with error:\r\n{traceback.format_exc()}")
+        LSP_SERVER.protocol.notify(
+            "pylint/lintingFailed",
+            {"uri": notebook_uri},
+        )
 
 
 def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:

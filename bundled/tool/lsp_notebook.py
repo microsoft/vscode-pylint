@@ -95,9 +95,7 @@ def build_notebook_source(
     return "".join(source_parts), cell_map
 
 
-def get_cell_for_line(
-    global_line: int, cell_map: CellMap
-) -> CellOffset | None:
+def get_cell_for_line(global_line: int, cell_map: CellMap) -> CellOffset | None:
     """Return the :class:`CellOffset` entry that owns *global_line*.
 
     *global_line* is a 0-based line number in the combined notebook source.

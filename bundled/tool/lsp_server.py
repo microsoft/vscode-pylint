@@ -231,6 +231,11 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
             nb.cells, LSP_SERVER.workspace.get_text_document
         )
         if not cell_map:
+            for cell in nb.cells:
+                if cell.kind == lsp.NotebookCellKind.Code and cell.document:
+                    LSP_SERVER.text_document_publish_diagnostics(
+                        lsp.PublishDiagnosticsParams(uri=cell.document, diagnostics=[])
+                    )
             return
 
         # Build a synthetic document pointing at the notebook's .ipynb path so

@@ -149,6 +149,9 @@ def remap_diagnostics_to_cells(
             code=diag.code,
             code_description=diag.code_description,
             source=diag.source,
+            related_information=diag.related_information,
+            tags=diag.tags,
+            data=diag.data,
         )
         per_cell[entry.cell_uri].append(remapped)
 

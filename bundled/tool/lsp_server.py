@@ -211,7 +211,7 @@ def notebook_did_close(params: lsp.DidCloseNotebookDocumentParams) -> None:
         _clear_notebook_cell_diagnostics(cell_doc.uri)
 
 
-def _get_extra_args(document: workspace.TextDocument | None) -> list[str]:
+def _get_extra_args(document: TextDocument | None) -> list[str]:
     """Return extra pylint CLI args based on the pylint version for the workspace."""
     code_workspace = _get_settings_by_document(document)["workspaceFS"]
     if VERSION_TABLE.get(code_workspace, None):
@@ -293,6 +293,14 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
             LSP_SERVER.text_document_publish_diagnostics(
                 lsp.PublishDiagnosticsParams(uri=cell_uri, diagnostics=diags)
             )
+
+        # Clear diagnostics for empty code cells that were skipped by
+        # build_notebook_source so stale diagnostics don't persist.
+        for cell in nb.cells:
+            if cell.kind == lsp.NotebookCellKind.Code and cell.document and cell.document not in per_cell:
+                LSP_SERVER.text_document_publish_diagnostics(
+                    lsp.PublishDiagnosticsParams(uri=cell.document, diagnostics=[])
+                )
     except Exception:  # pylint: disable=broad-except
         log_error(f"Notebook linting failed with error:\r\n{traceback.format_exc()}")
         LSP_SERVER.protocol.notify(
@@ -308,9 +316,7 @@ def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
     )
 
 
-def _linting_helper(
-    document: TextDocument, is_notebook: bool = False
-) -> list[lsp.Diagnostic]:
+def _linting_helper(document: TextDocument) -> list[lsp.Diagnostic]:
     try:
         # Skip notebook cells — they are linted via _linting_helper_notebook
         # which concatenates all cells before passing to pylint.

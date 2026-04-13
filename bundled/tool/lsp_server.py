@@ -68,8 +68,9 @@ update_environ_path()
 import lsp_jsonrpc as jsonrpc
 import lsp_utils as utils
 from lsprotocol import types as lsp
-from pygls import uris, workspace
+from pygls import uris
 from pygls.lsp.server import LanguageServer
+from pygls.workspace import TextDocument
 
 WORKSPACE_SETTINGS = {}
 GLOBAL_SETTINGS = {}
@@ -272,7 +273,7 @@ def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
 
 
 def _linting_helper(
-    document: workspace.TextDocument, is_notebook: bool = False
+    document: TextDocument, is_notebook: bool = False
 ) -> list[lsp.Diagnostic]:
     try:
         # Skip notebook cells — they are linted via _lint_notebook_cell which
@@ -427,18 +428,14 @@ class QuickFixSolutions:
     def __init__(self):
         self._solutions: Dict[
             str,
-            Callable[
-                [workspace.TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]
-            ],
+            Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]],
         ] = {}
 
     def quick_fix(self, codes: Union[str, List[str]]):
         """Decorator used for registering quick fixes."""
 
         def decorator(
-            func: Callable[
-                [workspace.TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]
-            ],
+            func: Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]],
         ):
             if isinstance(codes, str):
                 if codes in self._solutions:
@@ -454,9 +451,7 @@ class QuickFixSolutions:
 
     def solutions(
         self, code: str
-    ) -> Optional[
-        Callable[[workspace.TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]]
-    ]:
+    ) -> Optional[Callable[[TextDocument, List[lsp.Diagnostic]], List[lsp.CodeAction]]]:
         """Given a pylint error code returns a function, if available, that provides
         quick fix code actions."""
         return self._solutions.get(code, None)
@@ -499,7 +494,7 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     ]
 )
 def fix_format(
-    _document: workspace.TextDocument, diagnostics: List[lsp.Diagnostic]
+    _document: TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve formatting document."""
     return [
@@ -519,7 +514,7 @@ def fix_format(
     ]
 )
 def organize_imports(
-    _document: workspace.TextDocument, diagnostics: List[lsp.Diagnostic]
+    _document: TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which involve organizing imports."""
     return [
@@ -600,7 +595,7 @@ def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.T
     codes=list(REPLACEMENTS.keys()),
 )
 def fix_with_replacement(
-    document: workspace.TextDocument, diagnostics: List[lsp.Diagnostic]
+    document: TextDocument, diagnostics: List[lsp.Diagnostic]
 ) -> List[lsp.CodeAction]:
     """Provides quick fixes which basic string replacements."""
     return [
@@ -645,7 +640,7 @@ def _command_quick_fix(
 
 
 def _create_workspace_edits(
-    document: workspace.TextDocument, results: Optional[List[lsp.TextEdit]]
+    document: TextDocument, results: Optional[List[lsp.TextEdit]]
 ):
     return lsp.WorkspaceEdit(
         document_changes=[
@@ -811,7 +806,7 @@ def _get_settings_by_path(file_path: pathlib.Path):
     return setting_values[0]
 
 
-def _get_document_key(document: workspace.TextDocument):
+def _get_document_key(document: TextDocument):
     if WORKSPACE_SETTINGS:
         document_workspace = pathlib.Path(document.path)
         workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
@@ -826,7 +821,7 @@ def _get_document_key(document: workspace.TextDocument):
     return None
 
 
-def _get_settings_by_document(document: workspace.TextDocument | None):
+def _get_settings_by_document(document: TextDocument | None):
     if document is None or document.path is None:
         return list(WORKSPACE_SETTINGS.values())[0]
 
@@ -847,9 +842,7 @@ def _get_settings_by_document(document: workspace.TextDocument | None):
 # *****************************************************
 # Internal execution APIs.
 # *****************************************************
-def get_cwd(
-    settings: Dict[str, Any], document: Optional[workspace.TextDocument]
-) -> str:
+def get_cwd(settings: Dict[str, Any], document: Optional[TextDocument]) -> str:
     """Returns the working directory for running the tool.
 
     Resolves the following VS Code file-related variable substitutions when
@@ -908,7 +901,7 @@ def get_cwd(
 
 # pylint: disable=too-many-branches,too-many-statements
 def _run_tool_on_document(
-    document: workspace.TextDocument,
+    document: TextDocument,
     use_stdin: bool = False,
     extra_args: Optional[Sequence[str]] = None,
 ) -> utils.RunResult | None:

@@ -113,14 +113,29 @@ def _create_lsprotocol_mocks():
     mock_lsp.CodeActionKind = types.SimpleNamespace(QuickFix="quickfix")
 
     class _FlexClass:
-        """Accepts arbitrary positional/keyword args."""
+        """Accepts arbitrary positional/keyword args (stores kwargs as attributes)."""
 
         def __init__(self, *_args, **_kwargs):
-            self._kwargs = _kwargs
+            for key, value in _kwargs.items():
+                setattr(self, key, value)
+
+    class _DiagSevMeta(type):
+        _MAP = {"Error": 1, "Warning": 2, "Information": 3, "Hint": 4}
+
+        def __getitem__(cls, key):
+            return cls._MAP[key]
+
+    class _MockDiagnosticSeverity(metaclass=_DiagSevMeta):
+        Error = 1
+        Warning = 2
+        Information = 3
+        Hint = 4
+
+    mock_lsp.DiagnosticSeverity = _MockDiagnosticSeverity
 
     for _name in [
+        "CodeDescription",
         "Diagnostic",
-        "DiagnosticSeverity",
         "DidCloseTextDocumentParams",
         "DidOpenTextDocumentParams",
         "DidSaveTextDocumentParams",

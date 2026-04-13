@@ -210,6 +210,16 @@ def notebook_did_close(params: lsp.DidCloseNotebookDocumentParams) -> None:
         _clear_notebook_cell_diagnostics(cell_doc.uri)
 
 
+def _get_extra_args(document: workspace.TextDocument | None) -> list[str]:
+    """Return extra pylint CLI args based on the pylint version for the workspace."""
+    code_workspace = _get_settings_by_document(document)["workspaceFS"]
+    if VERSION_TABLE.get(code_workspace, None):
+        major, minor, _ = VERSION_TABLE[code_workspace]
+        if (major, minor) >= (2, 16):
+            return ["--clear-cache-post-run=y"]
+    return []
+
+
 def _linting_helper_notebook(notebook_uri: str) -> None:
     """Lint all code cells together and publish per-cell diagnostics."""
     try:
@@ -244,14 +254,9 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
             {"uri": notebook_uri},
         )
 
-        extra_args = []
-        code_workspace = _get_settings_by_document(combined_doc)["workspaceFS"]
-        if VERSION_TABLE.get(code_workspace, None):
-            major, minor, _ = VERSION_TABLE[code_workspace]
-            if (major, minor) >= (2, 16):
-                extra_args += ["--clear-cache-post-run=y"]
-
-        result = _run_tool_on_document(combined_doc, use_stdin=True, extra_args=extra_args)
+        result = _run_tool_on_document(
+            combined_doc, use_stdin=True, extra_args=_get_extra_args(combined_doc)
+        )
 
         # Discard stale results if a newer request has arrived.
         with _lint_versions_lock:
@@ -311,15 +316,9 @@ def _linting_helper(
                 "uri": document.uri,
             },
         )
-        extra_args = []
-
-        code_workspace = _get_settings_by_document(document)["workspaceFS"]
-        if VERSION_TABLE.get(code_workspace, None):
-            major, minor, _ = VERSION_TABLE[code_workspace]
-            if (major, minor) >= (2, 16):
-                extra_args += ["--clear-cache-post-run=y"]
-
-        result = _run_tool_on_document(document, use_stdin=True, extra_args=extra_args)
+        result = _run_tool_on_document(
+            document, use_stdin=True, extra_args=_get_extra_args(document)
+        )
 
         # If a newer lint request arrived while we were running, discard
         # these stale results — the newer request will publish its own.

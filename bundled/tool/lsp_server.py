@@ -297,7 +297,11 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
         # Clear diagnostics for empty code cells that were skipped by
         # build_notebook_source so stale diagnostics don't persist.
         for cell in nb.cells:
-            if cell.kind == lsp.NotebookCellKind.Code and cell.document and cell.document not in per_cell:
+            if (
+                cell.kind == lsp.NotebookCellKind.Code
+                and cell.document
+                and cell.document not in per_cell
+            ):
                 LSP_SERVER.text_document_publish_diagnostics(
                     lsp.PublishDiagnosticsParams(uri=cell.document, diagnostics=[])
                 )

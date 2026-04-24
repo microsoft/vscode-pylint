@@ -258,6 +258,6 @@
         "typemoq": "^2.1.0",
         "typescript": "^5.9.3",
         "webpack": "^5.105.4",
-        "webpack-cli": "^5.1.4"
+        "webpack-cli": "^7.0.2"
     }
 }

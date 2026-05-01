@@ -36,6 +36,7 @@ export async function restartServer(
     if (isLintOnChangeEnabled(serverId)) {
         toolConfig.extraEnvVars = {
             ...toolConfig.extraEnvVars,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             VSCODE_PYLINT_LINT_ON_CHANGE: '1',
         };
     }

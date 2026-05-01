@@ -1,18 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-"""Utility functions and classes for use with running tools over LSP.
-
-Thin wrapper: delegates to vscode-common-python-lsp shared package,
-providing backward-compatible names used by lsp_server.py and tests.
-"""
+"""Pylint-specific utility functions for use with running tools over LSP."""
 
 from __future__ import annotations
 
-from vscode_common_python_lsp import (
-    SERVER_CWD,
-    change_cwd,
-    classify_python_file,
-)
+from vscode_common_python_lsp import classify_python_file
 
 # Pylint-specific message category mapping
 CATEGORIES = {
@@ -37,8 +29,6 @@ def is_stdlib_file(file_path: str) -> bool:
 
 __all__ = [
     "CATEGORIES",
-    "SERVER_CWD",
-    "change_cwd",
     "get_message_category",
     "is_stdlib_file",
 ]

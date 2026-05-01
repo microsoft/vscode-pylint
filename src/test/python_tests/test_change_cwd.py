@@ -54,7 +54,10 @@ def test_change_cwd_oserror_does_not_crash(caplog):
     original_cwd = os.getcwd()
     body_executed = False
 
-    with patch("vscode_common_python_lsp.context.os.chdir", side_effect=OSError("Some OS error")):
+    with patch(
+        "vscode_common_python_lsp.context.os.chdir",
+        side_effect=OSError("Some OS error"),
+    ):
         with caplog.at_level(logging.WARNING):
             with lsp_utils.change_cwd("/inaccessible"):
                 body_executed = True

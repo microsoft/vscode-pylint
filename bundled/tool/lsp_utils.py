@@ -3,23 +3,15 @@
 """Utility functions and classes for use with running tools over LSP.
 
 Thin wrapper: delegates to vscode-common-python-lsp shared package,
-providing backward-compatible names used by lsp_server.py.
+providing backward-compatible names used by lsp_server.py and tests.
 """
 
 from __future__ import annotations
 
 from vscode_common_python_lsp import (
     SERVER_CWD,
-    QuickFixRegistrationError,
-    RunResult,
     change_cwd,
     classify_python_file,
-    is_current_interpreter,
-    is_match,
-    normalize_path,
-    run_module,
-    run_path,
-    substitute_attr,
 )
 
 # Pylint-specific message category mapping
@@ -45,16 +37,8 @@ def is_stdlib_file(file_path: str) -> bool:
 
 __all__ = [
     "CATEGORIES",
-    "QuickFixRegistrationError",
-    "RunResult",
     "SERVER_CWD",
     "change_cwd",
     "get_message_category",
-    "is_current_interpreter",
-    "is_match",
     "is_stdlib_file",
-    "normalize_path",
-    "run_module",
-    "run_path",
-    "substitute_attr",
 ]

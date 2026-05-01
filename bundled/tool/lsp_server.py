@@ -73,6 +73,16 @@ from lsprotocol import types as lsp
 from pygls import uris
 from pygls.lsp.server import LanguageServer
 from pygls.workspace import TextDocument
+from vscode_common_python_lsp import (
+    QuickFixRegistrationError,
+    RunResult,
+    is_current_interpreter,
+    is_match,
+    normalize_path,
+    run_module,
+    run_path,
+    substitute_attr,
+)
 
 WORKSPACE_SETTINGS = {}
 GLOBAL_SETTINGS = {}
@@ -479,12 +489,12 @@ class QuickFixSolutions:
         ):
             if isinstance(codes, str):
                 if codes in self._solutions:
-                    raise utils.QuickFixRegistrationError(codes)
+                    raise QuickFixRegistrationError(codes)
                 self._solutions[codes] = func
             else:
                 for code in codes:
                     if code in self._solutions:
-                        raise utils.QuickFixRegistrationError(code)
+                        raise QuickFixRegistrationError(code)
                     self._solutions[code] = func
 
         return decorator
@@ -816,7 +826,7 @@ def _get_global_defaults():
 
 def _update_workspace_settings(settings):
     if not settings:
-        key = utils.normalize_path(os.getcwd())
+        key = normalize_path(os.getcwd())
         WORKSPACE_SETTINGS[key] = {
             "cwd": key,
             "workspaceFS": key,
@@ -826,7 +836,7 @@ def _update_workspace_settings(settings):
         return
 
     for setting in settings:
-        key = utils.normalize_path(uris.to_fs_path(setting["workspace"]))
+        key = normalize_path(uris.to_fs_path(setting["workspace"]))
         WORKSPACE_SETTINGS[key] = {
             **setting,
             "workspaceFS": key,
@@ -837,7 +847,7 @@ def _get_settings_by_path(file_path: pathlib.Path):
     workspaces = {s["workspaceFS"] for s in WORKSPACE_SETTINGS.values()}
 
     while file_path != file_path.parent:
-        str_file_path = utils.normalize_path(file_path)
+        str_file_path = normalize_path(file_path)
         if str_file_path in workspaces:
             return WORKSPACE_SETTINGS[str_file_path]
         file_path = file_path.parent
@@ -853,7 +863,7 @@ def _get_document_key(document: TextDocument):
 
         # Find workspace settings for the given file.
         while document_workspace != document_workspace.parent:
-            norm_path = utils.normalize_path(document_workspace)
+            norm_path = normalize_path(document_workspace)
             if norm_path in workspaces:
                 return norm_path
             document_workspace = document_workspace.parent
@@ -868,7 +878,7 @@ def _get_settings_by_document(document: TextDocument | None):
     key = _get_document_key(document)
     if key is None:
         # This is either a non-workspace file or there is no workspace.
-        key = utils.normalize_path(pathlib.Path(document.path).parent)
+        key = normalize_path(pathlib.Path(document.path).parent)
         return {
             "cwd": key,
             "workspaceFS": key,
@@ -944,7 +954,7 @@ def _run_tool_on_document(
     document: TextDocument,
     use_stdin: bool = False,
     extra_args: Optional[Sequence[str]] = None,
-) -> utils.RunResult | None:
+) -> RunResult | None:
     """Runs tool on the given document.
 
     if use_stdin is true then contents of the document is passed to the
@@ -968,7 +978,7 @@ def _run_tool_on_document(
 
         return None
 
-    if utils.is_match(settings["ignorePatterns"], document.path):
+    if is_match(settings["ignorePatterns"], document.path):
         log_warning(
             f"Skipping file due to `pylint.ignorePatterns` match: {document.path}"
         )
@@ -983,7 +993,7 @@ def _run_tool_on_document(
         # 'path' setting takes priority over everything.
         use_path = True
         argv = settings["path"]
-    elif settings["interpreter"] and not utils.is_current_interpreter(
+    elif settings["interpreter"] and not is_current_interpreter(
         settings["interpreter"][0]
     ):
         # If there is a different interpreter set use JSON-RPC to the subprocess
@@ -1016,7 +1026,7 @@ def _run_tool_on_document(
         # This mode is used when running executables.
         log_to_output(" ".join(argv))
         log_to_output(f"CWD Server: {cwd}")
-        result = utils.run_path(
+        result = run_path(
             argv=argv,
             use_stdin=use_stdin,
             cwd=cwd,
@@ -1050,9 +1060,9 @@ def _run_tool_on_document(
         log_to_output(f"CWD Linter: {cwd}")
         # This is needed to preserve sys.path, in cases where the tool modifies
         # sys.path and that might not work for this scenario next time around.
-        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
+        with substitute_attr(sys, "path", [""] + sys.path[:]):
             try:
-                result = utils.run_module(
+                result = run_module(
                     module=TOOL_MODULE,
                     argv=argv,
                     use_stdin=use_stdin,
@@ -1070,7 +1080,7 @@ def _run_tool_on_document(
     return result
 
 
-def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunResult:
+def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> RunResult:
     """Runs tool."""
     code_workspace = settings["workspaceFS"]
     cwd = get_cwd(settings, None)
@@ -1081,7 +1091,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         # 'path' setting takes priority over everything.
         use_path = True
         argv = settings["path"]
-    elif len(settings["interpreter"]) > 0 and not utils.is_current_interpreter(
+    elif len(settings["interpreter"]) > 0 and not is_current_interpreter(
         settings["interpreter"][0]
     ):
         # If there is a different interpreter set use JSON-RPC to the subprocess
@@ -1105,7 +1115,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         # This mode is used when running executables.
         log_to_output(" ".join(argv))
         log_to_output(f"CWD Server: {cwd}")
-        result = utils.run_path(argv=argv, use_stdin=True, cwd=cwd, env=env)
+        result = run_path(argv=argv, use_stdin=True, cwd=cwd, env=env)
         if result.stderr:
             log_to_output(result.stderr)
             if any(kw in result.stderr.lower() for kw in _STDERR_ERROR_KEYWORDS):
@@ -1131,9 +1141,9 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> utils.RunR
         log_to_output(f"CWD Linter: {cwd}")
         # This is needed to preserve sys.path, in cases where the tool modifies
         # sys.path and that might not work for this scenario next time around.
-        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
+        with substitute_attr(sys, "path", [""] + sys.path[:]):
             try:
-                result = utils.run_module(
+                result = run_module(
                     module=TOOL_MODULE, argv=argv, use_stdin=True, cwd=cwd
                 )
             except Exception:
@@ -1163,7 +1173,7 @@ def _get_updated_env(settings: Dict[str, Any]) -> str:
     return env
 
 
-def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunResult:
+def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> RunResult:
     error = ""
     if rpc_result.exception:
         log_error(rpc_result.exception)
@@ -1171,7 +1181,7 @@ def _to_run_result_with_logging(rpc_result: jsonrpc.RpcRunResult) -> utils.RunRe
     elif rpc_result.stderr:
         log_to_output(rpc_result.stderr)
         error = rpc_result.stderr
-    return utils.RunResult(rpc_result.stdout, error)
+    return RunResult(rpc_result.stdout, error)
 
 
 # *****************************************************

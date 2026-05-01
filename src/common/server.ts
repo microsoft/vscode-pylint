@@ -4,18 +4,12 @@
 import { Disposable, l10n, LanguageStatusSeverity, LogOutputChannel } from 'vscode';
 import { State } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/node';
-import {
-    IBaseSettings,
-    getServerCwd as _getServerCwd,
-    restartServer as _restartServer,
-} from '@vscode/common-python-lsp';
+import { IBaseSettings, restartServer as _restartServer } from '@vscode/common-python-lsp';
 import { PYLINT_TOOL_CONFIG } from './constants';
 import { traceError, traceVerbose } from './logging';
 import { ISettings, isLintOnChangeEnabled } from './settings';
 import { getLSClientTraceLevel } from './utilities';
 import { updateScore, updateStatus } from './status';
-
-export type { IInitOptions } from '@vscode/common-python-lsp';
 
 // Lazy-initialized PythonEnvironmentsProvider
 import { PythonEnvironmentsProvider } from '@vscode/common-python-lsp';
@@ -26,10 +20,6 @@ export function getPythonProvider(): PythonEnvironmentsProvider {
         _provider = new PythonEnvironmentsProvider(PYLINT_TOOL_CONFIG);
     }
     return _provider;
-}
-
-export function getServerCwd(settings: ISettings): string {
-    return _getServerCwd(settings as unknown as IBaseSettings);
 }
 
 let _disposables: Disposable[] = [];

@@ -35,7 +35,7 @@ update_sys_path(os.getcwd(), os.getenv("LS_IMPORT_STRATEGY", "useBundled"))
 
 # pylint: disable=wrong-import-position,import-error
 import lsp_jsonrpc as jsonrpc
-import lsp_utils as utils
+from vscode_common_python_lsp import RunResult, run_module, substitute_attr
 
 RPC = jsonrpc.create_json_rpc(sys.stdin.buffer, sys.stdout.buffer)
 
@@ -53,9 +53,9 @@ while not EXIT_NOW:
         # This is needed to preserve sys.path, pylint modifies
         # sys.path and that might not work for this scenario
         # next time around.
-        with utils.substitute_attr(sys, "path", [""] + sys.path[:]):
+        with substitute_attr(sys, "path", [""] + sys.path[:]):
             try:
-                result = utils.run_module(
+                result = run_module(
                     module=msg["module"],
                     argv=msg["argv"],
                     use_stdin=msg["useStdin"],
@@ -63,7 +63,7 @@ while not EXIT_NOW:
                     source=msg["source"] if "source" in msg else None,
                 )
             except Exception:  # pylint: disable=broad-except
-                result = utils.RunResult("", traceback.format_exc(chain=True))
+                result = RunResult("", traceback.format_exc(chain=True))
                 is_exception = True  # pylint: disable=invalid-name
 
         response = {"id": msg["id"], "error": result.stderr}

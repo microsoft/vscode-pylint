@@ -7,20 +7,10 @@ import { LanguageClient } from 'vscode-languageclient/node';
 import { IBaseSettings, restartServer as _restartServer } from '@vscode/common-python-lsp';
 import { PYLINT_TOOL_CONFIG } from './constants';
 import { traceError, traceVerbose } from './logging';
+import { getPythonProvider } from './python';
 import { ISettings, isLintOnChangeEnabled } from './settings';
 import { getLSClientTraceLevel } from './utilities';
 import { updateScore, updateStatus } from './status';
-
-// Lazy-initialized PythonEnvironmentsProvider
-import { PythonEnvironmentsProvider } from '@vscode/common-python-lsp';
-
-let _provider: PythonEnvironmentsProvider | undefined;
-export function getPythonProvider(): PythonEnvironmentsProvider {
-    if (!_provider) {
-        _provider = new PythonEnvironmentsProvider(PYLINT_TOOL_CONFIG);
-    }
-    return _provider;
-}
 
 let _disposables: Disposable[] = [];
 

@@ -14,7 +14,6 @@ from vscode_common_python_lsp import (
     CWD_LOCK,
     SERVER_CWD,
     CustomIO,
-    PythonFileKind,
     QuickFixRegistrationError,
     RunResult,
     as_list,

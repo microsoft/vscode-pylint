@@ -28,7 +28,6 @@ export const PYLINT_TOOL_CONFIG: ToolConfig = {
     pythonUtf8: true,
     settingsDefaults: {
         enabled: true,
-        args: [],
         severity: {
             convention: 'Information',
             error: 'Error',
@@ -37,10 +36,7 @@ export const PYLINT_TOOL_CONFIG: ToolConfig = {
             warning: 'Warning',
             info: 'Information',
         },
-        path: [],
         ignorePatterns: [],
-        importStrategy: 'useBundled',
-        showNotifications: 'off',
         lintOnChange: false,
     },
     trackedSettings: [

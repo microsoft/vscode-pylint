@@ -8,11 +8,10 @@ import {
     getGlobalSettings as _getGlobalSettings,
     getWorkspaceSettings as _getWorkspaceSettings,
     resolveVariables,
-    getWorkspaceFolders,
-    getConfiguration,
 } from '@vscode/common-python-lsp';
 import { PYLINT_TOOL_CONFIG } from './constants';
 import { getInterpreterDetails } from './python';
+import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
 import { traceWarn } from './logging';
 
 export interface ISettings extends IBaseSettings {
@@ -33,7 +32,12 @@ export async function getWorkspaceSettings(
     includeInterpreter?: boolean,
 ): Promise<ISettings> {
     const resolveInterpreter = includeInterpreter ? getInterpreterDetails : undefined;
-    const settings = (await _getWorkspaceSettings(namespace, workspace, PYLINT_TOOL_CONFIG, resolveInterpreter)) as ISettings;
+    const settings = (await _getWorkspaceSettings(
+        namespace,
+        workspace,
+        PYLINT_TOOL_CONFIG,
+        resolveInterpreter,
+    )) as ISettings;
 
     if (settings.ignorePatterns?.length > 0) {
         settings.ignorePatterns = resolveVariables(settings.ignorePatterns, workspace);
@@ -53,10 +57,7 @@ export function isLintOnChangeEnabled(namespace: string): boolean {
 }
 
 export function getTrackedSettings(namespace: string): string[] {
-    return [
-        ...PYLINT_TOOL_CONFIG.trackedSettings.map((s) => `${namespace}.${s}`),
-        'python.analysis.extraPaths',
-    ];
+    return [...PYLINT_TOOL_CONFIG.trackedSettings.map((s) => `${namespace}.${s}`), 'python.analysis.extraPaths'];
 }
 
 export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {

@@ -5,7 +5,7 @@
 Thin wrapper: delegates to vscode-common-python-lsp shared package.
 """
 
-from vscode_common_python_lsp import (  # noqa: F401
+from vscode_common_python_lsp import (  # noqa: F401  # pylint: disable=unused-import
     MAGIC_LINE_RE,
     NOTEBOOK_SYNC_OPTIONS,
     CellOffset,

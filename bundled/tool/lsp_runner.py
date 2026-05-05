@@ -31,7 +31,12 @@ update_sys_path(
 )
 
 
-from vscode_common_python_lsp import JsonRpc, RunResult, run_message_loop, run_module  # noqa: E402
+from vscode_common_python_lsp import (  # isort: skip  # noqa: E402
+    JsonRpc,
+    RunResult,
+    run_message_loop,
+    run_module,
+)
 
 RPC = JsonRpc(sys.stdin.buffer, sys.stdout.buffer)
 # run_message_loop handles the sys.path manipulation internally:

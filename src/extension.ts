@@ -43,7 +43,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const lintOnChange = getConfiguration('pylint').get<boolean>('lintOnChange', false);
     const toolConfig = lintOnChange
         ? // eslint-disable-next-line @typescript-eslint/naming-convention
-          { ...PYLINT_TOOL_CONFIG, extraEnvVars: { ...PYLINT_TOOL_CONFIG.extraEnvVars, VSCODE_PYLINT_LINT_ON_CHANGE: '1' } }
+          {
+              ...PYLINT_TOOL_CONFIG,
+              extraEnvVars: { ...PYLINT_TOOL_CONFIG.extraEnvVars, VSCODE_PYLINT_LINT_ON_CHANGE: '1' },
+          }
         : PYLINT_TOOL_CONFIG;
 
     const pythonProvider = new PythonEnvironmentsProvider(toolConfig);

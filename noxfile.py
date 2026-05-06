@@ -124,7 +124,7 @@ def install_bundled_libs(session):
         "py",
         "--no-deps",
         "--upgrade",
-        "vscode-common-python-lsp==0.4.0",
+        "vscode-common-python-lsp==0.5.0",
     )
 
 

@@ -8,12 +8,15 @@ export const EXTENSION_ROOT_DIR = resolveExtensionRoot(__dirname);
 
 export const PYLINT_CONFIG_FILES = ['.pylintrc', 'pylintrc', 'pyproject.toml', 'setup.cfg', 'tox.ini'];
 
-/* eslint-disable @typescript-eslint/naming-convention */
+export const MINIMUM_PYTHON_MAJOR = 3;
+export const MINIMUM_PYTHON_MINOR = 10;
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const PYLINT_TOOL_CONFIG: ToolConfig = {
     toolId: 'pylint',
     toolDisplayName: 'Pylint',
     toolModule: 'pylint',
-    minimumPythonVersion: { major: 3, minor: 10 },
+    minimumPythonVersion: { major: MINIMUM_PYTHON_MAJOR, minor: MINIMUM_PYTHON_MINOR },
     configFiles: PYLINT_CONFIG_FILES,
     serverScript: path.join(EXTENSION_ROOT_DIR, 'bundled', 'tool', 'lsp_server.py'),
     debugServerScript: path.join(EXTENSION_ROOT_DIR, 'bundled', 'tool', '_debug_server.py'),

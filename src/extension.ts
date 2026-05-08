@@ -39,25 +39,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const outputChannel = vscode.window.createOutputChannel(serverInfo.name, { log: true });
     context.subscriptions.push(outputChannel, registerLogger(outputChannel));
 
-    // Set lintOnChange env var dynamically based on current config
-    const lintOnChange = getConfiguration('pylint').get<boolean>('lintOnChange', false);
-    const toolConfig = lintOnChange
-        ? // eslint-disable-next-line @typescript-eslint/naming-convention
-          {
-              ...PYLINT_TOOL_CONFIG,
-              extraEnvVars: { ...PYLINT_TOOL_CONFIG.extraEnvVars, VSCODE_PYLINT_LINT_ON_CHANGE: '1' },
-          }
-        : PYLINT_TOOL_CONFIG;
-
-    const pythonProvider = new PythonEnvironmentsProvider(toolConfig);
+    const pythonProvider = new PythonEnvironmentsProvider(PYLINT_TOOL_CONFIG);
     context.subscriptions.push(pythonProvider);
 
-    toolContext = createToolContext({ serverInfo, outputChannel, toolConfig, pythonProvider });
+    toolContext = createToolContext({ serverInfo, outputChannel, toolConfig: PYLINT_TOOL_CONFIG, pythonProvider });
     context.subscriptions.push({ dispose: () => toolContext?.dispose() });
 
-    // Wrap runServer to register pylint-specific notification handlers after each restart
+    // HACK: Override runServer to (1) set the lintOnChange env var dynamically so
+    // toggling the setting takes effect without a full window reload, and (2) register
+    // pylint-specific score notification handlers after each server restart.
+    // Replace with a proper post-start hook when the shared package supports one.
     const originalRunServer = toolContext.runServer.bind(toolContext);
     toolContext.runServer = async () => {
+        // Re-evaluate lintOnChange on each restart so runtime config changes take effect
+        if (getConfiguration('pylint').get<boolean>('lintOnChange', false)) {
+            process.env['VSCODE_PYLINT_LINT_ON_CHANGE'] = '1';
+        } else {
+            delete process.env['VSCODE_PYLINT_LINT_ON_CHANGE'];
+        }
         await originalRunServer();
         registerScoreNotifications(toolContext!);
     };
@@ -65,13 +64,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerCommonSubscriptions(context, {
         serverInfo,
         outputChannel,
-        toolConfig,
+        toolConfig: PYLINT_TOOL_CONFIG,
         toolContext,
         pythonProvider,
     });
 
     // Pylint-specific: score status bar (separate from the shared LanguageStatusItem)
-    context.subscriptions.push(registerScoreStatusBar(toolConfig.toolId, serverInfo.name));
+    context.subscriptions.push(registerScoreStatusBar(PYLINT_TOOL_CONFIG.toolId, serverInfo.name));
 
     // Pylint-specific: update status bar visibility on config change
     context.subscriptions.push(

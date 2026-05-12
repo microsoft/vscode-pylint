@@ -1,18 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationChangeEvent, WorkspaceFolder } from 'vscode';
-import {
-    IBaseSettings,
-    checkIfConfigurationChanged as _checkIfConfigurationChanged,
-    getGlobalSettings as _getGlobalSettings,
-    getWorkspaceSettings as _getWorkspaceSettings,
-    resolveVariables,
-} from '@vscode/common-python-lsp';
-import { PYLINT_TOOL_CONFIG } from './constants';
-import { getInterpreterDetails } from './python';
-import { getConfiguration, getWorkspaceFolders } from './vscodeapi';
-import { traceWarn } from './logging';
+// Extension-specific settings: ISettings type extension and legacy settings logging.
+// All shared settings resolution is handled by @vscode/common-python-lsp directly.
+
+import { IBaseSettings, getConfiguration, getWorkspaceFolders, traceWarn } from '@vscode/common-python-lsp';
 
 export interface ISettings extends IBaseSettings {
     enabled: boolean;
@@ -20,51 +12,6 @@ export interface ISettings extends IBaseSettings {
     path: string[];
     ignorePatterns: string[];
     lintOnChange: boolean;
-}
-
-export function getExtensionSettings(namespace: string, includeInterpreter?: boolean): Promise<ISettings[]> {
-    return Promise.all(getWorkspaceFolders().map((w) => getWorkspaceSettings(namespace, w, includeInterpreter)));
-}
-
-export async function getWorkspaceSettings(
-    namespace: string,
-    workspace: WorkspaceFolder,
-    includeInterpreter?: boolean,
-): Promise<ISettings> {
-    const resolveInterpreter = includeInterpreter ? getInterpreterDetails : undefined;
-    const settings = (await _getWorkspaceSettings(
-        namespace,
-        workspace,
-        PYLINT_TOOL_CONFIG,
-        resolveInterpreter,
-    )) as ISettings;
-
-    if (settings.ignorePatterns?.length > 0) {
-        settings.ignorePatterns = resolveVariables(settings.ignorePatterns, workspace);
-    }
-
-    return settings;
-}
-
-export async function getGlobalSettings(namespace: string, includeInterpreter?: boolean): Promise<ISettings> {
-    const resolveInterpreter = includeInterpreter ? getInterpreterDetails : undefined;
-    return (await _getGlobalSettings(namespace, PYLINT_TOOL_CONFIG, resolveInterpreter)) as ISettings;
-}
-
-export function isLintOnChangeEnabled(namespace: string): boolean {
-    const config = getConfiguration(namespace);
-    return config.get<boolean>('lintOnChange', false);
-}
-
-export function getTrackedSettings(namespace: string): string[] {
-    return [...PYLINT_TOOL_CONFIG.trackedSettings.map((s) => `${namespace}.${s}`), 'python.analysis.extraPaths'];
-}
-
-export function checkIfConfigurationChanged(e: ConfigurationChangeEvent, namespace: string): boolean {
-    return (
-        _checkIfConfigurationChanged(e, namespace, PYLINT_TOOL_CONFIG.trackedSettings) ||
-        e.affectsConfiguration('python.analysis.extraPaths')
-    );
 }
 
 export function logLegacySettings(): void {

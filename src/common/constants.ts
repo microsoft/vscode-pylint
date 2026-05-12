@@ -2,29 +2,24 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { ToolConfig } from '@vscode/common-python-lsp';
+import { resolveExtensionRoot, ToolConfig } from '@vscode/common-python-lsp';
 
-const folderName = path.basename(__dirname);
-export const EXTENSION_ROOT_DIR =
-    folderName === 'common' ? path.dirname(path.dirname(__dirname)) : path.dirname(__dirname);
-export const BUNDLED_PYTHON_SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'bundled');
-export const SERVER_SCRIPT_PATH = path.join(BUNDLED_PYTHON_SCRIPTS_DIR, 'tool', `lsp_server.py`);
-export const DEBUG_SERVER_SCRIPT_PATH = path.join(BUNDLED_PYTHON_SCRIPTS_DIR, 'tool', `_debug_server.py`);
-export const PYTHON_MAJOR = 3;
-export const PYTHON_MINOR = 10;
-export const PYTHON_VERSION = `${PYTHON_MAJOR}.${PYTHON_MINOR}`;
-export const LS_SERVER_RESTART_DELAY = 1000;
+export const EXTENSION_ROOT_DIR = resolveExtensionRoot(__dirname);
+
 export const PYLINT_CONFIG_FILES = ['.pylintrc', 'pylintrc', 'pyproject.toml', 'setup.cfg', 'tox.ini'];
 
+export const MINIMUM_PYTHON_MAJOR = 3;
+export const MINIMUM_PYTHON_MINOR = 10;
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const PYLINT_TOOL_CONFIG: ToolConfig = {
     toolId: 'pylint',
     toolDisplayName: 'Pylint',
     toolModule: 'pylint',
-    minimumPythonVersion: { major: PYTHON_MAJOR, minor: PYTHON_MINOR },
+    minimumPythonVersion: { major: MINIMUM_PYTHON_MAJOR, minor: MINIMUM_PYTHON_MINOR },
     configFiles: PYLINT_CONFIG_FILES,
-    serverScript: SERVER_SCRIPT_PATH,
-    debugServerScript: DEBUG_SERVER_SCRIPT_PATH,
-    restartDelay: LS_SERVER_RESTART_DELAY,
+    serverScript: path.join(EXTENSION_ROOT_DIR, 'bundled', 'tool', 'lsp_server.py'),
+    debugServerScript: path.join(EXTENSION_ROOT_DIR, 'bundled', 'tool', '_debug_server.py'),
     pythonUtf8: true,
     settingsDefaults: {
         enabled: true,

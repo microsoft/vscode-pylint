@@ -3,11 +3,11 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { window } from 'vscode';
+import { languages, window, workspace } from 'vscode';
 import { registerLanguageStatusItem, updateScore } from '../../../../common/status';
-import * as vscodeapi from '../../../../common/vscodeapi';
-import * as utilities from '../../../../common/utilities';
 
+// Stub the underlying VS Code APIs directly rather than the shared package's
+// barrel exports (which use non-configurable Object.defineProperty getters).
 suite('Status Bar Score Display Tests', () => {
     let mockStatusBarItem: {
         text: string;
@@ -40,13 +40,12 @@ suite('Status Bar Score Display Tests', () => {
             selector: [],
         };
 
-        sinon.stub(vscodeapi, 'createStatusBarItem').returns(mockStatusBarItem as any);
-        sinon.stub(vscodeapi, 'createLanguageStatusItem').returns(mockLanguageStatusItem as any);
-        sinon.stub(vscodeapi, 'getConfiguration').returns({
+        sinon.stub(window, 'createStatusBarItem').returns(mockStatusBarItem as any);
+        sinon.stub(languages, 'createLanguageStatusItem').returns(mockLanguageStatusItem as any);
+        sinon.stub(workspace, 'getConfiguration').returns({
             get: sinon.stub().returns(true),
         } as any);
-        sinon.stub(vscodeapi, 'onDidChangeActiveTextEditor').returns({ dispose: sinon.stub() } as any);
-        sinon.stub(utilities, 'getDocumentSelector').returns([]);
+        sinon.stub(window, 'onDidChangeActiveTextEditor').returns({ dispose: sinon.stub() } as any);
 
         disposable = registerLanguageStatusItem('pylint', 'Pylint', 'pylint.showLogs');
     });

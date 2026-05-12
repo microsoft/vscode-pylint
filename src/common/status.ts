@@ -6,16 +6,45 @@ import {
     createLanguageStatusItem,
     createStatusBarItem,
     getConfiguration,
+    getDocumentSelector,
     onDidChangeActiveTextEditor,
-} from './vscodeapi';
+} from '@vscode/common-python-lsp';
 import { Command } from 'vscode-languageclient';
-import { getDocumentSelector } from './utilities';
 
 let _status: LanguageStatusItem | undefined;
 let _statusBarItem: StatusBarItem | undefined;
 let _disposables: Disposable[] = [];
 const _scoresByUri = new Map<string, number>();
 
+/**
+ * Register the score StatusBarItem only. Use this when the shared package
+ * already provides the LanguageStatusItem via registerCommonSubscriptions.
+ */
+export function registerScoreStatusBar(id: string, name: string): Disposable {
+    _statusBarItem = createStatusBarItem(`${id}.score`);
+    _statusBarItem.name = name;
+    _statusBarItem.text = '$(checklist) Pylint';
+    updateStatusBarVisibility();
+
+    const editorDisposable = onDidChangeActiveTextEditor(() => {
+        const uri = window.activeTextEditor?.document.uri.toString();
+        updateDisplayedScore(_scoresByUri.get(uri ?? ''));
+    });
+
+    return {
+        dispose: () => {
+            _statusBarItem?.dispose();
+            _statusBarItem = undefined;
+            editorDisposable.dispose();
+            _scoresByUri.clear();
+        },
+    };
+}
+
+/**
+ * Register both the LanguageStatusItem and the score StatusBarItem.
+ * Used by tests and when not using registerCommonSubscriptions.
+ */
 export function registerLanguageStatusItem(id: string, name: string, command: string): Disposable {
     _status = createLanguageStatusItem(id, getDocumentSelector());
     _status.name = name;
@@ -82,13 +111,11 @@ function updateDisplayedScore(score: number | undefined, loading?: boolean): voi
 export function updateScore(uri: string, score: number | undefined): void {
     const activeUri = window.activeTextEditor?.document.uri.toString();
     if (score !== undefined) {
-        // Linting completed for the document, update the score.
         _scoresByUri.set(uri, score);
         if (activeUri === uri) {
             updateDisplayedScore(score);
         }
     } else if (activeUri === uri) {
-        // Linting started for the document, show loading state.
         updateDisplayedScore(undefined, true);
     }
 }

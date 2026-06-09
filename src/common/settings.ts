@@ -27,6 +27,7 @@ export function logLegacySettings(): void {
         try {
             const legacyConfig = getConfiguration('python', workspace.uri);
             const legacyPylintEnabled = legacyConfig.get<boolean>('linting.pylintEnabled', false);
+            const legacyPylintPath = legacyConfig.get<string>('linting.pylintPath', '');
             if (legacyPylintEnabled) {
                 traceWarn(`"python.linting.pylintEnabled" is deprecated. You can remove that setting.`);
                 traceWarn(
@@ -37,6 +38,11 @@ export function logLegacySettings(): void {
                     `"python.linting.pylintEnabled" value for workspace ${workspace.uri.fsPath}: ${legacyPylintEnabled}`,
                 );
             }
+            if (legacyPylintPath.length > 0 && legacyPylintPath !== 'pylint') {
+                traceWarn(`"python.linting.pylintPath" is deprecated. Use "pylint.path" instead.`);
+                traceWarn(`"python.linting.pylintPath" value for workspace ${workspace.uri.fsPath}:`);
+                traceWarn(`\n${JSON.stringify(legacyPylintPath, null, 4)}`);
+            }
         } catch (err) {
             traceWarn(`Error while logging legacy settings: ${err}`);
         }
@@ -46,6 +52,5 @@ export function logLegacySettings(): void {
     _logLegacySettings('pylint', [
         { legacyKey: 'linting.cwd', newKey: 'cwd' },
         { legacyKey: 'linting.pylintArgs', newKey: 'args', isArray: true },
-        { legacyKey: 'linting.pylintPath', newKey: 'path' },
     ]);
 }

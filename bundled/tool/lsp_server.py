@@ -94,9 +94,9 @@ PYLINT_CONFIG = ToolServerConfig(
             "warning": "Warning",
             "info": "Information",
         },
-        "ignorePatterns": [],
         "extraPaths": [],
     },
+    hardcoded_settings={"ignorePatterns": []},
 )
 
 tool_server = ToolServer(PYLINT_CONFIG, server=LSP_SERVER)
@@ -792,12 +792,7 @@ def _log_version_info() -> None:
 # Internal functional and settings management APIs.
 # *****************************************************
 def _get_global_defaults():
-    defaults = tool_server.get_global_defaults()
-    # ignorePatterns is always hardcoded to [] — the client resolves it
-    # before sending per-workspace settings, so the global default must
-    # never reflect user-supplied values.
-    defaults["ignorePatterns"] = []
-    return defaults
+    return tool_server.get_global_defaults()
 
 
 def _update_workspace_settings(settings):

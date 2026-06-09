@@ -7,6 +7,7 @@ description: >
   microsoft/vscode-common-python-lsp shared package, and look for related open
   issues on the upstream Pylint repository (pylint-dev/pylint). If applicable, suggest
   an upstream fix and surface relevant Pylint issues to the reporter.
+if: github.repository_owner == 'microsoft'
 on:
   issues:
     types: [opened]

@@ -34,7 +34,7 @@ def _mock_workspace_settings():
 
 
 def test_log_version_info_reads_live_workspace_settings(
-    patched_lsp_server, _mock_workspace_settings
+    patched_lsp_server, _mock_workspace_settings  # pylint: disable=unused-argument
 ):
     """_log_version_info iterates tool_server.workspace_settings (not a stale alias)."""
     with patch.object(lsp_server, "_run_tool") as mock_run:
@@ -70,8 +70,10 @@ def test_dead_shims_removed():
 
 def test_tool_server_get_settings_by_document_delegated():
     """get_settings_by_document is called on tool_server directly."""
+    mock_return = {"enabled": False, "workspaceFS": "/fake"}
     with patch.object(
-        lsp_server.tool_server, "get_settings_by_document", return_value={"enabled": False, "workspaceFS": "/fake"}
+        lsp_server.tool_server, "get_settings_by_document",
+        return_value=mock_return,
     ) as mock_get:
         doc = MagicMock()
         doc.path = "/fake/file.py"

@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-"""Unit tests for the get_cwd() helper in lsp_server."""
+"""Unit tests for tool_server.get_cwd() delegated via lsp_server."""
 
 import os
 import types
@@ -31,13 +31,13 @@ def _make_doc(path):
 def test_no_cwd_no_document_returns_workspace():
     """When neither cwd nor document is provided, return workspaceFS."""
     settings = _make_settings()
-    assert lsp_server.get_cwd(settings, None) == WORKSPACE
+    assert lsp_server.tool_server.get_cwd(settings, None) == WORKSPACE
 
 
 def test_plain_cwd_no_document_returned_unchanged():
     """A cwd without variables is returned as-is even without a document."""
     settings = _make_settings(cwd="/custom/path")
-    assert lsp_server.get_cwd(settings, None) == "/custom/path"
+    assert lsp_server.tool_server.get_cwd(settings, None) == "/custom/path"
 
 
 def test_file_variable_no_document_falls_back_to_workspace():
@@ -52,14 +52,14 @@ def test_file_variable_no_document_falls_back_to_workspace():
         "${fileWorkspaceFolder}",
     ]:
         settings = _make_settings(cwd=token + "/extra")
-        assert lsp_server.get_cwd(settings, None) == WORKSPACE, f"Failed for {token}"
+        assert lsp_server.tool_server.get_cwd(settings, None) == WORKSPACE, f"Failed for {token}"
 
 
 def test_relative_file_variable_no_document_falls_back_to_workspace():
     """Unresolvable ${relativeFile*} variable with no document falls back to workspaceFS."""
     for token in ["${relativeFile}", "${relativeFileDirname}"]:
         settings = _make_settings(cwd=token)
-        assert lsp_server.get_cwd(settings, None) == WORKSPACE, f"Failed for {token}"
+        assert lsp_server.tool_server.get_cwd(settings, None) == WORKSPACE, f"Failed for {token}"
 
 
 # ---------------------------------------------------------------------------
@@ -95,30 +95,30 @@ DOC = _make_doc(DOC_PATH)
 def test_single_variable_resolved(token, expected):
     """Each VS Code variable token resolves to its expected value."""
     settings = _make_settings(cwd=token)
-    assert lsp_server.get_cwd(settings, DOC) == expected
+    assert lsp_server.tool_server.get_cwd(settings, DOC) == expected
 
 
 def test_composite_pattern_resolved():
     """Variables embedded inside a longer path are substituted correctly."""
     settings = _make_settings(cwd="${fileDirname}/subdir")
-    assert lsp_server.get_cwd(settings, DOC) == "/home/user/myproject/src/subdir"
+    assert lsp_server.tool_server.get_cwd(settings, DOC) == "/home/user/myproject/src/subdir"
 
 
 def test_multiple_variables_in_one_cwd():
     """Multiple different variables in the same cwd string are all resolved."""
     settings = _make_settings(cwd="${fileDirname}/${fileBasename}")
-    result = lsp_server.get_cwd(settings, DOC)
+    result = lsp_server.tool_server.get_cwd(settings, DOC)
     assert result == "/home/user/myproject/src/foo.py"
 
 
 def test_no_variable_in_cwd_unchanged():
     """A cwd with no variables is returned unchanged even when a document exists."""
     settings = _make_settings(cwd="/static/path")
-    assert lsp_server.get_cwd(settings, DOC) == "/static/path"
+    assert lsp_server.tool_server.get_cwd(settings, DOC) == "/static/path"
 
 
 def test_document_with_no_path_falls_back_to_workspace():
     """A document object whose path is falsy triggers the fallback."""
     doc = types.SimpleNamespace(path="")
     settings = _make_settings(cwd="${fileDirname}")
-    assert lsp_server.get_cwd(settings, doc) == WORKSPACE
+    assert lsp_server.tool_server.get_cwd(settings, doc) == WORKSPACE

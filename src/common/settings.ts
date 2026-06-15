@@ -43,9 +43,13 @@ export function logLegacySettings(): void {
     });
 
     // Standard legacy key → new key mappings handled by the shared helper.
-    _logLegacySettings('pylint', [
-        { legacyKey: 'linting.cwd', newKey: 'cwd' },
-        { legacyKey: 'linting.pylintArgs', newKey: 'args', isArray: true },
-        { legacyKey: 'linting.pylintPath', newKey: 'path', defaultValue: 'pylint' },
-    ]);
+    try {
+        _logLegacySettings('pylint', [
+            { legacyKey: 'linting.cwd', newKey: 'cwd' },
+            { legacyKey: 'linting.pylintArgs', newKey: 'args', isArray: true },
+            { legacyKey: 'linting.pylintPath', newKey: 'path', defaultValue: 'pylint' },
+        ]);
+    } catch (err) {
+        traceWarn(`Error while logging legacy settings: ${err}`);
+    }
 }

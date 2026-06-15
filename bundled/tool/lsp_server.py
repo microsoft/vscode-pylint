@@ -15,7 +15,7 @@ import sys
 import threading
 import traceback
 import types
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 from urllib.parse import urlparse, urlunparse
 
 
@@ -100,9 +100,6 @@ PYLINT_CONFIG = ToolServerConfig(
 )
 
 tool_server = ToolServer(PYLINT_CONFIG, server=LSP_SERVER)
-
-WORKSPACE_SETTINGS = tool_server.workspace_settings
-GLOBAL_SETTINGS = tool_server.global_settings
 
 
 def _get_document_path(document: str) -> str:
@@ -225,7 +222,7 @@ def notebook_did_close(params: lsp.DidCloseNotebookDocumentParams) -> None:
 
 def _get_extra_args(document: TextDocument | None) -> list[str]:
     """Return extra pylint CLI args based on the pylint version for the workspace."""
-    code_workspace = _get_settings_by_document(document)["workspaceFS"]
+    code_workspace = tool_server.get_settings_by_document(document)["workspaceFS"]
     if VERSION_TABLE.get(code_workspace, None):
         major, minor, _ = VERSION_TABLE[code_workspace]
         if (major, minor) >= (2, 16):
@@ -255,7 +252,7 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
         # that settings resolution and pylint invocation work correctly.
         # NOTE: SimpleNamespace is used here as a lightweight stand-in for
         # workspace.TextDocument. If _run_tool_on_document or
-        # _get_settings_by_document begin accessing additional attributes,
+        # tool_server.get_settings_by_document begin accessing additional attributes,
         # consider replacing this with a Protocol or TypedDict.
         nb_path = _get_document_path(notebook_uri)
         combined_doc = types.SimpleNamespace(
@@ -292,7 +289,7 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
         combined_diagnostics: Sequence[lsp.Diagnostic] = []
         if result and result.stdout:
             log_to_output(f"{notebook_uri} :\r\n{result.stdout}")
-            settings = copy.deepcopy(_get_settings_by_document(combined_doc))
+            settings = copy.deepcopy(tool_server.get_settings_by_document(combined_doc))
             combined_diagnostics, _ = _parse_output(
                 result.stdout, severity=settings["severity"]
             )
@@ -370,7 +367,7 @@ def _linting_helper(document: TextDocument) -> list[lsp.Diagnostic]:
             log_to_output(f"{document.uri} :\r\n{result.stdout}")
 
             # deep copy here to prevent accidentally updating global settings.
-            settings = copy.deepcopy(_get_settings_by_document(document))
+            settings = copy.deepcopy(tool_server.get_settings_by_document(document))
             diagnostics, score = _parse_output(
                 result.stdout, severity=settings["severity"]
             )
@@ -522,7 +519,7 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     """LSP handler for textDocument/codeAction request."""
 
     document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
-    settings = copy.deepcopy(_get_settings_by_document(document))
+    settings = copy.deepcopy(tool_server.get_settings_by_document(document))
     code_actions = []
     if not settings["enabled"]:
         return code_actions
@@ -746,7 +743,7 @@ def on_shutdown(_params: Optional[Any] = None) -> None:
 
 
 def _log_version_info() -> None:
-    for value in WORKSPACE_SETTINGS.values():
+    for value in tool_server.workspace_settings.values():
         try:
             from packaging.version import parse as parse_version
 
@@ -789,34 +786,8 @@ def _log_version_info() -> None:
 
 
 # *****************************************************
-# Internal functional and settings management APIs.
-# *****************************************************
-def _get_global_defaults():
-    return tool_server.get_global_defaults()
-
-
-def _update_workspace_settings(settings):
-    tool_server.update_workspace_settings(settings)
-
-
-def _get_settings_by_path(file_path: pathlib.Path):
-    return tool_server.get_settings_by_path(file_path)
-
-
-def _get_document_key(document: TextDocument):
-    return tool_server.get_document_key(document)
-
-
-def _get_settings_by_document(document: TextDocument | None):
-    return tool_server.get_settings_by_document(document)
-
-
-# *****************************************************
 # Internal execution APIs.
 # *****************************************************
-def get_cwd(settings: Dict[str, Any], document: Optional[TextDocument]) -> str:
-    """Returns the working directory for running the tool."""
-    return tool_server.get_cwd(settings, document)
 
 
 # pylint: disable=too-many-branches,too-many-statements
@@ -834,7 +805,7 @@ def _run_tool_on_document(
         extra_args = []
 
     # deep copy here to prevent accidentally updating global settings.
-    settings = copy.deepcopy(_get_settings_by_document(document))
+    settings = copy.deepcopy(tool_server.get_settings_by_document(document))
 
     if not settings["enabled"]:
         log_warning(f"Skipping file [Linting Disabled]: {document.path}")
@@ -857,6 +828,7 @@ def _run_tool_on_document(
     code_workspace = settings["workspaceFS"]
     cwd = tool_server.get_cwd(settings, document)
 
+    mode: Literal["path", "rpc", "module"]
     if settings["path"]:
         mode = "path"
         argv = list(settings["path"])
@@ -914,6 +886,7 @@ def _run_tool(extra_args: Sequence[str], settings: Dict[str, Any]) -> RunResult:
     code_workspace = settings["workspaceFS"]
     cwd = tool_server.get_cwd(settings, None)
 
+    mode: Literal["path", "rpc", "module"]
     if len(settings["path"]) > 0:
         mode = "path"
         argv = list(settings["path"])

@@ -62,7 +62,7 @@ from vscode_common_python_lsp import (
 
 update_environ_path()
 
-RUNNER = pathlib.Path(__file__).parent / "runner.py"
+RUNNER_SCRIPT = pathlib.Path(__file__).parent / "lsp_runner.py"
 
 MAX_WORKERS = 5
 _STDERR_ERROR_KEYWORDS = ("error", "traceback", "exception", "fatal")
@@ -83,7 +83,7 @@ PYLINT_CONFIG = ToolServerConfig(
     tool_display="Pylint",
     tool_args=["--reports=n", "--output-format=json2"],
     min_version="2.14.0",
-    runner_script=str(RUNNER),
+    runner_script=str(RUNNER_SCRIPT),
     default_settings={
         "enabled": True,
         "severity": {

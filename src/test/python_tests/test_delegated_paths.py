@@ -38,9 +38,7 @@ def test_log_version_info_reads_live_workspace_settings(
 ):
     """_log_version_info iterates tool_server.workspace_settings (not a stale alias)."""
     with patch.object(lsp_server, "_run_tool") as mock_run:
-        mock_run.return_value = lsp_server.RunResult(
-            stdout="pylint 3.0.0", stderr=""
-        )
+        mock_run.return_value = lsp_server.RunResult(stdout="pylint 3.0.0", stderr="")
         # Should not raise; confirms it reads the live dict
         lsp_server._log_version_info()
         mock_run.assert_called_once()
@@ -72,7 +70,8 @@ def test_tool_server_get_settings_by_document_delegated():
     """get_settings_by_document is called on tool_server directly."""
     mock_return = {"enabled": False, "workspaceFS": "/fake"}
     with patch.object(
-        lsp_server.tool_server, "get_settings_by_document",
+        lsp_server.tool_server,
+        "get_settings_by_document",
         return_value=mock_return,
     ) as mock_get:
         doc = MagicMock()

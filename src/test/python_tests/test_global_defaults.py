@@ -49,5 +49,7 @@ def _with_global_settings(overrides, func):
 )
 def test_global_defaults_setting(overrides, key, expected):
     """Each global setting is correctly read or defaults when absent."""
-    result = _with_global_settings(overrides, lsp_server.tool_server.get_global_defaults)
+    result = _with_global_settings(
+        overrides, lsp_server.tool_server.get_global_defaults
+    )
     assert result[key] == expected

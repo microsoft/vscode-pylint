@@ -52,14 +52,18 @@ def test_file_variable_no_document_falls_back_to_workspace():
         "${fileWorkspaceFolder}",
     ]:
         settings = _make_settings(cwd=token + "/extra")
-        assert lsp_server.tool_server.get_cwd(settings, None) == WORKSPACE, f"Failed for {token}"
+        assert (
+            lsp_server.tool_server.get_cwd(settings, None) == WORKSPACE
+        ), f"Failed for {token}"
 
 
 def test_relative_file_variable_no_document_falls_back_to_workspace():
     """Unresolvable ${relativeFile*} variable with no document falls back to workspaceFS."""
     for token in ["${relativeFile}", "${relativeFileDirname}"]:
         settings = _make_settings(cwd=token)
-        assert lsp_server.tool_server.get_cwd(settings, None) == WORKSPACE, f"Failed for {token}"
+        assert (
+            lsp_server.tool_server.get_cwd(settings, None) == WORKSPACE
+        ), f"Failed for {token}"
 
 
 # ---------------------------------------------------------------------------
@@ -101,7 +105,10 @@ def test_single_variable_resolved(token, expected):
 def test_composite_pattern_resolved():
     """Variables embedded inside a longer path are substituted correctly."""
     settings = _make_settings(cwd="${fileDirname}/subdir")
-    assert lsp_server.tool_server.get_cwd(settings, DOC) == "/home/user/myproject/src/subdir"
+    assert (
+        lsp_server.tool_server.get_cwd(settings, DOC)
+        == "/home/user/myproject/src/subdir"
+    )
 
 
 def test_multiple_variables_in_one_cwd():

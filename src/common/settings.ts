@@ -4,7 +4,13 @@
 // Extension-specific settings: ISettings type extension and legacy settings logging.
 // All shared settings resolution is handled by @vscode/common-python-lsp directly.
 
-import { IBaseSettings, getConfiguration, getWorkspaceFolders, traceWarn } from '@vscode/common-python-lsp';
+import {
+    IBaseSettings,
+    getConfiguration,
+    getWorkspaceFolders,
+    logLegacySettings as _logLegacySettings,
+    traceWarn,
+} from '@vscode/common-python-lsp';
 
 export interface ISettings extends IBaseSettings {
     enabled: boolean;
@@ -15,10 +21,11 @@ export interface ISettings extends IBaseSettings {
 }
 
 export function logLegacySettings(): void {
+    // Handle pylintEnabled separately — it has custom messaging not covered
+    // by the shared helper's simple "use X instead" pattern.
     getWorkspaceFolders().forEach((workspace) => {
         try {
             const legacyConfig = getConfiguration('python', workspace.uri);
-
             const legacyPylintEnabled = legacyConfig.get<boolean>('linting.pylintEnabled', false);
             if (legacyPylintEnabled) {
                 traceWarn(`"python.linting.pylintEnabled" is deprecated. You can remove that setting.`);
@@ -30,28 +37,19 @@ export function logLegacySettings(): void {
                     `"python.linting.pylintEnabled" value for workspace ${workspace.uri.fsPath}: ${legacyPylintEnabled}`,
                 );
             }
-
-            const legacyCwd = legacyConfig.get<string>('linting.cwd');
-            if (legacyCwd) {
-                traceWarn(`"python.linting.cwd" is deprecated. Use "pylint.cwd" instead.`);
-                traceWarn(`"python.linting.cwd" value for workspace ${workspace.uri.fsPath}: ${legacyCwd}`);
-            }
-
-            const legacyArgs = legacyConfig.get<string[]>('linting.pylintArgs', []);
-            if (legacyArgs.length > 0) {
-                traceWarn(`"python.linting.pylintArgs" is deprecated. Use "pylint.args" instead.`);
-                traceWarn(`"python.linting.pylintArgs" value for workspace ${workspace.uri.fsPath}:`);
-                traceWarn(`\n${JSON.stringify(legacyArgs, null, 4)}`);
-            }
-
-            const legacyPath = legacyConfig.get<string>('linting.pylintPath', '');
-            if (legacyPath.length > 0 && legacyPath !== 'pylint') {
-                traceWarn(`"python.linting.pylintPath" is deprecated. Use "pylint.path" instead.`);
-                traceWarn(`"python.linting.pylintPath" value for workspace ${workspace.uri.fsPath}:`);
-                traceWarn(`\n${JSON.stringify(legacyPath, null, 4)}`);
-            }
         } catch (err) {
             traceWarn(`Error while logging legacy settings: ${err}`);
         }
     });
+
+    // Standard legacy key → new key mappings handled by the shared helper.
+    try {
+        _logLegacySettings('pylint', [
+            { legacyKey: 'linting.cwd', newKey: 'cwd' },
+            { legacyKey: 'linting.pylintArgs', newKey: 'args', isArray: true },
+            { legacyKey: 'linting.pylintPath', newKey: 'path', defaultValue: 'pylint' },
+        ]);
+    } catch (err) {
+        traceWarn(`Error while logging legacy settings: ${err}`);
+    }
 }

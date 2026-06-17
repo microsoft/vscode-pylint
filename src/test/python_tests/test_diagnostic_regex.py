@@ -15,7 +15,7 @@ import lsp_server
 from lsp_server import _get_severity, _parse_output
 
 # ---------------------------------------------------------------------------
-# Default severity mapping (matches _get_global_defaults in lsp_server.py)
+# Default severity mapping (matches tool_server.get_global_defaults in lsp_server.py)
 # ---------------------------------------------------------------------------
 DEFAULT_SEVERITY = {
     "convention": "Information",

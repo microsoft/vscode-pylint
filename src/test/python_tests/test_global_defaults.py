@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-"""Unit tests for _get_global_defaults() in lsp_server.
+"""Unit tests for get_global_defaults() via tool_server in lsp_server.
 
 Validates that global settings are correctly read (or hardcoded) in the
 pylint extension.  Mock setup is provided by conftest.py (setup_lsp_mocks).
@@ -12,15 +12,15 @@ import pytest
 
 
 def _with_global_settings(overrides, func):
-    """Run *func* with GLOBAL_SETTINGS temporarily set to *overrides*."""
-    original = lsp_server.GLOBAL_SETTINGS.copy()
+    """Run *func* with tool_server.global_settings temporarily set to *overrides*."""
+    original = lsp_server.tool_server.global_settings.copy()
     try:
-        lsp_server.GLOBAL_SETTINGS.clear()
-        lsp_server.GLOBAL_SETTINGS.update(overrides)
+        lsp_server.tool_server.global_settings.clear()
+        lsp_server.tool_server.global_settings.update(overrides)
         return func()
     finally:
-        lsp_server.GLOBAL_SETTINGS.clear()
-        lsp_server.GLOBAL_SETTINGS.update(original)
+        lsp_server.tool_server.global_settings.clear()
+        lsp_server.tool_server.global_settings.update(original)
 
 
 @pytest.mark.parametrize(
@@ -49,5 +49,7 @@ def _with_global_settings(overrides, func):
 )
 def test_global_defaults_setting(overrides, key, expected):
     """Each global setting is correctly read or defaults when absent."""
-    result = _with_global_settings(overrides, lsp_server._get_global_defaults)
+    result = _with_global_settings(
+        overrides, lsp_server.tool_server.get_global_defaults
+    )
     assert result[key] == expected

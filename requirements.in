@@ -9,3 +9,4 @@
 pygls
 packaging
 pylint
+vscode-common-python-lsp==0.5.1

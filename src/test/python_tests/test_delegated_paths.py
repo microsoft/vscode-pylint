@@ -7,7 +7,7 @@ and that workspace_settings/global_settings are read live (not stale aliases).
 """
 
 # pylint: disable=protected-access
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import lsp_server
 import pytest
@@ -67,7 +67,7 @@ def test_dead_shims_removed():
 
 
 def test_get_extra_args_uses_tool_server_get_settings_by_document():
-    """_get_extra_args should obtain workspace settings via tool_server.get_settings_by_document."""
+    """_get_extra_args uses tool_server.get_settings_by_document."""
     with patch.object(
         lsp_server.tool_server,
         "get_settings_by_document",

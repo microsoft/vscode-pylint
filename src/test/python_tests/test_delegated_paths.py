@@ -66,16 +66,12 @@ def test_dead_shims_removed():
         assert not hasattr(lsp_server, name), f"{name} should have been removed"
 
 
-def test_tool_server_get_settings_by_document_delegated():
-    """get_settings_by_document is called on tool_server directly."""
-    mock_return = {"enabled": False, "workspaceFS": "/fake"}
+def test_get_extra_args_uses_tool_server_get_settings_by_document():
+    """_get_extra_args should obtain workspace settings via tool_server.get_settings_by_document."""
     with patch.object(
         lsp_server.tool_server,
         "get_settings_by_document",
-        return_value=mock_return,
+        return_value={"workspaceFS": "ws"},
     ) as mock_get:
-        doc = MagicMock()
-        doc.path = "/fake/file.py"
-        result = lsp_server.tool_server.get_settings_by_document(doc)
-        mock_get.assert_called_once_with(doc)
-        assert result["enabled"] is False
+        assert lsp_server._get_extra_args(None) == []
+        mock_get.assert_called_once_with(None)

@@ -43,4 +43,5 @@ def test_common_lsp_package_is_bundled():
     """The server imports this package before it can start."""
     spec = importlib.util.find_spec("vscode_common_python_lsp")
     assert spec is not None
+    assert spec.origin is not None
     assert pathlib.Path(spec.origin).is_relative_to(BUNDLED_LIBS)

@@ -21,6 +21,7 @@ export const PYLINT_TOOL_CONFIG: ToolConfig = {
     serverScript: path.join(EXTENSION_ROOT_DIR, 'bundled', 'tool', 'lsp_server.py'),
     debugServerScript: path.join(EXTENSION_ROOT_DIR, 'bundled', 'tool', '_debug_server.py'),
     pythonUtf8: true,
+    refreshExtensionOnPackagesChange: true,
     settingsDefaults: {
         enabled: true,
         severity: {

@@ -116,6 +116,8 @@ def install_bundled_libs(session):
     """Installs the libraries that will be bundled with the extension."""
     session.install("wheel")
     _install_bundle(session)
+    # Source the shared Python library from the git submodule instead of the
+    # published package so the bundled copy matches the pinned submodule commit.
     session.install(
         "-t",
         "./bundled/libs",
@@ -124,7 +126,7 @@ def install_bundled_libs(session):
         "py",
         "--no-deps",
         "--upgrade",
-        "vscode-common-python-lsp==0.6.0",
+        "./external/vscode-common-python-lsp/python",
     )
 
 

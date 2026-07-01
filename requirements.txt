@@ -119,7 +119,3 @@ typing-extensions==4.15.0 \
     #   astroid
     #   cattrs
     #   exceptiongroup
-vscode-common-python-lsp==0.8.0 \
-    --hash=sha256:b38277459e190b1c29e524e289ecb44e641632063a6e68db3aa67ce5a799d5fb \
-    --hash=sha256:f5c6e132b9197d999508a8d14d4c41c407cdb187defa547a8dccc30c896cca96
-    # via -r requirements.in

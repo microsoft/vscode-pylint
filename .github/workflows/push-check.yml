@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
@@ -37,6 +39,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Lint
         uses: ./.github/actions/lint
@@ -60,6 +64,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          submodules: recursive
           path: ${{ env.special-working-directory-relative }}
 
       # Install bundled libs using minimum supported version even though you test it on other versions.
@@ -108,6 +113,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Install Node
         uses: actions/setup-node@v4

@@ -243,7 +243,7 @@
         "@types/node": "22.x",
         "@types/sinon": "^17.0.3",
         "@types/vscode": "^1.74.0",
-        "@typescript-eslint/eslint-plugin": "^8.57.0",
+        "@typescript-eslint/eslint-plugin": "^8.65.0",
         "@typescript-eslint/parser": "^8.57.0",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.7.1-1",
@@ -251,12 +251,12 @@
         "eslint": "^8.57.0",
         "glob": "^13.0.6",
         "mocha": "^10.4.0",
-        "prettier": "^3.8.1",
+        "prettier": "^3.9.6",
         "sinon": "^18.0.1",
         "ts-loader": "^9.5.4",
         "typemoq": "^2.1.0",
         "typescript": "^5.9.3",
-        "webpack": "^5.105.4",
+        "webpack": "^5.108.4",
         "webpack-cli": "^5.1.4"
     }
 }

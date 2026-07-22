@@ -34,7 +34,6 @@ lsprotocol==2025.0.0 \
     --hash=sha256:f9d78f25221f2a60eaa4a96d3b4ffae011b107537facee61d3da3313880995c7
     # via
     #   pygls
-    #   vscode-common-python-lsp
 mccabe==0.7.0 \
     --hash=sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325 \
     --hash=sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e
@@ -44,7 +43,6 @@ packaging==26.0 \
     --hash=sha256:b36f1fef9334a5588b4166f8bcd26a14e521f2b55e6b9de3aaa80d3ff7a37529
     # via
     #   -r requirements.in
-    #   vscode-common-python-lsp
 platformdirs==4.5.1 \
     --hash=sha256:61d5cdcc6065745cdd94f0f878977f8de9437be93de97c1c12f853c9c0cdcbda \
     --hash=sha256:d03afa3963c806a9bed9d5125c8f4cb2fdaf74a55ab60e5d59b3fde758104d31
@@ -54,7 +52,6 @@ pygls==2.1.0 \
     --hash=sha256:cfa8443561488cb15b59f6ce64cabfa37d79753f7120c1bf729419246bf747f9
     # via
     #   -r requirements.in
-    #   vscode-common-python-lsp
 pylint==4.0.5 \
     --hash=sha256:00f51c9b14a3b3ae08cff6b2cdd43f28165c78b165b628692e428fb1f8dc2cf2 \
     --hash=sha256:8cd6a618df75deb013bd7eb98327a95f02a6fb839205a6bbf5456ef96afb317c
@@ -119,7 +116,3 @@ typing-extensions==4.15.0 \
     #   astroid
     #   cattrs
     #   exceptiongroup
-vscode-common-python-lsp==0.8.0 \
-    --hash=sha256:b38277459e190b1c29e524e289ecb44e641632063a6e68db3aa67ce5a799d5fb \
-    --hash=sha256:f5c6e132b9197d999508a8d14d4c41c407cdb187defa547a8dccc30c896cca96
-    # via -r requirements.in

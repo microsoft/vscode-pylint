@@ -239,6 +239,8 @@
         "@typescript-eslint/parser": "^8.57.0",
         "@typescript-eslint/scope-manager": "^8.57.0",
         "@typescript-eslint/types": "^8.57.0",
+        "@typescript-eslint/typescript-estree": "^8.57.0",
+        "@typescript-eslint/visitor-keys": "^8.57.0",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.7.1-1",
         "chai": "^4.5.0",

@@ -44,7 +44,7 @@ if (
 }
 
 // The shared package is a separate dependency tree; build it from its own lockfile.
-execSync(`npm --prefix ${pkgDir} ci --ignore-scripts --no-audit --no-fund`, {
+execSync(`npm --prefix ${pkgDir} install --ignore-scripts --no-audit --no-fund`, {
   stdio: "inherit",
 });
 

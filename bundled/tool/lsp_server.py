@@ -31,14 +31,15 @@ def update_sys_path(path_to_add: str, strategy: str) -> None:
             sys.path.append(path_to_add)
 
 
+def configure_bundled_sys_path(bundle_dir: pathlib.Path) -> None:
+    """Ensure the server's runtime dependencies always come from the bundle."""
+    update_sys_path(os.fspath(bundle_dir / "tool"), "useBundled")
+    update_sys_path(os.fspath(bundle_dir / "libs"), "useBundled")
+
+
 # Ensure that we can import LSP libraries, and other bundled libraries.
 BUNDLE_DIR = pathlib.Path(__file__).parent.parent
-# Always use bundled server files.
-update_sys_path(os.fspath(BUNDLE_DIR / "tool"), "useBundled")
-update_sys_path(
-    os.fspath(BUNDLE_DIR / "libs"),
-    os.getenv("LS_IMPORT_STRATEGY", "useBundled"),
-)
+configure_bundled_sys_path(BUNDLE_DIR)
 
 # **********************************************************
 # Imports needed for the language server goes below this.
@@ -176,18 +177,6 @@ def did_close(params: lsp.DidCloseTextDocumentParams) -> None:
     LSP_SERVER.text_document_publish_diagnostics(
         lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=[])
     )
-
-
-if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
-
-    @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_CHANGE)
-    def did_change(params: lsp.DidChangeTextDocumentParams) -> None:
-        """LSP handler for textDocument/didChange request."""
-        document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
-        diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
-        LSP_SERVER.text_document_publish_diagnostics(
-            lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=diagnostics)
-        )
 
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_OPEN)
@@ -618,6 +607,18 @@ REPLACEMENTS: Dict[str, re.Pattern] = {
         {
             "pattern": re.compile(r"for\s+(\w+),\s+(\w+)\s+in\s+(\w+)\s*:"),
             "repl": r"for \1, \2 in \3.items():",
+        }
+    ],
+    "W1514:unspecified-encoding": [
+        {
+            "pattern": re.compile(
+                r"open\(\s*([^,)\s]+)\s*(?:,\s*['\"]([^'\"]+)['\"])?\s*\)"
+            ),
+            "repl": lambda m: (
+                f"open({m.group(1)}, '{m.group(2)}', encoding='utf-8')"
+                if m.group(2)
+                else f"open({m.group(1)}, encoding='utf-8')"
+            ),
         }
     ],
 }

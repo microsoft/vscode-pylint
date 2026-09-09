@@ -96,7 +96,8 @@
                     "type": "string",
                     "examples": [
                         "${workspaceFolder}/src",
-                        "${fileDirname}"
+                        "${fileDirname}",
+                        "${nearestConfig}"
                     ]
                 },
                 "pylint.enabled": {
@@ -143,15 +144,6 @@
                         "type": "string"
                     },
                     "type": "array"
-                },
-                "pylint.lintOnChange": {
-                    "default": false,
-                    "markdownDescription": "%settings.lintOnChange.description%",
-                    "scope": "machine",
-                    "type": "boolean",
-                    "tags": [
-                        "experimental"
-                    ]
                 },
                 "pylint.path": {
                     "default": [],
@@ -241,22 +233,22 @@
         "@types/glob": "^9.0.0",
         "@types/mocha": "^10.0.6",
         "@types/node": "22.x",
-        "@types/sinon": "^17.0.3",
+        "@types/sinon": "^21.0.0",
         "@types/vscode": "^1.74.0",
         "@typescript-eslint/eslint-plugin": "^8.57.0",
         "@typescript-eslint/parser": "^8.57.0",
         "@vscode/test-electron": "^2.5.2",
         "@vscode/vsce": "^3.7.1-1",
         "chai": "^4.5.0",
-        "eslint": "^8.57.0",
+        "eslint": "^10.0.3",
         "glob": "^13.0.6",
         "mocha": "^10.4.0",
         "prettier": "^3.8.1",
-        "sinon": "^18.0.1",
+        "sinon": "^21.0.3",
         "ts-loader": "^9.5.4",
         "typemoq": "^2.1.0",
         "typescript": "^5.9.3",
-        "webpack": "^5.105.4",
-        "webpack-cli": "^5.1.4"
+        "webpack": "^5.110.1",
+        "webpack-cli": "^7.0.2"
     }
 }

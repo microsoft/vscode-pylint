@@ -5,7 +5,6 @@ import * as vscode from 'vscode';
 import {
     createToolContext,
     deactivateServer,
-    getConfiguration,
     loadServerDefaults,
     onDidChangeConfiguration,
     PythonEnvironmentsProvider,
@@ -51,12 +50,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Replace with a proper post-start hook when the shared package supports one.
     const originalRunServer = toolContext.runServer.bind(toolContext);
     toolContext.runServer = async () => {
-        // Re-evaluate lintOnChange on each restart so runtime config changes take effect
-        if (getConfiguration('pylint').get<boolean>('lintOnChange', false)) {
-            process.env['VSCODE_PYLINT_LINT_ON_CHANGE'] = '1';
-        } else {
-            delete process.env['VSCODE_PYLINT_LINT_ON_CHANGE'];
-        }
         await originalRunServer();
         registerScoreNotifications(toolContext!);
     };

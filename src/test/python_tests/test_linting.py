@@ -169,7 +169,7 @@ def test_publish_diagnostics_on_close():
 
 
 def test_publish_diagnostics_on_change():
-    """Test to ensure diagnostic clean-up on file close."""
+    """Test to ensure diagnostics are not republished on file change."""
     contents = TEST_FILE2_PATH.read_text(encoding="utf-8")
 
     actual = []
@@ -196,19 +196,9 @@ def test_publish_diagnostics_on_change():
                 }
             }
         )
-        # wait for some time to receive all notifications
-        done.wait(TIMEOUT)
-
-        # We should receive empty diagnostics
-        assert_that(
-            actual,
-            is_(
-                {
-                    "uri": TEST_FILE2_URI,
-                    "diagnostics": [],
-                }
-            ),
-        )
+        # open still publishes diagnostics
+        assert_that(done.wait(TIMEOUT), is_(True))
+        opened_actual = actual
 
         # reset waiting
         done.clear()
@@ -232,44 +222,9 @@ def test_publish_diagnostics_on_change():
             }
         )
 
-        # wait for some time to receive all notifications
-        done.wait(TIMEOUT)
-
-        expected = {
-            "uri": TEST_FILE2_URI,
-            "diagnostics": [
-                {
-                    "range": {
-                        "start": {"line": 1, "character": 0},
-                        "end": {"line": 1, "character": 0},
-                    },
-                    "message": "Final newline missing",
-                    "severity": 3,
-                    "code": "C0304:missing-final-newline",
-                    "codeDescription": {
-                        "href": f"{DOCUMENTATION_HOME}/convention/missing-final-newline.html"
-                    },
-                    "source": "Pylint",
-                },
-                {
-                    "range": {
-                        "start": {"line": 1, "character": 6},
-                        "end": {
-                            "line": 1,
-                            "character": 7,
-                        },
-                    },
-                    "message": "Undefined variable 'x'",
-                    "severity": 1,
-                    "code": "E0602:undefined-variable",
-                    "codeDescription": {
-                        "href": f"{DOCUMENTATION_HOME}/error/undefined-variable.html"
-                    },
-                    "source": "Pylint",
-                },
-            ],
-        }
-        assert_that(actual, is_(expected))
+        # linting on change is disabled; diagnostics should not be republished
+        assert_that(done.wait(TIMEOUT), is_(False))
+        assert_that(actual, is_(opened_actual))
 
         # reset waiting
         done.clear()
@@ -293,19 +248,9 @@ def test_publish_diagnostics_on_change():
             }
         )
 
-        # wait for some time to receive all notifications
-        done.wait(TIMEOUT)
-
-        # We should receive empty diagnostics
-        assert_that(
-            actual,
-            is_(
-                {
-                    "uri": TEST_FILE2_URI,
-                    "diagnostics": [],
-                }
-            ),
-        )
+        # linting on change is disabled; diagnostics should not be republished
+        assert_that(done.wait(TIMEOUT), is_(False))
+        assert_that(actual, is_(opened_actual))
 
 
 @pytest.mark.parametrize("lint_code", ["W0611", "unused-import", "warning"])

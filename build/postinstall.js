@@ -43,4 +43,10 @@ if (
   process.exit(0);
 }
 
+if (!existsSync(`${pkgDir}/node_modules`)) {
+  execSync(`npm --prefix ${pkgDir} ci --ignore-scripts --no-audit --no-fund`, {
+  stdio: "inherit",
+  });
+}
+
 execSync(`npm --prefix ${pkgDir} run build`, { stdio: "inherit" });

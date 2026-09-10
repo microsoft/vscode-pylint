@@ -17,6 +17,7 @@ export interface ISettings extends IBaseSettings {
     severity: Record<string, string>;
     path: string[];
     ignorePatterns: string[];
+    lintOnChange: boolean;
 }
 
 export function logLegacySettings(): void {

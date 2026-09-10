@@ -96,8 +96,7 @@
                     "type": "string",
                     "examples": [
                         "${workspaceFolder}/src",
-                        "${fileDirname}",
-                        "${nearestConfig}"
+                        "${fileDirname}"
                     ]
                 },
                 "pylint.enabled": {
@@ -144,6 +143,15 @@
                         "type": "string"
                     },
                     "type": "array"
+                },
+                "pylint.lintOnChange": {
+                    "default": false,
+                    "markdownDescription": "%settings.lintOnChange.description%",
+                    "scope": "machine",
+                    "type": "boolean",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "pylint.path": {
                     "default": [],

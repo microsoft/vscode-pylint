@@ -32,6 +32,7 @@ export const PYLINT_TOOL_CONFIG: ToolConfig = {
             info: 'Information',
         },
         ignorePatterns: [],
+        lintOnChange: false,
     },
     trackedSettings: [
         'args',
@@ -43,5 +44,6 @@ export const PYLINT_TOOL_CONFIG: ToolConfig = {
         'importStrategy',
         'showNotifications',
         'ignorePatterns',
+        'lintOnChange',
     ],
 };

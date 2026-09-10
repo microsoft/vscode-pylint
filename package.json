@@ -230,9 +230,6 @@
     },
     "dependencies": {
         "@vscode/common-python-lsp": "file:external/vscode-common-python-lsp/typescript",
-        "@vscode/python-extension": "^1.0.6",
-        "dotenv": "^17.4.0",
-        "fs-extra": "^11.3.4",
         "vscode-languageclient": "^8.1.0"
     },
     "devDependencies": {
@@ -249,6 +246,7 @@
         "@vscode/vsce": "^3.7.1-1",
         "chai": "^4.5.0",
         "eslint": "^8.57.0",
+        "fs-extra": "^11.3.4",
         "glob": "^13.0.6",
         "mocha": "^10.4.0",
         "prettier": "^3.8.1",

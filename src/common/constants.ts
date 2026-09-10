@@ -11,6 +11,7 @@ export const PYLINT_CONFIG_FILES = ['.pylintrc', 'pylintrc', 'pyproject.toml', '
 export const MINIMUM_PYTHON_MAJOR = 3;
 export const MINIMUM_PYTHON_MINOR = 10;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const PYLINT_TOOL_CONFIG: ToolConfig = {
     toolId: 'pylint',
     toolDisplayName: 'Pylint',

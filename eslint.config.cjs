@@ -13,6 +13,9 @@ module.exports = [
         plugins: {
             "@typescript-eslint": tsPlugin,
         },
+        linterOptions: {
+            reportUnusedDisableDirectives: "warn",
+        },
         rules: {
             "@typescript-eslint/naming-convention": "warn",
             curly: "warn",

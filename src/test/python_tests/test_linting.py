@@ -173,7 +173,6 @@ def test_publish_diagnostics_on_change():
     contents = TEST_FILE2_PATH.read_text(encoding="utf-8")
 
     actual = []
-    os.environ["VSCODE_PYLINT_LINT_ON_CHANGE"] = "1"
     with session.LspSession() as ls_session:
         ls_session.initialize()
 

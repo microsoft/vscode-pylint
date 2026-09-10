@@ -44,9 +44,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     toolContext = createToolContext({ serverInfo, outputChannel, toolConfig: PYLINT_TOOL_CONFIG, pythonProvider });
     context.subscriptions.push({ dispose: () => toolContext?.dispose() });
 
-    // HACK: Override runServer to (1) set the lintOnChange env var dynamically so
-    // toggling the setting takes effect without a full window reload, and (2) register
-    // pylint-specific score notification handlers after each server restart.
+    // HACK: Override runServer to register pylint-specific score notification
+    // handlers after each server restart.
     // Replace with a proper post-start hook when the shared package supports one.
     const originalRunServer = toolContext.runServer.bind(toolContext);
     toolContext.runServer = async () => {

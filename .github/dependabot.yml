@@ -35,10 +35,31 @@ updates:
     directories:
       - '/'
       - '/src/test/python_tests'
+    # Multi-ecosystem groups only support positive patterns. Keep Pylint
+    # unmatched so its updates remain standalone.
     patterns:
-      - '*'
-    exclude-patterns:
-      - 'pylint'
+      - 'astroid'
+      - 'attrs'
+      - 'cattrs'
+      - 'colorama'
+      - 'dill'
+      - 'exceptiongroup'
+      - 'iniconfig'
+      - 'isort'
+      - 'lsprotocol'
+      - 'mccabe'
+      - 'packaging'
+      - 'platformdirs'
+      - 'pluggy'
+      - 'pygls'
+      - 'pygments'
+      - 'pyhamcrest'
+      - 'pytest'
+      - 'python-jsonrpc-server'
+      - 'tomli'
+      - 'tomlkit'
+      - 'typing-extensions'
+      - 'ujson'
     multi-ecosystem-group: 'dependencies'
     cooldown:
       default-days: 7

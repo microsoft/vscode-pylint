@@ -13,6 +13,7 @@ import pathlib
 import re
 import sys
 import threading
+import tokenize
 import traceback
 import types
 from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
@@ -575,7 +576,105 @@ def organize_imports(
     ]
 
 
-REPLACEMENTS: Dict[str, re.Pattern] = {
+_ENCODING_ARGUMENT = "encoding='utf-8'"
+
+
+def _encoding_insertion(
+    tokens: List[tokenize.TokenInfo], closing: int
+) -> Optional[tuple[tuple[int, int], str]]:
+    """Finds where to add an encoding to the call closed by ``tokens[closing]``.
+
+    Returns the position and the text to insert there, or ``None`` when the
+    call already passes an encoding, since repeating it is a syntax error.
+    """
+    depth = 0
+    keyword = None
+    for position in range(closing, -1, -1):
+        string = tokens[position].string
+        if string in (")", "]", "}"):
+            depth += 1
+        elif string in ("(", "[", "{"):
+            depth -= 1
+            if depth == 0:
+                break
+        elif (
+            depth == 1
+            and tokens[position].type == tokenize.NAME
+            and tokens[position + 1].string == "="
+        ):
+            if string == "encoding":
+                return None
+            # Reading backwards, the last one seen is the first one written.
+            keyword = position
+
+    if keyword is not None:
+        # Ahead of the other keyword arguments, where a reader looks for it,
+        # and after every positional one, where it has to be.
+        return tokens[keyword].start, f"{_ENCODING_ARGUMENT}, "
+    # Line breaks and comments before the closing parenthesis are not
+    # somewhere an argument can go.
+    while tokens[closing - 1].type in (tokenize.NL, tokenize.COMMENT):
+        closing -= 1
+    last = tokens[closing - 1]
+    # A call with no arguments needs no separator; a trailing comma is one
+    # already, and putting it back keeps the layout a formatter would keep.
+    before, after = {"(": ("", ""), ",": (" ", ",")}.get(last.string, (", ", ""))
+    return last.end, f"{before}{_ENCODING_ARGUMENT}{after}"
+
+
+def _fix_unspecified_encoding(
+    lines: List[str], diagnostic: lsp.Diagnostic
+) -> Optional[lsp.TextEdit]:
+    """Adds ``encoding='utf-8'`` to the call ``diagnostic`` flagged.
+
+    Pylint's diagnostic ends just past the closing parenthesis of that call,
+    and anchoring there fixes it and nothing else: not a nested call, and not
+    another call on the same line, which has a diagnostic of its own.
+
+    Tokenizing the whole document, rather than the lines the diagnostic covers,
+    is what keeps a call nested in a statement that runs past those lines
+    readable: the argument list starts at the parenthesis that opens it, and
+    both are found however the statement around them is laid out.
+    """
+    read_line = iter(lines).__next__
+    tokens = []
+
+    try:
+        for token in tokenize.generate_tokens(read_line):
+            tokens.append(token)
+    except (tokenize.TokenError, SyntaxError):
+        # A document being typed into stops tokenizing where the typing is,
+        # which leaves every call finished before that point already read.
+        pass
+
+    closing = (diagnostic.range.end.line + 1, diagnostic.range.end.character)
+    position = next(
+        (
+            index
+            for index, token in enumerate(tokens)
+            if token.string == ")" and token.end == closing
+        ),
+        None,
+    )
+    insertion = None if position is None else _encoding_insertion(tokens, position)
+
+    if insertion is None:
+        return None
+
+    (row, column), argument = insertion
+    at = lsp.Position(line=row - 1, character=column)
+
+    return lsp.TextEdit(lsp.Range(start=at, end=at), argument)
+
+
+# A replacement is either regular expression substitutions to apply to the
+# diagnostic's line, or a function returning the edit for the diagnostic.
+Replacement = Union[
+    List[Dict[str, Any]],
+    Callable[[List[str], lsp.Diagnostic], Optional[lsp.TextEdit]],
+]
+
+REPLACEMENTS: Dict[str, Replacement] = {
     "C0117:unnecessary-negation": [
         {
             "pattern": re.compile(r"\snot\s+not"),
@@ -620,17 +719,27 @@ REPLACEMENTS: Dict[str, re.Pattern] = {
             "repl": r"for \1, \2 in \3.items():",
         }
     ],
+    "W1514:unspecified-encoding": _fix_unspecified_encoding,
 }
 
 
-def _get_replacement_edit(diagnostic: lsp.Diagnostic, lines: List[str]) -> lsp.TextEdit:
+def _get_replacement_edit(
+    diagnostic: lsp.Diagnostic, lines: List[str]
+) -> Optional[lsp.TextEdit]:
+    replacement = REPLACEMENTS[diagnostic.code]
+
+    if callable(replacement):
+        return replacement(lines, diagnostic)
+
     new_line = lines[diagnostic.range.start.line]
-    for replacement in REPLACEMENTS[diagnostic.code]:
+
+    for substitution in replacement:
         new_line = re.sub(
-            replacement["pattern"],
-            replacement["repl"],
+            substitution["pattern"],
+            substitution["repl"],
             new_line,
         )
+
     return lsp.TextEdit(
         lsp.Range(
             start=lsp.Position(line=diagnostic.range.start.line, character=0),
@@ -663,13 +772,13 @@ def code_action_resolve(params: lsp.CodeAction) -> lsp.CodeAction:
     """LSP handler for codeAction/resolve request."""
     if params.data:
         document = LSP_SERVER.workspace.get_text_document(params.data)
+        edits = [
+            _get_replacement_edit(diagnostic, document.lines)
+            for diagnostic in params.diagnostics
+            if diagnostic.source == TOOL_DISPLAY and diagnostic.code in REPLACEMENTS
+        ]
         params.edit = _create_workspace_edits(
-            document,
-            [
-                _get_replacement_edit(diagnostic, document.lines)
-                for diagnostic in params.diagnostics
-                if diagnostic.source == TOOL_DISPLAY and diagnostic.code in REPLACEMENTS
-            ],
+            document, [edit for edit in edits if edit]
         )
     return params
 

@@ -262,5 +262,8 @@
         "typescript": "^5.9.3",
         "webpack": "5.110.3",
         "webpack-cli": "^7.2.3"
+    },
+    "overrides": {
+        "spdx-license-ids": "3.0.23"
     }
 }

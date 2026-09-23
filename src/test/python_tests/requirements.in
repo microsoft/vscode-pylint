@@ -11,4 +11,4 @@ PyHamcrest
 python-jsonrpc-server
 tomli==2.4.1
 typing-extensions==4.16.0
-ujson==5.13.0
+ujson==6.0.0

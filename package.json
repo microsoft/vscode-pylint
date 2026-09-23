@@ -237,30 +237,47 @@
         "@types/fs-extra": "^11.0.4",
         "@types/glob": "^9.0.0",
         "@types/mocha": "^10.0.6",
-        "@types/node": "22.x",
+        "@types/node": "22.19.17",
         "@types/sinon": "^21.0.1",
-        "@types/vscode": "^1.74.0",
-        "@typescript-eslint/eslint-plugin": "^8.57.0",
-        "@typescript-eslint/parser": "^8.57.0",
-        "@typescript-eslint/type-utils": "^8.57.0",
-        "@typescript-eslint/scope-manager": "^8.57.0",
-        "@typescript-eslint/types": "^8.57.0",
-        "@typescript-eslint/typescript-estree": "^8.57.0",
-        "@typescript-eslint/utils": "^8.57.0",
-        "@typescript-eslint/visitor-keys": "^8.57.0",
-        "@vscode/test-electron": "^2.5.2",
+        "@types/vscode": "1.74.0",
+        "@typescript-eslint/eslint-plugin": "8.70.0",
+        "@typescript-eslint/parser": "8.70.0",
+        "@typescript-eslint/type-utils": "8.70.0",
+        "@typescript-eslint/scope-manager": "8.70.0",
+        "@typescript-eslint/types": "8.70.0",
+        "@typescript-eslint/typescript-estree": "8.70.0",
+        "@typescript-eslint/utils": "8.70.0",
+        "@typescript-eslint/visitor-keys": "8.70.0",
+        "@vscode/test-electron": "2.3.10",
         "@vscode/vsce": "^3.7.1-1",
         "chai": "^4.5.0",
-        "eslint": "^10.0.3",
-        "fs-extra": "^11.3.4",
+        "eslint": "10.0.3",
+        "fs-extra": "11.3.4",
         "glob": "^13.0.6",
         "mocha": "^10.4.0",
-        "prettier": "^3.8.1",
+        "prettier": "3.8.1",
         "sinon": "^22.0.0",
         "ts-loader": "^9.5.4",
         "typemoq": "^2.1.0",
         "typescript": "^5.9.3",
-        "webpack": "^5.110.1",
-        "webpack-cli": "^7.0.2"
+        "webpack": "5.110.3",
+        "webpack-cli": "^7.2.3"
+    },
+    "overrides": {
+        "spdx-license-ids": "3.0.23",
+        "node-releases": "2.0.54",
+        "electron-to-chromium": "1.5.423",
+        "baseline-browser-mapping": "2.11.21",
+        "minimizer-webpack-plugin": "5.10.0",
+        "is-core-module": "2.16.1",
+        "@typescript-eslint/eslint-plugin": {
+            "ignore": "7.0.9"
+        },
+        "globby@14.1.0": {
+            "ignore": "7.0.9"
+        },
+        "path-scurry@2.0.2": {
+            "lru-cache": "11.5.1"
+        }
     }
 }

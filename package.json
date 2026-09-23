@@ -264,6 +264,9 @@
         "webpack-cli": "^7.2.3"
     },
     "overrides": {
-        "spdx-license-ids": "3.0.23"
+        "spdx-license-ids": "3.0.23",
+        "path-scurry@2.0.2": {
+            "lru-cache": "11.5.1"
+        }
     }
 }

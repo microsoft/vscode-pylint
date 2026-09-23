@@ -255,7 +255,7 @@
         "fs-extra": "^11.3.4",
         "glob": "^13.0.6",
         "mocha": "^10.4.0",
-        "prettier": "^3.8.1",
+        "prettier": "3.8.1",
         "sinon": "^22.0.0",
         "ts-loader": "^9.5.4",
         "typemoq": "^2.1.0",

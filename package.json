@@ -265,6 +265,7 @@
     },
     "overrides": {
         "spdx-license-ids": "3.0.23",
+        "node-releases": "2.0.54",
         "path-scurry@2.0.2": {
             "lru-cache": "11.5.1"
         }

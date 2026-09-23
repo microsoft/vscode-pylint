@@ -248,7 +248,7 @@
         "@typescript-eslint/typescript-estree": "8.70.0",
         "@typescript-eslint/utils": "8.70.0",
         "@typescript-eslint/visitor-keys": "8.70.0",
-        "@vscode/test-electron": "2.3.10",
+        "@vscode/test-electron": "2.5.2",
         "@vscode/vsce": "^3.7.1-1",
         "chai": "^4.5.0",
         "eslint": "10.0.3",

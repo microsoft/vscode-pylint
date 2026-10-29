@@ -69,17 +69,27 @@ def configured_versions(workflow):
     matches = VERSION_MATRIX.findall(workflow.read_text(encoding="utf-8"))
     if len(matches) != 1:
         raise RuntimeError(f"Expected one Python version matrix in {workflow}")
-    versions = set(re.findall(r"['\"](3\.\d+)['\"]", matches[0]))
+    versions = set(re.findall(r"['\"](\d+\.\d+)[^'\"]*['\"]", matches[0]))
     if not versions:
         raise RuntimeError(f"No Python versions found in {workflow}")
     return versions
 
 
+def unconfigured_version(releases, workflows, now=None):
+    """Return the newest RC series when it is missing from either test matrix."""
+    latest = latest_release_candidate(releases, now)
+    for workflow in workflows:
+        if latest not in configured_versions(workflow):
+            return latest
+    return None
+
+
 def main():
-    latest = latest_release_candidate(fetch_releases())
-    workflow = pathlib.Path(__file__).parent.parent / ".github/workflows/pr-check.yml"
-    if latest not in configured_versions(workflow):
-        print(latest)
+    workflow_dir = pathlib.Path(__file__).parent.parent / ".github/workflows"
+    workflows = [workflow_dir / name for name in ("pr-check.yml", "push-check.yml")]
+    version = unconfigured_version(fetch_releases(), workflows)
+    if version:
+        print(version)
 
 
 if __name__ == "__main__":

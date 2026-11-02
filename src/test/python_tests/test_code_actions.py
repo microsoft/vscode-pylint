@@ -259,6 +259,52 @@ for city, population in data:
             """for city, population in data.items():
 """,
         ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open('my file.txt', 'w', newline='\\n') as f:
+    f.write('Hello, world!')
+""",
+            """with open('my file.txt', 'w', encoding='utf-8', newline='\\n') as f:
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+def read_text():
+    return 'file.txt'
+
+CONTENT = open(read_text()).read()
+""",
+            """CONTENT = open(read_text(), encoding='utf-8').read()
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+def wrap(handle, *_args):
+    return handle
+
+RESULT = wrap(open(
+    'file.txt'
+), 1,
+    2)
+""",
+            """    'file.txt', encoding='utf-8'
+""",
+        ),
+        (
+            "W1514:unspecified-encoding",
+            """
+with open(
+    'file.txt',
+    'r',
+) as f:
+    content = f.read()
+""",
+            """    'r', encoding='utf-8',
+""",
+        ),
     ],
 )
 def test_edit_code_action(code, contents, new_text):
@@ -328,7 +374,7 @@ def test_edit_code_action(code, contents, new_text):
                                 "edits": [
                                     {
                                         "range": changes[0]["edits"][0]["range"],
-                                        "newText": new_text,
+                                        "newText": changes[0]["edits"][0]["newText"],
                                     }
                                 ],
                             }
@@ -342,3 +388,20 @@ def test_edit_code_action(code, contents, new_text):
             actual_code_action["edit"]["documentChanges"],
             is_(expected[0]["edit"]["documentChanges"]),
         )
+        assert_that(_edited_lines(contents, changes[0]["edits"][0]), is_(new_text))
+
+
+def _edited_lines(contents: str, edit: dict) -> str:
+    """Applies ``edit`` to ``contents`` and returns the lines it rewrote."""
+    lines = contents.splitlines(keepends=True)
+    start, end = edit["range"]["start"], edit["range"]["end"]
+    at = len("".join(lines[: start["line"]])) + start["character"]
+    until = len("".join(lines[: end["line"]])) + end["character"]
+    rewritten = f"{contents[:at]}{edit['newText']}{contents[until:]}".splitlines(
+        keepends=True
+    )
+
+    # An edit whose text ends on a line boundary leaves the next line alone.
+    spans = edit["newText"].count("\n") - edit["newText"].endswith("\n")
+
+    return "".join(rewritten[start["line"] : start["line"] + spans + 1])

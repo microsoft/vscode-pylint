@@ -277,6 +277,9 @@
         "baseline-browser-mapping": "2.11.21",
         "minimizer-webpack-plugin": "5.10.0",
         "is-core-module": "2.16.1",
+        "mocha": {
+            "serialize-javascript": "7.1.2"
+        },
         "@typescript-eslint/eslint-plugin": {
             "ignore": "7.0.9"
         },

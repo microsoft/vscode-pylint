@@ -24,23 +24,14 @@ if (existsSync(`${pkgDir}/dist/index.js`)) {
   process.exit(0);
 }
 
-// The build runs the submodule's `tsc`, which is a devDependency of the shared
-// package. A dev-pruned install (`npm ci --omit=dev`, `NODE_ENV=production`, or
-// a VSIX packager that prunes) may not have it available. Skip with guidance
-// rather than hard-failing the whole install; build/packaging jobs run a full
-// install and produce `dist/` there.
+// Root npm installs do not bring along the submodule's devDependencies, so
+// install the shared package when its TypeScript toolchain is missing.
 if (
   !existsSync(`${pkgDir}/node_modules/.bin/tsc`) &&
   !existsSync(`${pkgDir}/node_modules/.bin/tsc.cmd`) &&
   !existsSync(`${pkgDir}/node_modules/typescript`)
 ) {
-  console.warn(
-    `[postinstall] TypeScript toolchain not installed in "${pkgDir}"; ` +
-      "skipping the shared package build. Run " +
-      `\`npm --prefix ${pkgDir} install && npm --prefix ${pkgDir} run build\` ` +
-      "if you need dist/ locally.",
-  );
-  process.exit(0);
+  execSync(`npm --prefix ${pkgDir} ci`, { stdio: "inherit" });
 }
 
 execSync(`npm --prefix ${pkgDir} run build`, { stdio: "inherit" });

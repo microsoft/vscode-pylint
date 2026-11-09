@@ -54,6 +54,13 @@
     "main": "./dist/extension.js",
     "l10n": "./l10n",
     "scripts": {
+        "setup": "node ./build/setup.js",
+        "setup:msft": "node ./build/setup-msft.js",
+        "setup:msft-registry": "node ./build/setup-npm-registry.js",
+        "ci:msft": "node ./build/setup-npm-registry.js --ci",
+        "setup-hooks": "node ./build/setup-hooks.js",
+        "normalize-lockfile": "node ./build/normalize-package-lock.js",
+        "test:setup": "node --test ./build/setup.test.js ./build/setup-npm-registry.test.js ./build/normalize-package-lock.test.js",
         "postinstall": "node ./build/postinstall.js",
         "vscode:prepublish": "npm run package",
         "compile": "webpack",
@@ -62,9 +69,9 @@
         "compile-tests": "tsc -p . --outDir out",
         "watch-tests": "tsc -p . -w --outDir out",
         "pretest": "npm run compile-tests && npm run compile",
-        "lint": "eslint src --ext ts",
-        "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.yml' '.github/**/*.yml'",
-        "fix-format": "prettier --write src/**/*.ts build/**/*.yml .github/**/*.yml",
+        "lint": "eslint src --ext ts \"build/setup*.js\" \"build/normalize-package-lock*.js\"",
+        "format-check": "prettier --check \"src/**/*.ts\" \"build/**/*.yml\" \".github/**/*.yml\" \"build/setup*.js\" \"build/normalize-package-lock*.js\" build/package-feeds.json",
+        "fix-format": "prettier --write src/**/*.ts build/**/*.yml .github/**/*.yml \"build/setup*.js\" \"build/normalize-package-lock*.js\" build/package-feeds.json",
         "tests": "node ./out/test/ts_tests/runTest.js",
         "vsce-package": "vsce package -o pylint.vsix",
         "vsce-package-pre": "vsce package -o pylint.vsix --pre-release"
@@ -230,9 +237,6 @@
     },
     "dependencies": {
         "@vscode/common-python-lsp": "file:external/vscode-common-python-lsp/typescript",
-        "@vscode/python-extension": "^1.0.6",
-        "dotenv": "^17.4.0",
-        "fs-extra": "^11.3.4",
         "vscode-languageclient": "^8.1.0"
     },
     "devDependencies": {
@@ -240,23 +244,50 @@
         "@types/fs-extra": "^11.0.4",
         "@types/glob": "^9.0.0",
         "@types/mocha": "^10.0.6",
-        "@types/node": "22.x",
-        "@types/sinon": "^17.0.3",
-        "@types/vscode": "^1.74.0",
-        "@typescript-eslint/eslint-plugin": "^8.57.0",
-        "@typescript-eslint/parser": "^8.57.0",
-        "@vscode/test-electron": "^2.5.2",
+        "@types/node": "22.19.17",
+        "@types/sinon": "^21.0.1",
+        "@types/vscode": "1.74.0",
+        "@typescript-eslint/eslint-plugin": "8.70.0",
+        "@typescript-eslint/parser": "8.70.0",
+        "@typescript-eslint/type-utils": "8.70.0",
+        "@typescript-eslint/scope-manager": "8.70.0",
+        "@typescript-eslint/types": "8.70.0",
+        "@typescript-eslint/typescript-estree": "8.70.0",
+        "@typescript-eslint/utils": "8.70.0",
+        "@typescript-eslint/visitor-keys": "8.70.0",
+        "@vscode/test-electron": "2.5.2",
         "@vscode/vsce": "^3.7.1-1",
         "chai": "^4.5.0",
-        "eslint": "^8.57.0",
+        "eslint": "10.0.3",
+        "fs-extra": "11.3.4",
         "glob": "^13.0.6",
         "mocha": "^10.4.0",
-        "prettier": "^3.8.1",
-        "sinon": "^18.0.1",
+        "prettier": "3.8.1",
+        "sinon": "^22.0.0",
         "ts-loader": "^9.5.4",
         "typemoq": "^2.1.0",
         "typescript": "^5.9.3",
-        "webpack": "^5.105.4",
-        "webpack-cli": "^5.1.4"
+        "webpack": "5.110.3",
+        "webpack-cli": "^7.2.3"
+    },
+    "overrides": {
+        "spdx-license-ids": "3.0.23",
+        "node-releases": "2.0.54",
+        "electron-to-chromium": "1.5.423",
+        "baseline-browser-mapping": "2.11.21",
+        "minimizer-webpack-plugin": "5.10.0",
+        "is-core-module": "2.16.1",
+        "mocha": {
+            "serialize-javascript": "7.1.2"
+        },
+        "@typescript-eslint/eslint-plugin": {
+            "ignore": "7.0.9"
+        },
+        "globby@14.1.0": {
+            "ignore": "7.0.9"
+        },
+        "path-scurry@2.0.2": {
+            "lru-cache": "11.5.1"
+        }
     }
 }

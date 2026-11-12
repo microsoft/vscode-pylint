@@ -15,6 +15,7 @@ import sys
 import threading
 import traceback
 import types
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union
 from urllib.parse import urlparse, urlunparse
 
@@ -70,6 +71,11 @@ _STDERR_ERROR_KEYWORDS = ("error", "traceback", "exception", "fatal")
 # Track lint request versions per URI to discard stale results from superseded runs.
 _lint_versions: Dict[str, int] = {}
 _lint_versions_lock = threading.Lock()
+# Lints run on a dedicated thread so that neither the main loop nor the pygls
+# thread pool (which also services stdin reads) waits on pylint. Otherwise
+# requests such as codeAction queue behind every pending lint. A single worker
+# also serializes in-process tool runs, which mutate sys.path/argv/stdio.
+_LINT_EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="pylint-lint")
 
 LSP_SERVER = LanguageServer(
     name="pylint-server",
@@ -152,20 +158,14 @@ VERSION_TABLE: Dict[str, (int, int, int)] = {}
 def did_open(params: lsp.DidOpenTextDocumentParams) -> None:
     """LSP handler for textDocument/didOpen request."""
     document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
-    diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
-    LSP_SERVER.text_document_publish_diagnostics(
-        lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=diagnostics)
-    )
+    _LINT_EXECUTOR.submit(_lint_and_publish, document)
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_SAVE)
 def did_save(params: lsp.DidSaveTextDocumentParams) -> None:
     """LSP handler for textDocument/didSave request."""
     document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
-    diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
-    LSP_SERVER.text_document_publish_diagnostics(
-        lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=diagnostics)
-    )
+    _LINT_EXECUTOR.submit(_lint_and_publish, document)
 
 
 @LSP_SERVER.feature(lsp.TEXT_DOCUMENT_DID_CLOSE)
@@ -184,16 +184,13 @@ if os.getenv("VSCODE_PYLINT_LINT_ON_CHANGE"):
     def did_change(params: lsp.DidChangeTextDocumentParams) -> None:
         """LSP handler for textDocument/didChange request."""
         document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
-        diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
-        LSP_SERVER.text_document_publish_diagnostics(
-            lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=diagnostics)
-        )
+        _LINT_EXECUTOR.submit(_lint_and_publish, document)
 
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_OPEN)
 def notebook_did_open(params: lsp.DidOpenNotebookDocumentParams) -> None:
     """Run diagnostics on all code cells when a notebook is opened."""
-    _linting_helper_notebook(params.notebook_document.uri)
+    _LINT_EXECUTOR.submit(_linting_helper_notebook, params.notebook_document.uri)
 
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_CHANGE)
@@ -204,13 +201,13 @@ def notebook_did_change(params: lsp.DidChangeNotebookDocumentParams) -> None:
         if structure and structure.did_close:
             for cell_document in structure.did_close:
                 _clear_notebook_cell_diagnostics(cell_document.uri)
-    _linting_helper_notebook(params.notebook_document.uri)
+    _LINT_EXECUTOR.submit(_linting_helper_notebook, params.notebook_document.uri)
 
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_SAVE)
 def notebook_did_save(params: lsp.DidSaveNotebookDocumentParams) -> None:
     """Re-lint all cells when a notebook is saved."""
-    _linting_helper_notebook(params.notebook_document.uri)
+    _LINT_EXECUTOR.submit(_linting_helper_notebook, params.notebook_document.uri)
 
 
 @LSP_SERVER.feature(lsp.NOTEBOOK_DOCUMENT_DID_CLOSE)
@@ -326,6 +323,13 @@ def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
     """Clear diagnostics for a single notebook cell."""
     LSP_SERVER.text_document_publish_diagnostics(
         lsp.PublishDiagnosticsParams(uri=cell_uri, diagnostics=[])
+    )
+
+
+def _lint_and_publish(document: TextDocument) -> None:
+    diagnostics: list[lsp.Diagnostic] = _linting_helper(document)
+    LSP_SERVER.text_document_publish_diagnostics(
+        lsp.PublishDiagnosticsParams(uri=document.uri, diagnostics=diagnostics)
     )
 
 

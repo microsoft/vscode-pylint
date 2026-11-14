@@ -9,7 +9,6 @@ on:
       - 'release-*'
 
 env:
-  NPM_CONFIG_REGISTRY: https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/Pylance_PublicPackages/npm/registry/
   NODE_VERSION: 24.17.0
   PYTHON_VERSION: '3.10'
   TEST_RESULTS_DIRECTORY: .
@@ -24,7 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,7 +48,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -69,7 +66,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
-      id-token: write
     defaults:
       run:
         working-directory: ${{ env.special-working-directory }}
@@ -85,9 +81,6 @@ jobs:
         with:
           submodules: recursive
           path: ${{ env.special-working-directory-relative }}
-
-      - name: Authenticate package feeds
-        uses: ./testingDir/.github/actions/authenticate-feeds
 
       - name: Download bundled Python libraries
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
@@ -118,7 +111,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
-      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -137,11 +129,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./package-lock.json
 
-      - name: Authenticate package feeds
-        uses: ./.github/actions/authenticate-feeds
-
       - name: Install Node dependencies
-        run: npm run ci:msft
+        run: npm ci
         shell: bash
 
       - name: Compile TS tests

@@ -11,6 +11,7 @@ accidentally excluded.
 
 import importlib.metadata
 import importlib.util
+import json
 import pathlib
 import sys
 
@@ -45,3 +46,17 @@ def test_common_lsp_package_is_bundled():
     assert spec is not None
     assert spec.origin is not None
     assert pathlib.Path(spec.origin).is_relative_to(BUNDLED_LIBS)
+
+
+def test_common_lsp_metadata_matches_local_checkout():
+    """The paired runtime must come from the pinned checkout, not a registry."""
+    distribution = importlib.metadata.distribution("vscode-python-tool-internal")
+    assert (
+        pathlib.Path(distribution.locate_file("")).resolve() == BUNDLED_LIBS.resolve()
+    )
+    direct_url = json.loads(distribution.read_text("direct_url.json"))
+    shared = (
+        BUNDLED_LIBS.parents[1] / "external" / "vscode-common-python-lsp" / "python"
+    )
+    assert direct_url["url"] == shared.as_uri()
+    assert not direct_url.get("dir_info", {}).get("editable", False)

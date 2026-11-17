@@ -1,37 +1,25 @@
-// Builds the shared package that lives in the git submodule after install.
-//
-// Note: a clone made without `--recurse-submodules` actually fails earlier,
-// when npm resolves the `file:` dependency during the install phase, before
-// this postinstall script runs. The guard below only adds a friendlier message
-// on the rarer paths that still reach postinstall (e.g. the submodule was
-// removed after a prior install); it is not a substitute for initializing the
-// submodule.
-const { existsSync } = require("fs");
-const { execSync } = require("child_process");
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-const pkgDir = "external/vscode-common-python-lsp/typescript";
+const { existsSync } = require('node:fs');
+const { execFileSync } = require('node:child_process');
+const path = require('node:path');
 
-if (!existsSync(`${pkgDir}/package.json`)) {
-  console.warn(
-    `[postinstall] Shared package submodule not found at "${pkgDir}". ` +
-      "Run `git submodule update --init --recursive` and reinstall to build it.",
-  );
-  process.exit(0);
+const pkgDir = path.resolve(__dirname, '..', 'external', 'vscode-common-python-lsp', 'typescript');
+if (!existsSync(path.join(pkgDir, 'package.json'))) {
+    throw new Error('Shared submodule missing. Run git submodule update --init --recursive before building.');
+}
+if (!process.env.npm_execpath) {
+    throw new Error('Run this build using npm run build:shared.');
 }
 
-// Already built (e.g. by a prior install or the packaging pipeline); nothing to do.
-if (existsSync(`${pkgDir}/dist/index.js`)) {
-  process.exit(0);
+function npm(args) {
+    execFileSync(process.execPath, [process.env.npm_execpath, ...args], { cwd: pkgDir, stdio: 'inherit' });
 }
 
-// Root npm installs do not bring along the submodule's devDependencies, so
-// install the shared package when its TypeScript toolchain is missing.
-if (
-  !existsSync(`${pkgDir}/node_modules/.bin/tsc`) &&
-  !existsSync(`${pkgDir}/node_modules/.bin/tsc.cmd`) &&
-  !existsSync(`${pkgDir}/node_modules/typescript`)
-) {
-  execSync(`npm --prefix ${pkgDir} ci`, { stdio: "inherit" });
+if (!existsSync(path.join(pkgDir, 'node_modules', 'typescript'))) {
+    npm(['ci', '--include=dev']);
 }
 
-execSync(`npm --prefix ${pkgDir} run build`, { stdio: "inherit" });
+// Always rebuild: an existing dist directory may belong to a different gitlink.
+npm(['run', 'build']);

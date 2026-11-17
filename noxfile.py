@@ -24,6 +24,22 @@ def _install_bundle(session: nox.Session) -> None:
         "-r",
         "./requirements.txt",
     )
+    shared_python_lib = pathlib.Path("external/vscode-common-python-lsp/python")
+    if not shared_python_lib.exists():
+        session.error(
+            f"Shared package submodule missing at {shared_python_lib}. "
+            "Run 'git submodule update --init --recursive' before building."
+        )
+    session.install(
+        "-t",
+        "./bundled/libs",
+        "--no-cache-dir",
+        "--implementation",
+        "py",
+        "--no-deps",
+        "--upgrade",
+        str(shared_python_lib),
+    )
 
 
 def _check_files(names: List[str]) -> None:
@@ -70,7 +86,6 @@ def _update_npm_packages(session: nox.Session) -> None:
         "vscode-languageclient",
         "@types/vscode",
         "@types/node",
-        "@vscode/common-python-lsp",
     }
     package_json_path = pathlib.Path(__file__).parent / "package.json"
     package_json = json.loads(package_json_path.read_text(encoding="utf-8"))
@@ -117,24 +132,6 @@ def install_bundled_libs(session):
     """Installs the libraries that will be bundled with the extension."""
     session.install("wheel")
     _install_bundle(session)
-    # Source the shared Python library from the git submodule instead of the
-    # published package so the bundled copy matches the pinned submodule commit.
-    shared_python_lib = pathlib.Path("external/vscode-common-python-lsp/python")
-    if not shared_python_lib.exists():
-        session.error(
-            f"Shared package submodule missing at {shared_python_lib}. "
-            "Run 'git submodule update --init --recursive' before building."
-        )
-    session.install(
-        "-t",
-        "./bundled/libs",
-        "--no-cache-dir",
-        "--implementation",
-        "py",
-        "--no-deps",
-        "--upgrade",
-        "./external/vscode-common-python-lsp/python",
-    )
 
 
 @nox.session(python="3.10")

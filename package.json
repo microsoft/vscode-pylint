@@ -62,16 +62,18 @@
         "normalize-lockfile": "node ./build/normalize-package-lock.js",
         "test:setup": "node --test ./build/setup.test.js ./build/setup-npm-registry.test.js ./build/normalize-package-lock.test.js",
         "postinstall": "node ./build/postinstall.js",
+        "build:shared": "node ./build/postinstall.js",
+        "test:runtime": "npm run compile-tests && node --test ./build/lifecycle.test.js",
         "vscode:prepublish": "npm run package",
-        "compile": "webpack",
-        "watch": "webpack --watch",
-        "package": "webpack --mode production --devtool source-map --config ./webpack.config.js",
-        "compile-tests": "tsc -p . --outDir out",
-        "watch-tests": "tsc -p . -w --outDir out",
-        "pretest": "npm run compile-tests && npm run compile",
-        "lint": "eslint src --ext ts \"build/setup*.js\" \"build/normalize-package-lock*.js\"",
-        "format-check": "prettier --check \"src/**/*.ts\" \"build/**/*.yml\" \".github/**/*.yml\" \"build/setup*.js\" \"build/normalize-package-lock*.js\" build/package-feeds.json",
-        "fix-format": "prettier --write src/**/*.ts build/**/*.yml .github/**/*.yml \"build/setup*.js\" \"build/normalize-package-lock*.js\" build/package-feeds.json",
+        "compile": "npm run build:shared && webpack",
+        "watch": "npm run build:shared && webpack --watch",
+        "package": "npm run build:shared && webpack --mode production --devtool source-map --config ./webpack.config.js",
+        "compile-tests": "npm run build:shared && tsc -p . --outDir out",
+        "watch-tests": "npm run build:shared && tsc -p . -w --outDir out",
+        "pretest": "npm run test:runtime && npm run compile",
+        "lint": "eslint src --ext ts \"build/setup*.js\" \"build/normalize-package-lock*.js\" \"build/postinstall.js\" \"build/lifecycle.test.js\"",
+        "format-check": "prettier --check \"src/**/*.ts\" \"build/**/*.yml\" \".github/**/*.yml\" \"build/setup*.js\" \"build/normalize-package-lock*.js\" build/postinstall.js build/lifecycle.test.js build/package-feeds.json",
+        "fix-format": "prettier --write src/**/*.ts build/**/*.yml .github/**/*.yml \"build/setup*.js\" \"build/normalize-package-lock*.js\" build/postinstall.js build/lifecycle.test.js build/package-feeds.json",
         "tests": "node ./out/test/ts_tests/runTest.js",
         "vsce-package": "vsce package -o pylint.vsix",
         "vsce-package-pre": "vsce package -o pylint.vsix --pre-release"
@@ -236,7 +238,6 @@
         ]
     },
     "dependencies": {
-        "@vscode/common-python-lsp": "file:external/vscode-common-python-lsp/typescript",
         "vscode-languageclient": "^8.1.0"
     },
     "devDependencies": {

@@ -8,7 +8,7 @@ import {
     getConfiguration,
     getDocumentSelector,
     onDidChangeActiveTextEditor,
-} from '@vscode/common-python-lsp';
+} from '../../external/vscode-common-python-lsp/typescript/dist';
 import { Command } from 'vscode-languageclient';
 
 let _status: LanguageStatusItem | undefined;

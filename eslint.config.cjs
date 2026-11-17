@@ -25,7 +25,7 @@ module.exports = [
         },
     },
     {
-        files: ['build/setup*.js', 'build/normalize-package-lock*.js'],
+        files: ['build/setup*.js', 'build/normalize-package-lock*.js', 'build/postinstall.js', 'build/lifecycle.test.js'],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'commonjs',
@@ -33,6 +33,8 @@ module.exports = [
                 __dirname: 'readonly',
                 console: 'readonly',
                 process: 'readonly',
+                URL: 'readonly',
+                AbortController: 'readonly',
             },
         },
         rules: {

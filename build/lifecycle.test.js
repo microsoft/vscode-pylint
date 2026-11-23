@@ -61,7 +61,11 @@ async function fixture({
     let deactivations = 0;
     const ui = { dispose() {} };
     const configuration = { dispose() {} };
-    const toolConfig = { toolId: 'pylint', serverScript: path.join(root, 'bundled', 'tool', 'lsp_server.py') };
+    const toolConfig = load(
+        'out/common/constants.js',
+        { '../../external/vscode-common-python-lsp/typescript/dist': { resolveExtensionRoot: () => root } },
+        { __dirname: path.join(root, 'out', 'common') },
+    ).PYLINT_TOOL_CONFIG;
     const extension = load(
         'out/extension.js',
         {
@@ -70,6 +74,7 @@ async function fixture({
                 loadServerDefaults: () => ({ name: 'Pylint', module: 'pylint' }),
                 activateToolExtension: (context, options) => {
                     assert.equal(context.subscriptions, subscriptions);
+                    assert.equal(options.toolConfig.workspaceEnablementSetting, 'enabled');
                     activation = options;
                     return {
                         async deactivate() {

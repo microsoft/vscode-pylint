@@ -26,6 +26,14 @@ But if you wish to disable linting with Pylint for your entire workspace or glob
 
 ## Settings
 
+`pylint.enabled` can also be set for an individual folder in a multi-root
+workspace. The most-specific workspace folder controls Python files and notebook
+cells below it, so a nested folder can re-enable linting. All folders retain
+their settings in the single shared server; disabling one does not disable
+other folders or create additional servers. Changing this setting refreshes the
+server, clears old diagnostics, and suppresses linting and Pylint quick fixes for
+disabled resources.
+
 There are several settings you can configure to customize the behavior of this extension.
 
 | Settings                | Default                                                                                                                                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |

@@ -14,6 +14,7 @@ export const MINIMUM_PYTHON_MINOR = 10;
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const PYLINT_TOOL_CONFIG: ToolConfig = {
     toolId: 'pylint',
+    workspaceEnablementSetting: 'enabled',
     toolDisplayName: 'Pylint',
     toolModule: 'pylint',
     minimumPythonVersion: { major: MINIMUM_PYTHON_MAJOR, minor: MINIMUM_PYTHON_MINOR },

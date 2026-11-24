@@ -230,6 +230,15 @@ def _get_extra_args(document: TextDocument | None) -> list[str]:
     return []
 
 
+def _is_document_enabled(document: TextDocument) -> bool:
+    if str(getattr(document, "uri", "")).startswith("vscode-notebook-cell"):
+        document = types.SimpleNamespace(path=_get_document_path(document.uri))
+    return (
+        tool_server.is_document_enabled(document)
+        and tool_server.get_settings_by_document(document)["enabled"]
+    )
+
+
 def _linting_helper_notebook(notebook_uri: str) -> None:
     """Lint all code cells together and publish per-cell diagnostics."""
     try:
@@ -237,15 +246,21 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
         if nb is None:
             return
 
+        with _lint_versions_lock:
+            version = _lint_versions.get(notebook_uri, 0) + 1
+            _lint_versions[notebook_uri] = version
+
+        if not _is_document_enabled(
+            types.SimpleNamespace(path=_get_document_path(notebook_uri))
+        ):
+            _clear_notebook_diagnostics(nb)
+            return
+
         combined_source, cell_map = notebook.build_notebook_source(
             nb.cells, LSP_SERVER.workspace.get_text_document
         )
         if not cell_map:
-            for cell in nb.cells:
-                if cell.kind == lsp.NotebookCellKind.Code and cell.document:
-                    LSP_SERVER.text_document_publish_diagnostics(
-                        lsp.PublishDiagnosticsParams(uri=cell.document, diagnostics=[])
-                    )
+            _clear_notebook_diagnostics(nb)
             return
 
         # Build a synthetic document pointing at the notebook's .ipynb path so
@@ -262,11 +277,6 @@ def _linting_helper_notebook(notebook_uri: str) -> None:
             language_id="python",
             version=0,
         )
-
-        # Debounce: key on the notebook URI.
-        with _lint_versions_lock:
-            version = _lint_versions.get(notebook_uri, 0) + 1
-            _lint_versions[notebook_uri] = version
 
         LSP_SERVER.protocol.notify(
             "pylint/lintingStarted",
@@ -329,6 +339,12 @@ def _clear_notebook_cell_diagnostics(cell_uri: str) -> None:
     )
 
 
+def _clear_notebook_diagnostics(nb: lsp.NotebookDocument) -> None:
+    for cell in nb.cells:
+        if cell.kind == lsp.NotebookCellKind.Code and cell.document:
+            _clear_notebook_cell_diagnostics(cell.document)
+
+
 def _linting_helper(document: TextDocument) -> list[lsp.Diagnostic]:
     try:
         # Skip notebook cells — they are linted via _linting_helper_notebook
@@ -341,6 +357,9 @@ def _linting_helper(document: TextDocument) -> list[lsp.Diagnostic]:
         with _lint_versions_lock:
             version = _lint_versions.get(document.uri, 0) + 1
             _lint_versions[document.uri] = version
+
+        if not _is_document_enabled(document):
+            return []
 
         # Notify the client that linting has started for this document.
         LSP_SERVER.protocol.notify(
@@ -519,9 +538,8 @@ def code_action(params: lsp.CodeActionParams) -> List[lsp.CodeAction]:
     """LSP handler for textDocument/codeAction request."""
 
     document = LSP_SERVER.workspace.get_text_document(params.text_document.uri)
-    settings = copy.deepcopy(tool_server.get_settings_by_document(document))
     code_actions = []
-    if not settings["enabled"]:
+    if not _is_document_enabled(document):
         return code_actions
 
     diagnostics = (d for d in params.context.diagnostics if d.source == TOOL_DISPLAY)
@@ -663,6 +681,9 @@ def code_action_resolve(params: lsp.CodeAction) -> lsp.CodeAction:
     """LSP handler for codeAction/resolve request."""
     if params.data:
         document = LSP_SERVER.workspace.get_text_document(params.data)
+        if not _is_document_enabled(document):
+            params.edit = None
+            return params
         params.edit = _create_workspace_edits(
             document,
             [
@@ -745,6 +766,9 @@ def on_shutdown(_params: Optional[Any] = None) -> None:
 def _log_version_info() -> None:
     for value in tool_server.workspace_settings.values():
         try:
+            if value.get("_toolEnabled", True) is False or not value["enabled"]:
+                continue
+
             from packaging.version import parse as parse_version
 
             settings = copy.deepcopy(value)
@@ -807,7 +831,7 @@ def _run_tool_on_document(
     # deep copy here to prevent accidentally updating global settings.
     settings = copy.deepcopy(tool_server.get_settings_by_document(document))
 
-    if not settings["enabled"]:
+    if not _is_document_enabled(document):
         log_warning(f"Skipping file [Linting Disabled]: {document.path}")
         log_warning("See `pylint.enabled` in settings.json to enabling linting.")
         return None

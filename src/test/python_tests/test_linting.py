@@ -5,6 +5,7 @@ Test for linting over LSP.
 """
 
 import os
+from copy import deepcopy
 from threading import Event
 from typing import List
 
@@ -20,6 +21,61 @@ TEST_FILE2_URI = utils.as_uri(str(TEST_FILE2_PATH))
 LINTER = utils.get_server_info_defaults()
 TIMEOUT = 10  # 10 seconds
 DOCUMENTATION_HOME = "https://pylint.readthedocs.io/en/latest/user_guide/messages"
+
+
+def test_mixed_nested_workspace_participation_over_stdio(tmp_path):
+    """Keep disabled roots routable without suppressing a nested enabled root."""
+    roots = [tmp_path, tmp_path / "disabled", tmp_path / "disabled" / "nested"]
+    init = defaults.vscode_initialize_defaults()
+    options = init["initializationOptions"]
+    base = options["settings"][0]
+    options["settings"] = []
+    for root, enabled in zip(roots, (True, False, True)):
+        root.mkdir(parents=True, exist_ok=True)
+        settings = deepcopy(base)
+        settings.update(
+            workspace=utils.as_uri(str(root)), cwd=str(root), _toolEnabled=enabled
+        )
+        options["settings"].append(settings)
+    options["globalSettings"]["_toolEnabled"] = False
+
+    with session.LspSession() as ls_session:
+        ls_session.initialize(init)
+        documents = [
+            (utils.as_uri(str(root / "probe.py")), enabled)
+            for root, enabled in zip(roots, (True, False, True))
+        ]
+        done = {uri: Event() for uri, _ in documents}
+        received = {}
+
+        def _handler(params):
+            uri = params["uri"]
+            if uri in done:
+                received[uri] = params
+                done[uri].set()
+
+        ls_session.set_notification_callback(session.PUBLISH_DIAGNOSTICS, _handler)
+        for uri, _ in documents:
+            ls_session.notify_did_open(
+                {
+                    "textDocument": {
+                        "uri": uri,
+                        "languageId": "python",
+                        "version": 1,
+                        "text": '"""Participation probe."""\nprint(undefined_variable)\n',
+                    }
+                }
+            )
+        for uri, enabled in documents:
+            assert done[uri].wait(TIMEOUT), f"No diagnostics response for {uri}"
+            diagnostics = received[uri]["diagnostics"]
+            if enabled:
+                assert any(
+                    diagnostic["code"] == "E0602:undefined-variable"
+                    for diagnostic in diagnostics
+                )
+            else:
+                assert diagnostics == []
 
 
 @pytest.mark.parametrize(

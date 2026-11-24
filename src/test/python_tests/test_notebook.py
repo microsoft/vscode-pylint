@@ -11,6 +11,8 @@ import json
 from threading import Event
 from typing import Any, Dict, List, Tuple
 
+import pytest
+
 from .lsp_test_client import constants, defaults, session, utils
 
 TIMEOUT = 10  # seconds
@@ -83,7 +85,8 @@ def _load_notebook(
     return nb_uri, cells, cell_text_documents
 
 
-def test_notebook_did_open():
+@pytest.mark.parametrize("participates", (True, False))
+def test_notebook_did_open(participates):
     """Diagnostics are published for each code cell when a notebook is opened.
 
     This test sends a notebookDocument/didOpen notification for a notebook with
@@ -95,7 +98,9 @@ def test_notebook_did_open():
     code_cell_uri = cell_text_documents[0]["uri"]  # first code cell
 
     with session.LspSession() as ls_session:
-        ls_session.initialize(defaults.vscode_initialize_defaults())
+        init = defaults.vscode_initialize_defaults()
+        init["initializationOptions"]["settings"][0]["_toolEnabled"] = participates
+        ls_session.initialize(init)
 
         done = Event()
         received = []
@@ -124,6 +129,8 @@ def test_notebook_did_open():
         assert any(
             r.get("uri") == code_cell_uri for r in received
         ), f"Expected diagnostics for {code_cell_uri!r}, got: {received}"
+        if not participates:
+            assert all(not result["diagnostics"] for result in received)
 
 
 def test_notebook_did_change_text_content():

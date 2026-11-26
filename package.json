@@ -276,7 +276,7 @@
         "node-releases": "2.0.54",
         "electron-to-chromium": "1.5.423",
         "baseline-browser-mapping": "2.11.21",
-        "minimizer-webpack-plugin": "5.10.0",
+        "minimizer-webpack-plugin": "5.13.1",
         "is-core-module": "2.16.1",
         "mocha": {
             "serialize-javascript": "7.1.2"
